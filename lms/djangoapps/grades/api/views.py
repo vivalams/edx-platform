@@ -1,15 +1,10 @@
 """ API v0 views. """
 import logging
-
-<<<<<<< HEAD
-=======
 #TODO Added these imports
 from collections import defaultdict
 from datetime import datetime, timedelta
 from django.db.models import Count, F
-
 from django.contrib.auth import get_user_model
->>>>>>> 02e6599... Initial commit for adding bulk grades api route to the lms grades api
 from django.http import Http404
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
@@ -19,12 +14,8 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
-<<<<<<< HEAD
-=======
 from courseware.access import has_access
 from courseware.models import StudentModule
->>>>>>> 02e6599... Initial commit for adding bulk grades api route to the lms grades api
 from lms.djangoapps.ccx.utils import prep_course_for_grading
 from lms.djangoapps.courseware import courses
 from lms.djangoapps.grades.api.serializers import GradingPolicySerializer
