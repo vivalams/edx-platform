@@ -1,15 +1,10 @@
 """ API v0 views. """
 import logging
-
-<<<<<<< HEAD
-=======
 #TODO Added these imports
 from collections import defaultdict
 from datetime import datetime, timedelta
 from django.db.models import Count, F
-
 from django.contrib.auth import get_user_model
->>>>>>> 02e6599... Initial commit for adding bulk grades api route to the lms grades api
 from django.http import Http404
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
@@ -19,12 +14,8 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
-<<<<<<< HEAD
-=======
 from courseware.access import has_access
 from courseware.models import StudentModule
->>>>>>> 02e6599... Initial commit for adding bulk grades api route to the lms grades api
 from lms.djangoapps.ccx.utils import prep_course_for_grading
 from lms.djangoapps.courseware import courses
 from lms.djangoapps.grades.api.serializers import GradingPolicySerializer
@@ -173,22 +164,18 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
         }])
 
 # TODO Platform Addition, LD Route to sync user grades by an organization
+# TODO Platform Addition, LD Route to sync user grades by an organization
 class BulkGradesView(GradeViewMixin, GenericAPIView):
 
     """
     **Use Case**
-
         Get all grades for all users enrolled in courses
         that are associated with the given organization
-
     **Example requests**
-
         POST /api/grades/v0/user_grades/
         ** NOTE: Temporarily this will be a post request in order to pass data
         **       through the request body (i.e. there will be a lot of usernames)
-
     **Example Response**
-
         [{
             username: 'kakh',
             course_id: 'edx-DemoX-DemoCourse',
@@ -202,11 +189,9 @@ class BulkGradesView(GradeViewMixin, GenericAPIView):
                 passed: true
             }
         }]
-
     """
 
     def get(self, request):
-
         organizations = request.GET.get('organizations')
         time_delta = request.GET.get('time_delta')
 
@@ -231,9 +216,9 @@ class BulkGradesView(GradeViewMixin, GenericAPIView):
                 students_needing_grading_by_course[module.course_id].append(module.student_id)
 
         res = defaultdict(dict)
-
+        USER_MODEL = get_user_model()
         for course_id, student_ids in students_needing_grading_by_course.iteritems():
-            course = self._get_course(CourseKey.from_string(course_id), request.user, 'load')
+            course = self._get_course(str(course_id), request.user, 'load')
             if organizations and not course.org in organizations:
                 continue
 
@@ -242,12 +227,12 @@ class BulkGradesView(GradeViewMixin, GenericAPIView):
                     'course': course.display_name,
                     'percent': course_grade.percent,
                     'letter': course_grade.letter_grade
-                } for student, course_grade, err_msg in CourseGradeFactory().iter(course, USER_MODEL.objects.filter(id__in=student_ids))
+                } for student, course_grade, err_msg in CourseGradeFactory().iter(course, USER_MODEL.objects.filter(id__in=set(student_ids)))
                 if course_grade.percent > 0
             }
 
         # clean up response by removing courses without new grades
-        res = {k: v for k, v in res.items() if v}
+        res = {str(k): v for k, v in res.items() if v}
 
         return Response(res)
 
