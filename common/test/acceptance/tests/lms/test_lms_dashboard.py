@@ -142,10 +142,6 @@ class LmsDashboardPageTest(BaseLmsDashboardTest):
         # now datetime for usage in tests
         self.now = datetime.datetime.utcnow()
 
-    def _to_utc(local_datetime, tz):
-        timezone = pytz.timezone(tz)        
-        return timezone.localize(local_datetime).astimezone(pytz.utc)
-
     def test_dashboard_course_listings(self):
         """
         Perform a general validation of the course listings section
