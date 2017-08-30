@@ -58,7 +58,7 @@ User = get_user_model()  # pylint:disable=invalid-name
 
 TEST_COOKIE_URL = "https://example.com/locale/test/api/dftg?sitename=testsite"
 @ddt.ddt
-@override_settings(COOKIES_API_URL = TEST_COOKIE_URL)
+@override_settings(API_COOKIE_URL = TEST_COOKIE_URL)
 @patch('requests.get')
 class CookieApiVerification(TestCase):
     """ Tests for the cookie api call """
