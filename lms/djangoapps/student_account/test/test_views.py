@@ -60,7 +60,7 @@ User = get_user_model()  # pylint:disable=invalid-name
 
 
 @ddt.ddt
-@override_settings(API_COOKIE_URL = TEST_COOKIE_URL)
+@override_settings(API_COOKIE_URL=TEST_COOKIE_URL)
 @patch('requests.get')
 class CookieApiVerification(TestCase):
     """ Tests for the cookie api call """
@@ -76,12 +76,12 @@ class CookieApiVerification(TestCase):
             "MaximumDate": "2017-04-01T00:00:00",
             "Error": "null",
             "IsItRequired": "true",
-            "Array1": ["https://example.com/example"], 
+            "Array1": ["https://example.com/example"],
             "Culture": "en-us",
             "Name": "DFGT",
             "Array2": ["https://example.com/example"]
         }
-        
+
         mock_get.return_value.content = json.dumps(expected_response)
         response = cookies_api(self.request)
         self.assertJSONEqual(response.content.decode("utf-8"), expected_response)

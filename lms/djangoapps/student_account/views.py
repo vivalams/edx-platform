@@ -518,6 +518,6 @@ def cookies_api(request):
             addr = urlparse.urlunparse((parse_url.scheme, parse_url.netloc, updated_path, parse_url.params, parse_url.query, parse_url.fragment))
             response = requests.get(addr)
             return JsonResponse(json.loads(response.content))
-        
+
         except:
             log.info('Failed in calling cookies api {}'.format(settings.API_COOKIE_URL))
