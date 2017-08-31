@@ -54,9 +54,11 @@ from openedx.core.djangoapps.theming.tests.test_util import with_comprehensive_t
 
 
 LOGGER_NAME = 'audit'
+TEST_COOKIE_URL = "https://example.com/locale/test/api/dftg?sitename=testsite"
+
 User = get_user_model()  # pylint:disable=invalid-name
 
-TEST_COOKIE_URL = "https://example.com/locale/test/api/dftg?sitename=testsite"
+
 @ddt.ddt
 @override_settings(API_COOKIE_URL = TEST_COOKIE_URL)
 @patch('requests.get')
@@ -65,7 +67,7 @@ class CookieApiVerification(TestCase):
     def setUp(self):
         self.request = HttpRequest()
         self.request.LANGUAGE_CODE = "en-us"
-        
+
     def test_cookie_api_call(self, mock_get):
         expected_response = {
             "City": "redmond",
@@ -83,7 +85,8 @@ class CookieApiVerification(TestCase):
         mock_get.return_value.content = json.dumps(expected_response)
         response = cookies_api(self.request)
         self.assertJSONEqual(response.content.decode("utf-8"), expected_response)
-        
+
+
 @ddt.ddt
 class StudentAccountUpdateTest(CacheIsolationTestCase, UrlResetMixin):
     """ Tests for the student account views that update the user's account information. """

@@ -502,6 +502,7 @@ def account_settings_context(request):
 
     return context
 
+
 def cookies_api(request):
     """Getting the common API URL from the settings page
        If the URL is not None or not empty then returning the response
@@ -513,9 +514,10 @@ def cookies_api(request):
             end_point = settings.API_COOKIE_URL
             parse_url = urlparse.urlparse(end_point)
             i = parse_url.path.index('/', 1)
-            updated_path = '/' + locale_var + '/' + parse_url.path[1+i:]
+            updated_path = '/' + locale_var + '/' + parse_url.path[1 + i:]
             addr = urlparse.urlunparse((parse_url.scheme, parse_url.netloc, updated_path, parse_url.params, parse_url.query, parse_url.fragment))
             response = requests.get(addr)
             return JsonResponse(json.loads(response.content))
+        
         except:
-            pass
+            log.info('Failed in calling cookies api {}'.format(settings.API_COOKIE_URL))
