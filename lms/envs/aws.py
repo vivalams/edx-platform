@@ -510,6 +510,7 @@ AWS_STORAGE_BUCKET_NAME = AUTH_TOKENS.get('AWS_STORAGE_BUCKET_NAME', 'edxuploads
 AZURE_ACCOUNT_NAME = AUTH_TOKENS.get('AZURE_ACCOUNT_NAME', None)
 AZURE_ACCOUNT_KEY = AUTH_TOKENS.get('AZURE_ACCOUNT_KEY', None)
 AZURE_CONTAINER = AUTH_TOKENS.get('AZURE_CONTAINER', None)
+AZURE_STORAGE_ENDPOINT = AUTH_TOKENS.get('AZURE_STORAGE_ENDPOINT', None)
 
 # Disabling querystring auth instructs Boto to exclude the querystring parameters (e.g. signature, access key) it
 # normally appends to every returned URL.
