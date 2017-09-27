@@ -16,6 +16,6 @@ cd /edx/app/edxapp/edx-platform
 export CODE_COV_TOKEN=$CODE_COV_TOKEN
 export TRAVIS=true
 
-pip install python-coveralls
-coveralls
+pip install codecov==2.0.5
+codecov --token=$CODE_COV_TOKEN --branch=$BRANCH
 EOF
