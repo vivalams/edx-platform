@@ -211,21 +211,15 @@ class TrackMiddleware(object):
         Anonymize the ip address to the first two octets.
         This gives enough data to be useful for Analysis
         without explicitly identifying user
-            eg. 127.0.0.1 => 127.0
+            e.g. 127.0.0.1 => 127.0.X.X
+            e.g. 127.0.123.12 => 127.0.XXX.XX
         """
-        def _anonymize_if_needed(ip_address_str):
-            if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
-                return self._get_anonymous_ip(ip_address_str)
-            else:
-                return ip_address_str
-
-        # raise ValueError("IP ADDRESS FOR SERVER: ", hasattr(request, 'META'))
-
         if request is not None and hasattr(request, 'META'):
             ip_address = get_ip(request)
-            return _anonymize_if_needed(ip_address)
-        elif request is not None and request.get('ip'):
-            return _anonymize_if_needed(request.get('ip'))
+            if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
+                return self._get_anonymous_ip(ip_address)
+            else:
+                return ip_address
         else:
             return default
 
