@@ -32,12 +32,56 @@ def _get_request_header(request, header_name, default=''):
         return default
 
 
+def get_request_ip(request):
+    """Wrapper for helper method to get request ip."""
+    return _get_request_ip(request)
+
+
 def _get_request_ip(request, default=''):
-    """Helper method to get IP from a request's META dict, if present."""
-    if request is not None and hasattr(request, 'META'):
-        return get_ip(request)
-    else:
-        return default
+        """
+        Helper method to get IP from a request's META dict, if present.
+        If SQUELCH_PII_IN_LOGS is True:
+        Anonymize the ip address to the first two octets.
+        This gives enough data to be useful for Analysis
+        without explicitly identifying user
+            e.g. 127.0.0.1 => 127.0.X.X
+            e.g. 127.0.123.12 => 127.0.XXX.XX
+        """
+        if request is None:
+            return default
+
+        def _anonymize_if_needed(ip_address_str):
+            if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
+                return _get_anonymous_ip(ip_address)
+            else:
+                return ip_address
+
+        if hasattr(request, 'META'):
+            ip_address = get_ip(request)
+            return _anonymize_if_needed(ip_address)
+        elif request.get('ip'):
+            return _anonymize_if_needed(request.get('ip'))
+        else:
+            return default
+
+
+def _get_anonymous_ip(ip_address_str):
+    """Helper method to obbuscate the last two octets of an ip address"""
+    try:
+        ip_comps = ip_address_str.split('.')
+        first, second = '.'.join(ip_comps[0:2]), '.'.join(ip_comps[2:])
+        second_out = ''
+        for char in second:
+            if char != '.':
+                second_out += 'x'
+            else:
+                second_out += '.'
+
+        ip_address = '{}.{}'.format(first, second_out)
+    except:
+        ip_address = 'unknown'
+
+    return ip_address
 
 
 def _get_request_value(request, value_name, default=''):
