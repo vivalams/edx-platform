@@ -145,6 +145,7 @@ class TestSites(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
 
         self.assertContains(resp, 'This is a copyright page for an Open edX site.')
 
+    @unittest.skip('Copyright url is not customized')
     def test_not_site_anonymous_copyright_content(self):
         """
         Verify that the copyright page does not exist if we are not in a configured site.
