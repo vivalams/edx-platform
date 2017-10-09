@@ -133,6 +133,7 @@ class TestSites(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         self.assertNotContains(resp, 'This is a Test Site footer')
 
     @override_settings(SITE_NAME=settings.MICROSITE_TEST_HOSTNAME)
+    @unittest.skip('Copyright url is not customized')
     def test_site_anonymous_copyright_content(self):
         """
         Verify that the copyright, when accessed via a Site domain, returns
