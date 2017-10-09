@@ -15,6 +15,7 @@ from xmodule.modulestore.tests.django_utils import SharedModuleStoreTestCase
 
 import unittest
 
+
 @attr(shard=1)
 class TestSites(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
     """
