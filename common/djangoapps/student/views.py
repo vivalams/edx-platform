@@ -597,7 +597,7 @@ def dashboard(request):
     
     provider_id = request.GET.get('provider', '')
     if provider_id == configuration_helpers.get_value('SOCIAL_OAUTH_MSA_PROVIDER'):
-	    is_redirection = None
+        is_redirection = None
         try:
             # Check to see user social entry for this user
             social_auth_users = UserSocialAuth.objects.filter(user__username=user)
