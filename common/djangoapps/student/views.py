@@ -595,7 +595,7 @@ def dashboard(request):
     """
     user = request.user
     
-	provider_id = request.GET.get('provider', '')
+    provider_id = request.GET.get('provider', '')
     if provider_id == configuration_helpers.get_value('SOCIAL_OAUTH_MSA_PROVIDER'):
 	    is_redirection = None
         try:
@@ -603,8 +603,7 @@ def dashboard(request):
             social_auth_users = UserSocialAuth.objects.filter(user__username=user)
             if social_auth_users:
                 try:
-                    social_auth_users_mapping = UserSocialAuthMapping.objects.get(uid=social_auth_users[0].uid)
-					is_redirection = None
+                    social_auth_users_mapping = UserSocialAuthMapping.objects.get(uid=social_auth_users[0].uid)					
                 except UserSocialAuthMapping.DoesNotExist:
                     is_redirection = 1
        except UserSocialAuth.DoesNotExist:
