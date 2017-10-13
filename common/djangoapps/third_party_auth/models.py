@@ -682,3 +682,15 @@ class ProviderApiPermissions(models.Model):
         app_label = "third_party_auth"
         verbose_name = "Provider API Permission"
         verbose_name_plural = verbose_name + 's'
+
+class UserSocialAuthMapping(models.Model):
+    """
+    Mapping table for user social auth and puid
+    """
+    user = models.ForeignKey(USER_MODEL, related_name='third_party_auth')
+    uid = models.CharField(max_length=UID_LENGTH)
+    puid = models.CharField(max_length=200)
+    class Meta(object):
+        app_label = "third_party_auth"
+        unique_together = ('uid', 'puid')
+        db_table = 'third_party_auth_social_auth_mapping'
