@@ -200,7 +200,7 @@ def users_social_auth_mapping(request):
     if request.method != 'POST':
         return HttpResponseNotAllowed('POST')
 		
-	# Check the LTI parameters, and return 400 if any required parameters are
+    # Check the LTI parameters, and return 400 if any required parameters are
     # missing
     params = get_required_social_auth_parameters(request.POST)
     if not params:
@@ -223,7 +223,7 @@ def users_social_auth_mapping(request):
     except UserSocialAuthMapping.DoesNotExist:
         pass
 
-	provider = params["provider"]
+    provider = params["provider"]
     uid = params["uid"]
     puid = params["puid"]
 	
