@@ -594,7 +594,6 @@ def dashboard(request):
 
     """
     user = request.user
-    
     provider_id = request.GET.get('provider', '')
     if provider_id == configuration_helpers.get_value('SOCIAL_OAUTH_MSA_PROVIDER'):
         is_redirection = None
