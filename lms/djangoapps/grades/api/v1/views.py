@@ -154,10 +154,12 @@ class GradeViewMixin(DeveloperErrorViewMixin):
         try:
             return datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S")
         except Exception as exc:
+            log.info("DATE STRING: ", date_string)
+            log.info(exc.message)
             log.exception('Error parsing provided date string', date_string, exc.message)
             return self.make_error_response(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                developer_message='Could not parse date one of the provided date filters',
+                developer_message='Could not parse one of the provided date filters',
                 error_code='date_filter_format'
             )
 
