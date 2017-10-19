@@ -23,70 +23,70 @@ from enrollment import data as enrollment_data
 from student.roles import CourseStaffRole
 
 
-log = logging.getLogger(__name__)
+	log = logging.getLogger(__name__)
 USER_MODEL = get_user_model()
 
 
 @view_auth_classes()
-class GradeViewMixin(DeveloperErrorViewMixin):
-    """
-    Mixin class for Grades related views.
-    """
-    def _get_course(self, course_key_string, user, access_action):
-        """
-        Returns the course for the given course_key_string after
-        verifying the requested access to the course by the given user.
-        """
-        try:
-            course_key = CourseKey.from_string(course_key_string)
-        except InvalidKeyError:
-            return self.make_error_response(
-                status_code=status.HTTP_404_NOT_FOUND,
-                developer_message='The provided course key cannot be parsed.',
-                error_code='invalid_course_key'
-            )
+	class GradeViewMixin(DeveloperErrorViewMixin):
+		"""
+			Mixin class for Grades related views.
+			"""
+			def _get_course(self, course_key_string, user, access_action):
+				"""
+					Returns the course for the given course_key_string after
+					verifying the requested access to the course by the given user.
+					"""
+					try:
+					course_key = CourseKey.from_string(course_key_string)
+					except InvalidKeyError:
+						return self.make_error_response(
+								status_code=status.HTTP_404_NOT_FOUND,
+								developer_message='The provided course key cannot be parsed.',
+								error_code='invalid_course_key'
+								)
 
-        try:
-            return courses.get_course_with_access(
-                user,
-                access_action,
-                course_key,
-                check_if_enrolled=True,
-            )
-        except Http404:
-            log.info('Course with ID "%s" not found', course_key_string)
-        except CourseAccessRedirect:
-            log.info('User %s does not have access to course with ID "%s"', user.username, course_key_string)
-        return self.make_error_response(
-            status_code=status.HTTP_404_NOT_FOUND,
-            developer_message='The user, the course or both do not exist.',
-            error_code='user_or_course_does_not_exist',
-        )
+						try:
+return courses.get_course_with_access(
+		user,
+		access_action,
+		course_key,
+		check_if_enrolled=True,
+		)
+	except Http404:
+	log.info('Course with ID "%s" not found', course_key_string)
+	except CourseAccessRedirect:
+	log.info('User %s does not have access to course with ID "%s"', user.username, course_key_string)
+	return self.make_error_response(
+			status_code=status.HTTP_404_NOT_FOUND,
+			developer_message='The user, the course or both do not exist.',
+			error_code='user_or_course_does_not_exist',
+			)
 
-    def _get_courses(self, user, access_action):
-        # try:
-        enrollments = enrollment_data.get_course_enrollments(user.username)
-        course_key_strings = [enrollment.get('course_details').get('course_id') for enrollment in enrollments]
-        return [self._get_course(course_key_string, user, access_action) for course_key_string in course_key_strings]
-        # except:
-        #     return []
+	def _get_courses(self, user, access_action):
+# try:
+		enrollments = enrollment_data.get_course_enrollments(user.username)
+	course_key_strings = [enrollment.get('course_details').get('course_id') for enrollment in enrollments]
+	return [self._get_course(course_key_string, user, access_action) for course_key_string in course_key_strings]
+# except:
+#     return []
 
-    def _get_effective_user(self, request, courses):
-        """
-        Returns the user object corresponding to the request's 'username' parameter,
-        or the current request.user if no 'username' was provided.
+	def _get_effective_user(self, request, courses):
+		"""
+			Returns the user object corresponding to the request's 'username' parameter,
+			or the current request.user if no 'username' was provided.
 
-        Verifies that the request.user has access to the requested users's grades.
-        Returns a 403 error response if access is denied, or a 404 error response if the user does not exist.
-        """
+			Verifies that the request.user has access to the requested users's grades.
+			Returns a 403 error response if access is denied, or a 404 error response if the user does not exist.
+			"""
 
-        # Use the request user's if none provided.
-        if 'username' in request.GET:
-            username = request.GET.get('username')
-        else:
-            username = request.user.username
+# Use the request user's if none provided.
+			if 'username' in request.GET:
+			username = request.GET.get('username')
+			else:
+			username = request.user.username
 
-        if request.user.username == username:
+			if request.user.username == username:
             # Any user may request her own grades
             return request.user
 
@@ -320,7 +320,7 @@ class UserGradeView(GradeViewMixin, ListAPIView):
 
     pagination_class = NamespacedPageNumberPagination
 
-    def get_queryset(self, request):
+    def get(self, request):
         """
         Bulk implementation of grades api. If username specified just return users grades in all courses
         :param request:
@@ -352,8 +352,9 @@ class UserGradeView(GradeViewMixin, ListAPIView):
             if isinstance(end_date, Response):
                 return end_date
 
-            persisted_grades = CourseGradeFactory().bulk_read(start_date=start_date, end_date=end_date)
+            persisted_grades = CourseGradeFactory()._bulk_read(start_date=start_date, end_date=end_date)
 
+            page = self.paginator.paginate_queryset(persisted_grades, self.request, view=self)
             response = []
             for persisted_grade in persisted_grades:
                 response.append({
@@ -363,8 +364,8 @@ class UserGradeView(GradeViewMixin, ListAPIView):
                     'percent': persisted_grade.percent_grade,
                     'letter_grade': persisted_grade.letter_grade,
                 })
-
-
+            if page is not None:
+                return self.get_paginated_response(response)
         else:
             grade_user = self._get_effective_user(request, [])
 
