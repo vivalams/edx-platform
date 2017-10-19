@@ -402,7 +402,6 @@ class CourseGradeFactory(object):
             filter['modified__lte'] = end_date
 
         persistent_grades = PersistentCourseGrade.objects.filter(**filter)
-        persistent_grades = list(persistent_grades)
         return persistent_grades
 
     def _get_saved_grade(self, student, course, course_structure):
