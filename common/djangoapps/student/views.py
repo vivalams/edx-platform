@@ -602,7 +602,7 @@ def dashboard(request):
             social_auth_users = UserSocialAuth.objects.filter(user__username=user)
             if social_auth_users:
                 try:
-                    social_auth_users_mapping = UserSocialAuthMapping.objects.get(uid=social_auth_users[0].uid)					
+                    social_auth_users_mapping = UserSocialAuthMapping.objects.get(uid=social_auth_users[0].uid)
                 except UserSocialAuthMapping.DoesNotExist:
                     is_redirection = 1
         except UserSocialAuth.DoesNotExist:
@@ -610,7 +610,7 @@ def dashboard(request):
         if is_redirection:
             external_redirect_url = configuration_helpers.get_value('external_login_api') + configuration_helpers.get_value('LMS_ROOT_URL') + request.path
             return redirect(external_redirect_url)
-		
+
     platform_name = configuration_helpers.get_value("platform_name", settings.PLATFORM_NAME)
     enable_verified_certificates = configuration_helpers.get_value(
         'ENABLE_VERIFIED_CERTIFICATES',

@@ -38,6 +38,7 @@ SOCIAL_AUTH_MAPPING_REQUIRED_PARAMETERS = [
     'oauth_nonce', 'uid', 'puid', 'provider'
 ]
 
+
 @csrf_exempt
 @add_p3p_header
 def lti_launch(request, course_id, usage_id):
@@ -123,6 +124,7 @@ def get_required_parameters(dictionary, additional_params=None):
         params[key] = dictionary[key]
     return params
 
+
 def get_required_social_auth_parameters(dictionary, additional_params=None):
     """
     Extract all required LTI parameters from a dictionary and verify that none
@@ -143,6 +145,7 @@ def get_required_social_auth_parameters(dictionary, additional_params=None):
             return None
         params[key] = dictionary[key]
     return params
+
 
 def get_optional_parameters(dictionary):
     """
@@ -183,6 +186,7 @@ def parse_course_and_usage_keys(course_id, usage_id):
     usage_key = UsageKey.from_string(usage_id).map_into_course(course_key)
     return course_key, usage_key
 
+
 @csrf_exempt
 def users_social_auth_mapping(request):
     """
@@ -196,15 +200,14 @@ def users_social_auth_mapping(request):
         - The launch data is correctly signed using a known client key/secret
           pair
     """
-	
     if request.method != 'POST':
         return HttpResponseNotAllowed('POST')
-		
+
     # Check the LTI parameters, and return 400 if any required parameters are
     # missing
     params = get_required_social_auth_parameters(request.POST)
     if not params:
-        return HttpResponseBadRequest()	
+        return HttpResponseBadRequest()
 
     # Get the consumer information from either the instance GUID or the consumer key
     try:
@@ -222,11 +225,10 @@ def users_social_auth_mapping(request):
         return HttpResponse(status=200)
     except UserSocialAuthMapping.DoesNotExist:
         pass
-
     provider = params["provider"]
     uid = params["uid"]
     puid = params["puid"]
-	
+
     # Check user social auth entry for uid and provider i.e. live
     try:
         usersocialauth = UserSocialAuth.objects.get(uid=uid, provider=provider)
