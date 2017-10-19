@@ -354,9 +354,10 @@ class UserGradeView(GradeViewMixin, ListAPIView):
 
             persisted_grades = CourseGradeFactory().bulk_read(start_date=start_date, end_date=end_date)
             page = self.paginator.paginate_queryset(persisted_grades, self.request, view=self)
+            grades_to_serialize = persisted_grades if not page else page
 
             response = []
-            for persisted_grade in persisted_grades:
+            for persisted_grade in grades_to_serialize:
                 response.append({
                     'username': USER_MODEL.objects.get(id=persisted_grade.user_id).username,
                     'course_key': str(persisted_grade.course_id),
