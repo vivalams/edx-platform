@@ -318,7 +318,7 @@ class UserGradeView(GradeViewMixin, ListAPIView):
 
     pagination_class = NamespacedPageNumberPagination
 
-    def get(self, request):
+    def get_queryset(self, request):
         """
         Bulk implementation of grades api. If username specified just return users grades in all courses
         :param request:
