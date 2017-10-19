@@ -352,9 +352,9 @@ class UserGradeView(GradeViewMixin, ListAPIView):
             if isinstance(end_date, Response):
                 return end_date
 
-            persisted_grades = CourseGradeFactory()._bulk_read(start_date=start_date, end_date=end_date)
-
+            persisted_grades = CourseGradeFactory().bulk_read(start_date=start_date, end_date=end_date)
             page = self.paginator.paginate_queryset(persisted_grades, self.request, view=self)
+
             response = []
             for persisted_grade in persisted_grades:
                 response.append({
@@ -366,6 +366,7 @@ class UserGradeView(GradeViewMixin, ListAPIView):
                 })
             if page is not None:
                 return self.get_paginated_response(response)
+
         else:
             grade_user = self._get_effective_user(request, [])
 
