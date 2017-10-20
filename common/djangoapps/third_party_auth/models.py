@@ -29,8 +29,8 @@ from openedx.core.djangoapps.theming.helpers import get_current_request
 from social.apps.django_app.default.models import UserSocialAuth
 log = logging.getLogger(__name__)
 USER_MODEL = getattr(settings, setting_name('USER_MODEL'), None) or \
-             getattr(settings, 'AUTH_USER_MODEL', None) or \
-             'auth.User'
+    getattr(settings, 'AUTH_USER_MODEL', None) or \
+    'auth.User'
 UID_LENGTH = getattr(settings, setting_name('UID_LENGTH'), 255)
 
 

@@ -169,7 +169,7 @@ class ShibSPTest(CacheIsolationTestCase):
                 audit_log_calls = mock_audit_log.method_calls
 
                 if idp == "https://idp.stanford.edu/" and remote_user == 'withmap@stanford.edu':
-                    self.assertRedirects(response, '/dashboard')
+                    self.assertRedirects(response, '/dashboard/')
                     self.assertEquals(int(self.client.session['_auth_user_id']), user_w_map.id)
                     # verify logging:
                     self.assertEquals(len(audit_log_calls), 2)
@@ -242,7 +242,7 @@ class ShibSPTest(CacheIsolationTestCase):
         self.assertTrue(inactive_user.is_active)
         self.assertIsInstance(response, HttpResponseRedirect)
         self.assertEqual(request.user, inactive_user)
-        self.assertEqual(response['Location'], '/dashboard')
+        self.assertEqual(response['Location'], '/dashboard/')
         # verify logging:
         self.assertEquals(len(audit_log_calls), 3)
         self._assert_shib_login_is_logged(audit_log_calls[0], log_user_string)
