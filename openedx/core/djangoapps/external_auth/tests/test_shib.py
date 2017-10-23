@@ -192,7 +192,7 @@ class ShibSPTest(CacheIsolationTestCase):
                     # self.assertEquals(remote_user, args[1])
                 elif idp == "https://idp.stanford.edu/" and remote_user == 'womap@stanford.edu':
                     self.assertIsNotNone(ExternalAuthMap.objects.get(user=user_wo_map))
-                    self.assertRedirects(response, '/dashboard')
+                    self.assertRedirects(response, '/dashboard/')
                     self.assertEquals(int(self.client.session['_auth_user_id']), user_wo_map.id)
                     # verify logging:
                     self.assertEquals(len(audit_log_calls), 2)
