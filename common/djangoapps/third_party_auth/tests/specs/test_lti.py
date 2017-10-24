@@ -106,7 +106,7 @@ class IntegrationTestLTI(testutil.TestCase):
         # The user should be redirected to the dashboard
         self.assertEqual(login_2_response.status_code, 302)
         self.assertEqual(login_2_response['Location'], LTI_TPA_COMPLETE_URL)
-        continue_2_response = self.client.get(login_2_response['Location']) + '/'
+        continue_2_response = self.client.get(login_2_response['Location'] + '/')
         self.assertEqual(continue_2_response.status_code, 302)
         self.assertTrue(continue_2_response['Location'].endswith(reverse('dashboard')))
 
