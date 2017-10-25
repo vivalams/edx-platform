@@ -25,21 +25,6 @@ class Migration(migrations.Migration):
                 'db_table': 'third_party_auth_social_auth_mapping',
             },
         ),
-        migrations.AlterField(
-            model_name='ltiproviderconfig',
-            name='icon_class',
-            field=models.CharField(default=b'fa-sign-in', help_text=b'Examples: fa-google-plus, fa-facebook, fa-linkedin, fa-sign-in, fa-university', max_length=50, blank=True),
-        ),
-        migrations.AlterField(
-            model_name='oauth2providerconfig',
-            name='icon_class',
-            field=models.CharField(default=b'fa-sign-in', help_text=b'Examples: fa-google-plus, fa-facebook, fa-linkedin, fa-sign-in, fa-university', max_length=50, blank=True),
-        ),
-        migrations.AlterField(
-            model_name='samlproviderconfig',
-            name='icon_class',
-            field=models.CharField(default=b'fa-sign-in', help_text=b'Examples: fa-google-plus, fa-facebook, fa-linkedin, fa-sign-in, fa-university', max_length=50, blank=True),
-        ),
         migrations.AlterUniqueTogether(
             name='usersocialauthmapping',
             unique_together=set([('uid', 'puid')]),
