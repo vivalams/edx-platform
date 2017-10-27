@@ -182,7 +182,7 @@ class SSLClientTest(ModuleStoreTestCase):
         response = self.client.get(
             reverse('dashboard'), follow=True,
             SSL_CLIENT_S_DN=self.AUTH_DN.format(self.USER_NAME, self.USER_EMAIL))
-        self.assertEquals(('http://testserver/dashboard/', 302),
+        self.assertEquals(('http://testserver/dashboard', 302),
                           response.redirect_chain[-1])
         self.assertIn(SESSION_KEY, self.client.session)
 
@@ -196,7 +196,7 @@ class SSLClientTest(ModuleStoreTestCase):
         response = self.client.get(
             reverse('register_user'), follow=True,
             SSL_CLIENT_S_DN=self.AUTH_DN.format(self.USER_NAME, self.USER_EMAIL))
-        self.assertEquals(('http://testserver/dashboard/', 302),
+        self.assertEquals(('http://testserver/dashboard', 302),
                           response.redirect_chain[-1])
         self.assertIn(SESSION_KEY, self.client.session)
 
@@ -236,7 +236,7 @@ class SSLClientTest(ModuleStoreTestCase):
         response = self.client.get(
             reverse('signin_user'), follow=True,
             SSL_CLIENT_S_DN=self.AUTH_DN.format(self.USER_NAME, self.USER_EMAIL))
-        self.assertEquals(('http://testserver/dashboard/', 302),
+        self.assertEquals(('http://testserver/dashboard', 302),
                           response.redirect_chain[-1])
         self.assertIn(SESSION_KEY, self.client.session)
 
@@ -409,7 +409,7 @@ class SSLClientTest(ModuleStoreTestCase):
         response = self.client.get(
             reverse('dashboard'), follow=True,
             SSL_CLIENT_S_DN=self.AUTH_DN.format(self.USER_NAME, self.USER_EMAIL))
-        self.assertEquals(('http://testserver/dashboard/', 302),
+        self.assertEquals(('http://testserver/dashboard', 302),
                           response.redirect_chain[-1])
         self.assertIn(SESSION_KEY, self.client.session)
         response = self.client.get(

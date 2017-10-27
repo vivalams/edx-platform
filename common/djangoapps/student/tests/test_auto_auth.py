@@ -219,7 +219,7 @@ class AutoAuthEnabledTestCase(AutoAuthTestCase):
 
         # Check that the redirect was to either /dashboard or /home
         if settings.ROOT_URLCONF == 'lms.urls':
-            url_pattern = '/dashboard/'
+            url_pattern = '/dashboard'
         else:
             url_pattern = '/home'
 

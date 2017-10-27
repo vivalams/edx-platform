@@ -489,7 +489,7 @@ class ExternalAuthShibTest(ModuleStoreTestCase):
         """
         response = self.client.get(reverse('dashboard'))
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['Location'], 'http://testserver/login?next=/dashboard/')
+        self.assertEqual(response['Location'], 'http://testserver/login?next=/dashboard')
 
     @unittest.skipUnless(settings.FEATURES.get('AUTH_USE_SHIB'), "AUTH_USE_SHIB not set")
     def test_externalauth_login_required_course_context(self):

@@ -108,8 +108,7 @@ class IntegrationTestLTI(testutil.TestCase):
         self.assertEqual(login_2_response['Location'], LTI_TPA_COMPLETE_URL)
         continue_2_response = self.client.get(login_2_response['Location'])
         self.assertEqual(continue_2_response.status_code, 302)
-        # Expected value http://testserver/dashboard
-        self.assertTrue(continue_2_response['Location'].endswith('dashboard'))
+        self.assertTrue(continue_2_response['Location'].endswith(reverse('dashboard')))
 
         # Check that the user was created correctly
         user = User.objects.get(email=EMAIL)

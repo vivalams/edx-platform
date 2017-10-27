@@ -515,7 +515,7 @@ class TestCourseEmailContext(SharedModuleStoreTestCase):
                           '{}://edx.org/c4x/{}/{}/asset/images_course_image.jpg'.format(scheme,
                                                                                         self.course_org,
                                                                                         self.course_number))
-        self.assertEquals(email_context['email_settings_url'], '{}://edx.org/dashboard/'.format(scheme))
+        self.assertEquals(email_context['email_settings_url'], '{}://edx.org/dashboard'.format(scheme))
         self.assertEquals(email_context['account_settings_url'], '{}://edx.org/account/settings'.format(scheme))
 
     @override_settings(LMS_ROOT_URL="http://edx.org")
