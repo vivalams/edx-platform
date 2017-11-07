@@ -1,3 +1,4 @@
+""" API v0 views. """
 import logging
 from datetime import datetime
 
@@ -22,7 +23,6 @@ from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, view_auth_c
 from enrollment import data as enrollment_data
 from student.roles import CourseStaffRole
 
-
 log = logging.getLogger(__name__)
 USER_MODEL = get_user_model()
 
@@ -32,6 +32,9 @@ class GradeViewMixin(DeveloperErrorViewMixin):
     """
     Mixin class for Grades related views.
     """
+
+    pagination_class = NamespacedPageNumberPagination
+
     def _get_course(self, course_key_string, user, access_action):
         """
         Returns the course for the given course_key_string after
@@ -125,17 +128,22 @@ class GradeViewMixin(DeveloperErrorViewMixin):
                 error_code='user_does_not_exist'
             )
 
-    def _read_or_create_grade(self, user, course, calculate=False):
+    def _read_or_create_grade(self, user, course, calculate=False, use_email=False):
         """
         Read or create a new CourseGrade for the specified user and course.
         """
         if calculate is not None:
-            course_grade = CourseGradeFactory().create(user, course)
+            course_grade = CourseGradeFactory().create(user, course, read_only=False)
         else:
             course_grade = CourseGradeFactory().get_persisted(user, course)
 
+        if use_email:
+            user = user.email
+        else:
+            user = user.username
+
         return {
-            'username': user.username,
+            'user': user,
             'course_key': str(course.id),
             'passed': course_grade.passed,
             'percent': course_grade.percent,
@@ -154,12 +162,10 @@ class GradeViewMixin(DeveloperErrorViewMixin):
         try:
             return datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S")
         except Exception as exc:
-            log.info("DATE STRING: ", date_string)
-            log.info(exc.message)
             log.exception('Error parsing provided date string', date_string, exc.message)
             return self.make_error_response(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                developer_message='Could not parse one of the provided date filters',
+                developer_message='Could not parse date one of the provided date filters',
                 error_code='date_filter_format'
             )
 
@@ -179,11 +185,12 @@ class CourseGradeView(GradeViewMixin, GenericAPIView):
         * Get the current course grades for a user in a course.
 
         The currently logged-in user may request her own grades, or a user with staff access to the course may request
-        any enrolled user's grades.
+        any/all enrolled user's grades.
 
     **Example Request**
 
-        GET /api/grades/v0/course_grade/{course_id}/users/?username={username}
+        GET /api/grades/v1/course_grade/{course_id}/users/?username={username}
+        GET /api/grades/v1/course_grade/{course_id}/users/?username=all         - Get grades for all users in course
 
     **GET Parameters**
 
@@ -192,6 +199,7 @@ class CourseGradeView(GradeViewMixin, GenericAPIView):
         * course_id: (required) A string representation of a Course ID.
         * username: (optional) A string representation of a user's username.
           Defaults to the currently logged-in user's username.
+          if username is 'all', get grades for all enrolled users
 
     **GET Response Values**
 
@@ -216,13 +224,38 @@ class CourseGradeView(GradeViewMixin, GenericAPIView):
 
         [{
             "username": "bob",
-            "course_key": "edX/DemoX/Demo_Course",
+            "course_key": "course-v1:edX+DemoX+Demo_Course",
             "passed": false,
             "percent": 0.03,
             "letter_grade": None,
         }]
 
+    **Example GET Response if username == 'all'**
+
+        [{
+            "username": "bob",
+            "course_key": "course-v1:edX+DemoX+Demo_Course",
+            "passed": false,
+            "percent": 0.03,
+            "letter_grade": null,
+        },
+        {
+            "username": "fred",
+            "course_key": "course-v1:edX+DemoX+Demo_Course",
+            "passed": true,
+            "percent": 0.83,
+            "letter_grade": "B",
+        },
+        {
+            "username": "kate",
+            "course_key": "course-v1:edX+DemoX+Demo_Course",
+            "passed": false,
+            "percent": 0.19,
+            "letter_grade": null,
+        }]
+
     """
+
     def get(self, request, course_id):
         """
         Gets a course progress status.
@@ -235,10 +268,7 @@ class CourseGradeView(GradeViewMixin, GenericAPIView):
             A JSON serialized representation of the requesting user's current grade status.
         """
 
-        # course_id = request.GET.get('course_id')
-        username = request.GET.get('username')
         should_calculate_grade = request.GET.get('calculate')
-
         course = self._get_course(course_id, request.user, 'load')
 
         if isinstance(course, Response):
@@ -255,38 +285,52 @@ class CourseGradeView(GradeViewMixin, GenericAPIView):
 
         elif isinstance(grade_user, list):
             # List of grades for all users in course
+            if len(grade_user) > 40:
+                log.warning('Cannot calculate real-time bulk grades...reading from persisted grades')
+                should_calculate_grade = False
+
             response = list()
             for user in grade_user:
                 course_grade = self._read_or_create_grade(user, course, should_calculate_grade)
                 response.append(course_grade)
         else:
-            # One grade for one user in course
+            # Grade for one user in course
             course_grade = self._read_or_create_grade(grade_user, course, should_calculate_grade)
             response = [course_grade]
 
         return Response(response)
 
 
-class UserGradeView(GradeViewMixin, ListAPIView):
+class UserGradeView(GradeViewMixin, GenericAPIView):
     """
     **Use Case**
 
-        * Get the current course grades for a user in a course.
+        * Get the current course grades for a user in all courses
 
         The currently logged-in user may request her own grades, or a user with staff access to the course may request
         any enrolled user's grades.
 
     **Example Request**
 
-        GET /api/grades/v0/course_grade/{course_id}/users/?username={username}
+        GET /api/grades/v1/user_grades/?username={username}
+        GET /api/grades/v1/user_grades/?username=all
 
     **GET Parameters**
 
         A GET request may include the following parameters.
 
-        * course_id: (required) A string representation of a Course ID.
         * username: (optional) A string representation of a user's username.
           Defaults to the currently logged-in user's username.
+          If 'all' return all grades from PersistentGrades table
+
+        * calculate: (optional) Boolean value, if set calculate grades for user
+          in real time if username is not 'all'
+
+        **Only function if username is 'all'**
+        * start_date: (optional) An ISO string representation of a start date
+          to filter the modified datetime on in the PersistentGrades table
+        * end_date: (optional) An ISO string representation of a end date
+          to filter the modified datetime on in the PersistentGrades table
 
     **GET Response Values**
 
@@ -311,20 +355,33 @@ class UserGradeView(GradeViewMixin, ListAPIView):
 
         [{
             "username": "bob",
-            "course_key": "edX/DemoX/Demo_Course",
+            "course_key": "course-v1:edX+DemoX+Demo_Course",
             "passed": false,
             "percent": 0.03,
             "letter_grade": None,
+        },
+        {
+            "username": "bob",
+            "course_key": "course-v1:edX+DemoX+A_Different_Course",
+            "passed": true,
+            "percent": 0.93,
+            "letter_grade": "A",
         }]
     """
 
-    pagination_class = NamespacedPageNumberPagination
-
     def get(self, request):
         """
-        Bulk implementation of grades api. If username specified just return users grades in all courses
-        :param request:
-        :return:
+        Gets a user's grades in all enrolled courses
+        or returns bulk grades from PersistentGrades table if specified
+        username is 'all'
+
+        Args:
+            request (Request): Django request object.
+
+        Return:
+            A JSON serialized representation of the requesting user's current grade status
+            or if username is 'all' a response from the PersistentGrades table filtered by
+            start_date and end_date
         """
 
         username = request.GET.get('username')
@@ -333,10 +390,16 @@ class UserGradeView(GradeViewMixin, ListAPIView):
         end_date_string = request.GET.get('end_date')
 
         if username == 'all':
-            log.info('Cannot calculate realtime bulk grades...reading from persisted grades')
+            # Essentially an export function of the PersistantGrades table.
+            # Read all grades for all students, filter on start_date and end_date
+            if should_calculate_grade:
+                log.warning('Cannot calculate real-time bulk grades...reading from persisted grades')
+                should_calculate_grade = False
 
-            bulk_grades_admin = settings.FEATURES.get('BULK_GRADES_ADMIN_USERNAME', 'edx')
-
+            # This is very sensitive functionality and is locked down to a single
+            # explicitly set user in the AUTH settings (lms.auth.json).
+            # This user is also required to have superuser status
+            bulk_grades_admin = settings.BULK_GRADES_API_ADMIN_USERNAME
             if not request.user.is_superuser or request.user.username != bulk_grades_admin:
                 return self.make_error_response(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -344,9 +407,9 @@ class UserGradeView(GradeViewMixin, ListAPIView):
                     error_code='user_does_not_have_access'
                 )
 
+            # Validate start and end date parameters
             start_date = self._parse_filter_date_string(start_date_string)
             end_date = self._parse_filter_date_string(end_date_string)
-
             if isinstance(start_date, Response):
                 return start_date
             if isinstance(end_date, Response):
@@ -358,8 +421,9 @@ class UserGradeView(GradeViewMixin, ListAPIView):
 
             response = []
             for persisted_grade in grades_to_serialize:
+                user = USER_MODEL.objects.get(id=persisted_grade.user_id)
                 response.append({
-                    'username': USER_MODEL.objects.get(id=persisted_grade.user_id).username,
+                    'username': user.email,
                     'course_key': str(persisted_grade.course_id),
                     'passed': persisted_grade.passed_timestamp is not None,
                     'percent': persisted_grade.percent_grade,
@@ -367,16 +431,48 @@ class UserGradeView(GradeViewMixin, ListAPIView):
                 })
             if page is not None:
                 return self.get_paginated_response(response)
-
         else:
+            # If username is not all, get the effective user for this call
+            # calculate all of their grades in all enrolled courses.
             grade_user = self._get_effective_user(request, [])
-
             courses = self._get_courses(grade_user, 'load')
 
             response = list()
             for course in courses:
-                course_grade = self._read_or_create_grade(grade_user, course, should_calculate_grade)
-                response.append(course_grade)
-
+                grade_response = self._read_or_create_grade(grade_user, course, should_calculate_grade)
+                response.append(grade_response)
 
         return Response(response)
+
+
+class CourseGradingPolicy(GradeViewMixin, ListAPIView):
+    """
+    **Use Case**
+
+        Get the course grading policy.
+
+    **Example requests**:
+
+        GET /api/grades/v0/policy/{course_id}/
+
+    **Response Values**
+
+        * assignment_type: The type of the assignment, as configured by course
+          staff. For example, course staff might make the assignment types Homework,
+          Quiz, and Exam.
+
+        * count: The number of assignments of the type.
+
+        * dropped: Number of assignments of the type that are dropped.
+
+        * weight: The weight, or effect, of the assignment type on the learner's
+          final grade.
+    """
+
+    allow_empty = False
+
+    def get(self, request, course_id, **kwargs):
+        course = self._get_course(course_id, request.user, 'staff')
+        if isinstance(course, Response):
+            return course
+        return Response(GradingPolicySerializer(course.raw_grader, many=True).data)
