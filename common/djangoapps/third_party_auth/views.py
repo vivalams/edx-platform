@@ -10,8 +10,7 @@ import social
 from social.apps.django_app.views import complete
 from social.apps.django_app.utils import load_strategy, load_backend
 from social.utils import setting_name
-from .models import SAMLConfiguration, UserSocialAuthMapping
-from social.apps.django_app.default.models import UserSocialAuth
+from .models import SAMLConfiguration
 
 URL_NAMESPACE = getattr(settings, setting_name('URL_NAMESPACE'), None) or 'social'
 
