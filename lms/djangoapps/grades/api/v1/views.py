@@ -17,7 +17,8 @@ from lms.djangoapps.ccx.utils import prep_course_for_grading
 from lms.djangoapps.courseware import courses
 from lms.djangoapps.courseware.exceptions import CourseAccessRedirect
 from lms.djangoapps.grades.api.serializers import GradingPolicySerializer
-from lms.djangoapps.grades.new.course_grade import CourseGradeFactory
+from lms.djangoapps.grades.new.course_grade import CourseGrade, CourseGradeFactory
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.lib.api.paginators import NamespacedPageNumberPagination
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, view_auth_classes
 from enrollment import data as enrollment_data
@@ -50,6 +51,9 @@ class GradeViewMixin(DeveloperErrorViewMixin):
             )
 
         try:
+            course_org_filter = configuration_helpers.get_current_site_orgs()
+            if course_org_filter and course_key.org not in course_org_filter:
+                raise Http404
             return courses.get_course_with_access(
                 user,
                 access_action,
@@ -67,12 +71,21 @@ class GradeViewMixin(DeveloperErrorViewMixin):
         )
 
     def _get_courses(self, user, access_action):
-        # try:
+        """
+        Get a users course enrollments based on the access_action
+        and if the user has that access level and return the
+        associated courses.
+        """
         enrollments = enrollment_data.get_course_enrollments(user.username)
         course_key_strings = [enrollment.get('course_details').get('course_id') for enrollment in enrollments]
-        return [self._get_course(course_key_string, user, access_action) for course_key_string in course_key_strings]
-        # except:
-        #     return []
+
+        courses = []
+        for course_key_string in course_key_strings:
+            course = self._get_course(course_key_string, user, access_action)
+            if not isinstance(course, Response):
+                courses.append(course)
+
+        return courses
 
     def _get_effective_user(self, request, courses):
         """
@@ -128,7 +141,7 @@ class GradeViewMixin(DeveloperErrorViewMixin):
                 error_code='user_does_not_exist'
             )
 
-    def _read_or_create_grade(self, user, course, calculate=False, use_email=False):
+    def _read_or_create_grade(self, user, course, calculate=None, use_email=None):
         """
         Read or create a new CourseGrade for the specified user and course.
         """
@@ -137,7 +150,15 @@ class GradeViewMixin(DeveloperErrorViewMixin):
         else:
             course_grade = CourseGradeFactory().get_persisted(user, course)
 
-        if use_email:
+        # Handle the case of a course grade not existing,
+        # return a Zero course grade
+        if not course_grade:
+            course_grade = CourseGrade(user, course, None)
+            course_grade._percent = 0.0
+            course_grade._letter_grade = None
+            course_grade._passed = False
+
+        if use_email is not None:
             user = user.email
         else:
             user = user.username
@@ -269,6 +290,7 @@ class CourseGradeView(GradeViewMixin, GenericAPIView):
         """
 
         should_calculate_grade = request.GET.get('calculate')
+        use_email = request.GET.get('use_email', False)
         course = self._get_course(course_id, request.user, 'load')
 
         if isinstance(course, Response):
@@ -287,15 +309,15 @@ class CourseGradeView(GradeViewMixin, GenericAPIView):
             # List of grades for all users in course
             if len(grade_user) > 40:
                 log.warning('Cannot calculate real-time bulk grades...reading from persisted grades')
-                should_calculate_grade = False
+                should_calculate_grade = None
 
             response = list()
             for user in grade_user:
-                course_grade = self._read_or_create_grade(user, course, should_calculate_grade)
+                course_grade = self._read_or_create_grade(user, course, should_calculate_grade, use_email)
                 response.append(course_grade)
         else:
             # Grade for one user in course
-            course_grade = self._read_or_create_grade(grade_user, course, should_calculate_grade)
+            course_grade = self._read_or_create_grade(grade_user, course, should_calculate_grade, use_email)
             response = [course_grade]
 
         return Response(response)
@@ -385,7 +407,8 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
         """
 
         username = request.GET.get('username')
-        should_calculate_grade = request.GET.get('calculate')
+        should_calculate_grade = request.GET.get('calculate', False)
+        use_email = request.GET.get('use_email', False)
         start_date_string = request.GET.get('start_date')
         end_date_string = request.GET.get('end_date')
 
@@ -437,9 +460,9 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
             grade_user = self._get_effective_user(request, [])
             courses = self._get_courses(grade_user, 'load')
 
-            response = list()
+            response = []
             for course in courses:
-                grade_response = self._read_or_create_grade(grade_user, course, should_calculate_grade)
+                grade_response = self._read_or_create_grade(grade_user, course, should_calculate_grade, use_email)
                 response.append(grade_response)
 
         return Response(response)
