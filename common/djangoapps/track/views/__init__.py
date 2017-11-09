@@ -55,9 +55,9 @@ def _get_request_ip(request, default=''):
 
         def _anonymize_if_needed(ip_address_str):
             if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
-                return _get_anonymous_ip(ip_address)
+                return _get_anonymous_ip(ip_address_str)
             else:
-                return ip_address
+                return ip_address_str
 
         if hasattr(request, 'META'):
             ip_address = get_ip(request)
@@ -198,7 +198,7 @@ def task_track(request_info, task_info, event_type, event, page=None):
     with eventtracker.get_tracker().context('edx.course.task', contexts.course_context_from_url(page)):
         event = {
             "username": request_info.get('username', 'unknown'),
-            "ip": request_info.get('ip', 'unknown'),
+            "ip": _get_request_ip(request_info, 'unknown'),
             "event_source": "task",
             "event_type": event_type,
             "event": full_event,
