@@ -304,11 +304,11 @@ class CourseGradeViewTest(GradeViewTestMixin, APITestCase):
         """
         Test that the user gets her grade in case she answered tests with an insufficient score.
         """
-        with self._mock_read_or_create_grade(grade_pass=grade['letter_grade'], percent=grade['percent']):
+        with self._mock_read_or_create_grade(letter_grade=grade['letter_grade'], percent=grade['percent']):
             resp = self.client.get(self.get_url(self.student.username))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         expected_data = {
-            'user': self.student.username,
+            'user': unicode(self.student.username),
             'course_key': str(self.course_keys[0]),
         }
 
