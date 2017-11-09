@@ -1,4 +1,4 @@
-""" API v0 views. """
+""" API v1 views. """
 import logging
 from datetime import datetime
 
@@ -290,7 +290,7 @@ class CourseGradeView(GradeViewMixin, GenericAPIView):
         """
 
         should_calculate_grade = request.GET.get('calculate')
-        use_email = request.GET.get('use_email', False)
+        use_email = request.GET.get('use_email', None)
         course = self._get_course(course_id, request.user, 'load')
 
         if isinstance(course, Response):
@@ -407,8 +407,8 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
         """
 
         username = request.GET.get('username')
-        should_calculate_grade = request.GET.get('calculate', False)
-        use_email = request.GET.get('use_email', False)
+        should_calculate_grade = request.GET.get('calculate', None)
+        use_email = request.GET.get('use_email', None)
         start_date_string = request.GET.get('start_date')
         end_date_string = request.GET.get('end_date')
 
@@ -417,7 +417,7 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
             # Read all grades for all students, filter on start_date and end_date
             if should_calculate_grade:
                 log.warning('Cannot calculate real-time bulk grades...reading from persisted grades')
-                should_calculate_grade = False
+                should_calculate_grade = None
 
             # This is very sensitive functionality and is locked down to a single
             # explicitly set user in the AUTH settings (lms.auth.json).
