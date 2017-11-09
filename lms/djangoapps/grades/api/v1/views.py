@@ -457,8 +457,20 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
         else:
             # If username is not all, get the effective user for this call
             # calculate all of their grades in all enrolled courses.
+
+            # Circular logic is required here. We need to validate the user exists
+            # here first and get that valid user. We can then fetch that user's
+            # enrolled courses but then need to revalidate that the requesting user
+            # has access to all of these courses.
             grade_user = self._get_effective_user(request, [])
+            if isinstance(grade_user, Response):
+                return grade_user
+
             courses = self._get_courses(grade_user, 'load')
+
+            grade_user = self._get_effective_user(request, courses)
+            if isinstance(grade_user, Response):
+                return grade_user
 
             response = []
             for course in courses:
