@@ -55,6 +55,7 @@ branches:
   - oxa/release.fic
   - oxa/dev.fic
   - oxa/ci-docker
+  - oxa/bulk-grades-restricted-application
 
 before_install:
   # Login and fetch container from Azure container registry
