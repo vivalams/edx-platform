@@ -3,6 +3,7 @@ import json
 
 import pytz
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import redirect
@@ -50,6 +51,8 @@ def _get_request_ip(request, default=''):
         if request is None:
             return default
 
+        request_ip = default
+
         def _anonymize_if_needed(ip_address_str):
             if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
                 return _get_anonymous_ip(ip_address)
@@ -58,11 +61,13 @@ def _get_request_ip(request, default=''):
 
         if hasattr(request, 'META'):
             ip_address = get_ip(request)
-            return _anonymize_if_needed(ip_address)
+            request_ip = _anonymize_if_needed(ip_address)
         elif request.get('ip'):
-            return _anonymize_if_needed(request.get('ip'))
+            request_ip = _anonymize_if_needed(request.get('ip'))
         else:
-            return default
+            request_ip = default
+
+        return request_ip
 
 
 def _get_anonymous_ip(ip_address_str):
@@ -143,7 +148,7 @@ def server_track(request, event_type, event, page=None):
     # define output:
     event = {
         "username": username,
-        "ip": _get_request_ip(request),
+        "ip": get_request_ip(request),
         "referer": _get_request_header(request, 'HTTP_REFERER'),
         "accept_language": _get_request_header(request, 'HTTP_ACCEPT_LANGUAGE'),
         "event_source": "server",
