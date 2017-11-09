@@ -1,11 +1,12 @@
 """
 Tests for v1 views
 """
+from contextlib import contextmanager
 from datetime import datetime
 import ddt
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
-from mock import patch
+from mock import MagicMock, patch
 from opaque_keys import InvalidKeyError
 from pytz import UTC
 from rest_framework import status
@@ -24,7 +25,7 @@ from xmodule.modulestore.tests.django_utils import SharedModuleStoreTestCase, TE
 class GradeViewTestMixin(SharedModuleStoreTestCase):
     """
     Mixin class for grades related view tests
-    
+
     The following tests assume that the grading policy is the edX default one:
     {
         "GRADER": [
@@ -171,6 +172,21 @@ class GradeViewTestMixin(SharedModuleStoreTestCase):
         self.assertIn('error_code', resp.data)  # pylint: disable=no-member
         self.assertEqual(resp.data['error_code'], 'user_mismatch')  # pylint: disable=no-member
 
+    @contextmanager
+    def _mock_read_or_create_grade(self, letter_grade='Pass', percent=0.75):
+            """
+            Mock the grading function to always return a passing grade.
+            """
+            grade_fields = {
+                'letter_grade': letter_grade,
+                'percent': percent,
+                'passed': letter_grade is not None,
+
+            }
+            with patch('lms.djangoapps.grades.api.v1.views.GradeViewMixin._read_or_create_grade') as mock_grade:
+                mock_grade.return_value = MagicMock(**grade_fields)
+                yield
+
 
 @ddt.ddt
 class CourseGradeViewTest(GradeViewTestMixin, APITestCase):
@@ -288,14 +304,14 @@ class CourseGradeViewTest(GradeViewTestMixin, APITestCase):
         """
         Test that the user gets her grade in case she answered tests with an insufficient score.
         """
-        with mock_passing_grade(letter_grade=grade['letter_grade'], percent=grade['percent']):
+        with self._mock_read_or_create_grade(grade_pass=grade['letter_grade'], percent=grade['percent']):
             resp = self.client.get(self.get_url(self.student.username))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         expected_data = {
             'user': self.student.username,
             'course_key': str(self.course_keys[0]),
         }
-        
+
         expected_data.update(grade)
         self.assertEqual(resp.data, [expected_data])  # pylint: disable=no-member
 
@@ -410,5 +426,5 @@ class UserGradesViewTest(GradeViewTestMixin, APITestCase):
         self.client.login(username=self.admin.username, password=self.password)
         resp = self.client.get(self.get_url('all'))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertIn('pagination', resp.data) # pylint: disable=no-member
+        self.assertIn('pagination', resp.data)  # pylint: disable=no-member
         self.assertIn('results', resp.data)  # pylint: disable=no-member
