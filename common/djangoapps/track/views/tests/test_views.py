@@ -171,7 +171,7 @@ class TestTrackViews(EventTrackingTestCase):
         }
         self.assert_mock_tracker_call_matches(expected_event)
 
-    @override_settings(FEATURES={ 'SQUELCH_PII_IN_LOGS': True })
+    @override_settings(FEATURES={'SQUELCH_PII_IN_LOGS': True})
     def test_server_track_without_personal_data(self):
         request = self.request_factory.get(self.path_with_course)
         views.server_track(request, str(sentinel.event_type), '{}')
@@ -319,7 +319,7 @@ class TestTrackViews(EventTrackingTestCase):
         }
         self.assert_mock_tracker_call_matches(expected_event)
 
-    @override_settings(FEATURES={ 'SQUELCH_PII_IN_LOGS': True })
+    @override_settings(FEATURES={'SQUELCH_PII_IN_LOGS': True})
     def test_task_track(self):
         request_info = {
             'accept_language': '',

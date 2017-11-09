@@ -93,7 +93,7 @@ class TrackMiddlewareTestCase(TestCase):
             'client_id': None,
         })
 
-    @override_settings(FEATURES={ 'SQUELCH_PII_IN_LOGS': True })
+    @override_settings(FEATURES={'SQUELCH_PII_IN_LOGS': True})
     def test_default_request_context_without_personal_data(self):
         context = self.get_context_for_path('/courses/')
         self.assertEquals(context, {
