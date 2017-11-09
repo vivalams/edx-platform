@@ -432,6 +432,7 @@ urlpatterns += (
         include('lms.djangoapps.grades.api.urls', namespace='grades_api')
     ),
 
+
     # For the instructor
     url(
         r'^courses/{}/instructor$'.format(
