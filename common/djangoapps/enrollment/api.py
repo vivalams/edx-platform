@@ -91,7 +91,7 @@ def get_enrollments(user_id, org_filter=None):
         ]
 
     """
-    return _data_api().get_course_enrollments(user_id)
+    return _data_api().get_course_enrollments(user_id, org_filter)
 
 
 def get_enrollment(user_id, course_id):

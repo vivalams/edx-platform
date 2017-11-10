@@ -498,7 +498,7 @@ class CourseGradingPolicyMissingFieldsTests(GradingPolicyTestMixin, SharedModule
         self.assertListEqual(response.data, expected)
 
 
-class OAuth2RestrictedAppTests(_DispatchingViewTestCase, ModuleStoreTestCase):
+class OAuth2RestrictedAppTests(_DispatchingViewTestCase, SharedModuleStoreTestCase):
     """
     Tests specifically around RestrictedApplications for OAuth2 clients
     We separated this out from other OAuth tests above, because those
