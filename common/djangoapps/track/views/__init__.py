@@ -46,12 +46,9 @@ def _get_request_ip(request, default=''):
         This gives enough data to be useful for Analysis
         without explicitly identifying user
             e.g. 127.0.0.1 => 127.0.X.X
-            e.g. 127.0.123.12 => 127.0.XXX.XX
         """
         if request is None:
             return default
-
-        request_ip = default
 
         def _anonymize_if_needed(ip_address_str):
             if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
@@ -74,15 +71,8 @@ def _get_anonymous_ip(ip_address_str):
     """Helper method to obbuscate the last two octets of an ip address"""
     try:
         ip_comps = ip_address_str.split('.')
-        first, second = '.'.join(ip_comps[0:2]), '.'.join(ip_comps[2:])
-        second_out = ''
-        for char in second:
-            if char != '.':
-                second_out += 'x'
-            else:
-                second_out += '.'
-
-        ip_address = '{}.{}'.format(first, second_out)
+        first = '.'.join(ip_comps[0:2])
+        ip_address = '{}.x.x'.format(first)
     except:
         ip_address = 'unknown'
 
