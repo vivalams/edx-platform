@@ -9,6 +9,7 @@ from django.conf import settings
 from django.test import RequestFactory, TestCase
 from django.core.urlresolvers import reverse
 import httpretty
+from mock import patch
 from oauth2_provider import models as dot_models
 from provider import constants
 import unittest
@@ -182,6 +183,7 @@ class TestAccessTokenView(AccessTokenLoginMixin, mixins.AccessTokenMixin, _Dispa
         self.assertIn('scope', data)
         self.assertIn('token_type', data)
 
+    @patch.dict('django.conf.settings.FEATURES', {'AUTO_EXPIRE_RESTRICTED_ACCESS_TOKENS': True})
     def test_restricted_access_token_fields(self):
         response = self._post_request(self.user, self.restricted_dot_app)
         self.assertEqual(response.status_code, 200)
@@ -208,6 +210,7 @@ class TestAccessTokenView(AccessTokenLoginMixin, mixins.AccessTokenMixin, _Dispa
         self.assertEqual(data['token_type'], 'JWT')
         self.assert_valid_jwt_access_token(data['access_token'], self.user, data['scope'].split(' '))
 
+    @patch.dict('django.conf.settings.FEATURES', {'AUTO_EXPIRE_RESTRICTED_ACCESS_TOKENS': True})
     def test_restricted_jwt_access_token(self):
         """
         Verify that when requesting a JWT token from a restricted Application
@@ -229,6 +232,7 @@ class TestAccessTokenView(AccessTokenLoginMixin, mixins.AccessTokenMixin, _Dispa
             should_be_expired=True
         )
 
+    @patch.dict('django.conf.settings.FEATURES', {'AUTO_EXPIRE_RESTRICTED_ACCESS_TOKENS': True})
     def test_restricted_access_token(self):
         """
         Verify that an access_token generated for a RestrictedApplication fails when
