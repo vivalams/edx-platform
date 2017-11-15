@@ -82,7 +82,6 @@ class CertificatesDetailView(GenericAPIView):
     # scope
     required_scopes = ['certificates:read']
 
-
     def get(self, request, username, course_id):
         """
         Gets a certificate information.

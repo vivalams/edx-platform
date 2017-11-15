@@ -12,9 +12,9 @@ from course_modes.models import CourseMode
 from openedx.core.lib.log_utils import audit_log
 from openedx.core.djangoapps.user_api.preferences.api import update_email_opt_in
 from openedx.core.lib.api.permissions import (
-  ApiKeyHeaderPermission,
-  ApiKeyHeaderPermissionIsAuthenticated,
-  OAuth2RestrictedApplicatonPermission
+    ApiKeyHeaderPermission,
+    ApiKeyHeaderPermissionIsAuthenticated,
+    OAuth2RestrictedApplicatonPermission
 )
 from rest_framework import status
 from rest_framework.response import Response
@@ -499,7 +499,7 @@ class EnrollmentListView(APIView, ApiKeyPermissionMixIn):
             # permissions model, see openedx/core/lib/api/permissions.py
 
             if hasattr(request, 'auth') and hasattr(request.auth, 'org_associations'):
-              org_filter = request.auth.org_associations
+                org_filter = request.auth.org_associations
 
             enrollment_data = api.get_enrollments(username, org_filter=org_filter)
         except CourseEnrollmentError:

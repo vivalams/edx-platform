@@ -5,11 +5,11 @@ Tests for Blocks Views
 import json
 
 import ddt
+from mock import patch
 from django.conf import settings
 from django.test import RequestFactory, TestCase
 from django.core.urlresolvers import reverse
 import httpretty
-from mock import patch
 from oauth2_provider import models as dot_models
 from provider import constants
 import unittest
@@ -98,15 +98,14 @@ class _DispatchingViewTestCase(TestCase):
         self.restricted_dot_app = self._create_restricted_app(
             name='test restricted dot application',
             client_id='dot-restricted-app-client-id',
-            allowed_scopes = all_scopes,
+            allowed_scopes=all_scopes,
         )
 
         self.restricted_dot_app_limited_scopes = self._create_restricted_app(
             name='test restricted dot application limited scopes',
             client_id='dot-restricted-app-limited-scopes-client-id',
-            allowed_scopes = u'profile',
+            allowed_scopes=u'profile',
         )
-
 
     def _create_restricted_app(self, name, client_id, allowed_scopes):
         """
@@ -121,7 +120,7 @@ class _DispatchingViewTestCase(TestCase):
         )
         restricted_app = models.RestrictedApplication.objects.create(
             application=restricted_dot_app,
-            _allowed_scopes = allowed_scopes
+            _allowed_scopes=allowed_scopes
         )
 
         return restricted_dot_app
