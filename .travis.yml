@@ -62,8 +62,7 @@ before_install:
   - docker pull btelnes/devstack
 
 install:
-  - mkdir reports
-  - docker run -d --name devstack --add-host "localhost preview.localhost":127.0.0.1 --security-opt seccomp=unconfined --tmpfs /run --tmpfs /run/lock -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v "$PWD/shared:/edx/app/edxapp/edx-platform" -e TEST_SUITE="$TEST_SUITE" -e SHARD="$SHARD" -e CODE_COV_TOKEN="$CODE_COV_TOKEN" -t btelnes/devstack
+  - docker run -d --name devstack --add-host "localhost preview.localhost":127.0.0.1 --security-opt seccomp=unconfined --tmpfs /run --tmpfs /run/lock -v /sys/fs/cgroup:/sys/fs/cgroup:ro -e TEST_SUITE="$TEST_SUITE" -e SHARD="$SHARD" -e CODE_COV_TOKEN="$CODE_COV_TOKEN" -t btelnes/devstack
   - docker ps -a
   # Prepare cgroup on the host at /tmp/cgroup to avoid error: "failed to connect to bus: no such file or directory"
   - sudo mkdir -p /tmp/cgroup/systemd && sudo mount -t cgroup systemd /tmp/cgroup/systemd -o ro,noexec,nosuid,nodev,none,name=systemd
