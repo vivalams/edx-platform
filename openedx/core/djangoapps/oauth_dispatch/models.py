@@ -13,6 +13,7 @@ from oauth2_provider.models import AccessToken
 # IMPORTANT: Do not change this after data has been populated in database
 _DEFAULT_SEPARATOR = ' '
 
+
 class RestrictedApplication(models.Model):
     """
     This model lists which django-oauth-toolkit Applications are considered 'restricted'
