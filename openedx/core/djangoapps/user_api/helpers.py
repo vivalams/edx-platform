@@ -465,6 +465,10 @@ def shim_student_view(view_func, check_logged_in=False):
             getattr(request, 'user', None) is not None
             and request.user.is_authenticated()
         )
+
+        if check_logged_in and is_authenticated:
+            return response
+
         if check_logged_in and not is_authenticated:
             # If we get a 403 status code from the student view
             # this means we've successfully authenticated with a

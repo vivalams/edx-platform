@@ -242,6 +242,9 @@
              *
              */
                 authComplete: function() {
+                    if (response != null && response.redirect_url != null) {
+                        this.nextUrl = response.redirect_url;
+                    }
                     if (this.thirdPartyAuth && this.thirdPartyAuth.finishAuthUrl) {
                         this.redirect(this.thirdPartyAuth.finishAuthUrl);
                     // Note: the third party auth URL likely contains another redirect URL embedded inside

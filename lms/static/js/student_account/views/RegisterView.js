@@ -89,6 +89,7 @@
                 },
 
                 saveError: function(error) {
+                    $('.form-toggle').trigger('click');
                     $(this.el).show(); // Show in case the form was hidden for auto-submission
                     this.errors = _.flatten(
                         _.map(

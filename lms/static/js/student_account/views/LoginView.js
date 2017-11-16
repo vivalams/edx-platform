@@ -131,8 +131,8 @@
                     }
                 },
 
-                saveSuccess: function() {
-                    this.trigger('auth-complete');
+                saveSuccess: function(response) {
+                    this.trigger('auth-complete', response);
                     this.clearPasswordResetSuccess();
                 },
 
