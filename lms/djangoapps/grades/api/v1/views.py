@@ -36,7 +36,13 @@ class GradeViewMixin(DeveloperErrorViewMixin):
 
     pagination_class = NamespacedPageNumberPagination
 
-    def _get_course(self, course_key_string, user, access_action):
+    # needed for passing OAuth2RestrictedApplicatonPermission checks
+    # for RestrictedApplications (only). A RestrictedApplication can
+    # only call this method if it is allowed to receive a 'grades:read'
+    # scope
+    required_scopes = ['grades:read']
+
+    def _get_course(self, request, course_key_string, user, access_action):
         """
         Returns the course for the given course_key_string after
         verifying the requested access to the course by the given user.
@@ -49,6 +55,20 @@ class GradeViewMixin(DeveloperErrorViewMixin):
                 developer_message='The provided course key cannot be parsed.',
                 error_code='invalid_course_key'
             )
+
+        # See if the request has an explicit ORG filter on the request
+        # which limits which OAuth2 clients can see what courses
+        # based on the association with a RestrictedApplication
+        #
+        # For more information on RestrictedApplications and the
+        # permissions model, see openedx/core/lib/api/permissions.py
+        if hasattr(request, 'auth') and hasattr(request.auth, 'org_associations'):
+            if course_key.org not in request.auth.org_associations:
+                return self.make_error_response(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    developer_message='The OAuth2 RestrictedApplication is not associated with org.',
+                    error_code='course_org_not_associated_with_calling_application'
+                )
 
         try:
             course_org_filter = configuration_helpers.get_current_site_orgs()
@@ -70,7 +90,7 @@ class GradeViewMixin(DeveloperErrorViewMixin):
             error_code='user_or_course_does_not_exist',
         )
 
-    def _get_courses(self, user, access_action):
+    def _get_courses(self, request, user, access_action):
         """
         Get a users course enrollments based on the access_action
         and if the user has that access level and return the
@@ -81,7 +101,7 @@ class GradeViewMixin(DeveloperErrorViewMixin):
 
         courses = []
         for course_key_string in course_key_strings:
-            course = self._get_course(course_key_string, user, access_action)
+            course = self._get_course(request, course_key_string, user, access_action)
             if not isinstance(course, Response):
                 courses.append(course)
 
@@ -291,7 +311,7 @@ class CourseGradeView(GradeViewMixin, GenericAPIView):
 
         should_calculate_grade = request.GET.get('calculate')
         use_email = request.GET.get('use_email', None)
-        course = self._get_course(course_id, request.user, 'load')
+        course = self._get_course(request, course_id, request.user, 'load')
 
         if isinstance(course, Response):
             # Returns a 404 if course_id is invalid, or request.user is not enrolled in the course
@@ -466,7 +486,7 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
             if isinstance(grade_user, Response):
                 return grade_user
 
-            courses = self._get_courses(grade_user, 'load')
+            courses = self._get_courses(request, grade_user, 'load')
 
             grade_user = self._get_effective_user(request, courses)
             if isinstance(grade_user, Response):
@@ -507,7 +527,7 @@ class CourseGradingPolicy(GradeViewMixin, ListAPIView):
     allow_empty = False
 
     def get(self, request, course_id, **kwargs):
-        course = self._get_course(course_id, request.user, 'staff')
+        course = self._get_course(request, course_id, request.user, 'staff')
         if isinstance(course, Response):
             return course
         return Response(GradingPolicySerializer(course.raw_grader, many=True).data)
