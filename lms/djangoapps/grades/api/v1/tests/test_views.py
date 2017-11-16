@@ -172,21 +172,6 @@ class GradeViewTestMixin(SharedModuleStoreTestCase):
         self.assertIn('error_code', resp.data)  # pylint: disable=no-member
         self.assertEqual(resp.data['error_code'], 'user_mismatch')  # pylint: disable=no-member
 
-    @contextmanager
-    def _mock_read_or_create_grade(self, letter_grade='Pass', percent=0.75):
-            """
-            Mock the grading function to always return a passing grade.
-            """
-            grade_fields = {
-                'letter_grade': letter_grade,
-                'percent': percent,
-                'passed': letter_grade is not None,
-
-            }
-            with patch('lms.djangoapps.grades.api.v1.views.GradeViewMixin._read_or_create_grade') as mock_grade:
-                mock_grade.return_value = MagicMock(**grade_fields)
-                yield
-
 
 @ddt.ddt
 class CourseGradeViewTest(GradeViewTestMixin, APITestCase):
@@ -304,11 +289,19 @@ class CourseGradeViewTest(GradeViewTestMixin, APITestCase):
         """
         Test that the user gets her grade in case she answered tests with an insufficient score.
         """
-        with self._mock_read_or_create_grade(grade_pass=grade['letter_grade'], percent=grade['percent']):
+        with patch('lms.djangoapps.grades.new.course_grade.CourseGradeFactory.get_persisted') as mock_grade:
+            grade_fields = {
+                'letter_grade': grade['letter_grade'],
+                'percent': grade['percent'],
+                'passed': grade['letter_grade'] is not None,
+
+            }
+            mock_grade.return_value = MagicMock(**grade_fields)
             resp = self.client.get(self.get_url(self.student.username))
+
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         expected_data = {
-            'user': self.student.username,
+            'user': unicode(self.student.username),
             'course_key': str(self.course_keys[0]),
         }
 
