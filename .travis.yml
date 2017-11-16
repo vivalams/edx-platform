@@ -76,7 +76,6 @@ script:
   - ./scripts/docker-run-tests.sh
 
 after_success:
-  - cd ""$PWD/shared/reports"
-  - bash <(curl -s https://codecov.io/bash)
+  - ./scripts/docker-report.sh
 
 dist: trusty
