@@ -54,7 +54,7 @@ branches:
   - oxa/master.fic
   - oxa/release.fic
   - oxa/dev.fic
-  - oxa/ci-docker
+  - oxa/ci
 
 before_install:
   # Login and fetch container from Azure container registry
@@ -62,7 +62,8 @@ before_install:
   - docker pull btelnes/devstack
 
 install:
-  - docker run -d --name devstack --add-host "localhost preview.localhost":127.0.0.1 --security-opt seccomp=unconfined --tmpfs /run --tmpfs /run/lock -v /sys/fs/cgroup:/sys/fs/cgroup:ro -e TEST_SUITE="$TEST_SUITE" -e SHARD="$SHARD" -e CODE_COV_TOKEN="$CODE_COV_TOKEN" -t btelnes/devstack
+  - mkdir reports
+  - docker run -d --name devstack --add-host "localhost preview.localhost":127.0.0.1 --security-opt seccomp=unconfined --tmpfs /run --tmpfs /run/lock -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v "$PWD/reports:/edx/app/edxapp/edx-platform/reports" -e TEST_SUITE="$TEST_SUITE" -e SHARD="$SHARD" -e CODE_COV_TOKEN="$CODE_COV_TOKEN" -t btelnes/devstack
   - docker ps -a
   # Prepare cgroup on the host at /tmp/cgroup to avoid error: "failed to connect to bus: no such file or directory"
   - sudo mkdir -p /tmp/cgroup/systemd && sudo mount -t cgroup systemd /tmp/cgroup/systemd -o ro,noexec,nosuid,nodev,none,name=systemd
@@ -76,6 +77,6 @@ script:
   - ./scripts/docker-run-tests.sh
 
 after_success:
-  - ./scripts/docker-report.sh
+  - bash <(curl -s https://codecov.io/bash)
 
 dist: trusty
