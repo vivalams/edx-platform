@@ -61,14 +61,9 @@
                 event.preventDefault();
 
                 this.showInProgressMessage();
-
-                if (this.options.connected) {
-                    this.disconnect();
-                } else {
-                    // Direct the user to the providers site to start the authentication process.
-                    // See python-social-auth docs for more information.
-                    this.redirect_to(this.options.connectUrl);
-                }
+                // Direct the user to the providers site to start the authentication process.
+                // See python-social-auth docs for more information.
+                this.redirect_to(this.options.connectUrl);
             },
             redirect_to: function(url) {
                 window.location.href = url;
