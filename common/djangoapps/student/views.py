@@ -41,6 +41,7 @@ from provider.oauth2.models import Client
 from ratelimitbackend.exceptions import RateLimitException
 
 from social.apps.django_app import utils as social_utils
+from social.apps.django_app.default.models import UserSocialAuth
 from social.backends import oauth as social_oauth
 from social.exceptions import AuthException, AuthAlreadyAssociated
 
@@ -1178,6 +1179,7 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
     backend_name = None
     email = None
     password = None
+    msa_migration_pipeline_status = None
     redirect_url = None
     response = None
     running_pipeline = None
@@ -1243,6 +1245,7 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
 
         email = request.POST['email']
         password = request.POST['password']
+        msa_migration_pipeline_status = request.POST.get('msa_migration_pipeline_status', 'email_lookup')
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
@@ -1268,6 +1271,37 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
 
     # see if account has been locked out due to excessive login failures
     user_found_by_email_lookup = user
+
+    msa_migration_enabled = configuration_helpers.get_value(
+        "ENABLE_MSA_MIGRATION",
+        settings.FEATURES.get("ENABLE_MSA_MIGRATION", True)
+    )
+
+    if msa_migration_enabled:
+        if msa_migration_pipeline_status == 'email_lookup':
+            if user_found_by_email_lookup:
+                try:
+                    # User has already migrated to Microsoft Account (MSA),
+                    # redirect them through that flow.
+                    UserSocialAuth.objects.get(user=user_found_by_email_lookup)
+                    # UserSocialAuth.objects.get(user=user_found_by_email_lookup, provider='live')
+                    msa_migration_pipeline_status = 'login_migrated'
+
+                except UserSocialAuth.DoesNotExist:
+                    # User has not migrated to Microsoft Account,
+                    # return successfully found user to show password field.
+                    msa_migration_pipeline_status = 'login_not_migrated'
+
+
+            else:
+                # New user
+                msa_migration_pipeline_status = 'register_new_user'
+
+            return JsonResponse({
+                "success": True,
+                "value": msa_migration_pipeline_status
+            })
+
     if user_found_by_email_lookup and LoginFailures.is_feature_enabled():
         if LoginFailures.is_user_locked_out(user_found_by_email_lookup):
             lockout_message = _('This account has been temporarily locked due '
