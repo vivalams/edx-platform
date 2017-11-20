@@ -74,12 +74,6 @@ def login_and_registration_form(request, initial_mode="login"):
     redirect_to = get_next_url_for_login_page(request)
     # If we're already logged in, redirect to the dashboard
     if request.user.is_authenticated():
-        try:
-            social_auth_users = UserSocialAuth.objects.filter(user__username=request.user.username)
-            if not social_auth_users:
-                redirect_to = "/account/link"
-        except UserSocialAuth.DoesNotExist:
-            redirect_to = "/account/link"
         return redirect(redirect_to)
 
     # Retrieve the form descriptions from the user API
@@ -435,7 +429,7 @@ def link_account(request):
     context = {
         'auth': {},
         'platform_name': configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME),
-        'disable_header': True,
+        'enable_account_linking': True,
     }
 
     if third_party_auth.is_enabled():
