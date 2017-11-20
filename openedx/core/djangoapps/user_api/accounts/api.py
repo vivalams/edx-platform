@@ -1,9 +1,11 @@
 """
 Programmatic integration point for User API Accounts sub-application
 """
+import random
 from django.utils.translation import ugettext as _
 from django.db import transaction, IntegrityError
 import datetime
+import hashlib
 from pytz import UTC
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
@@ -34,6 +36,7 @@ from .serializers import (
     UserReadOnlySerializer, _visible_fields  # pylint: disable=invalid-name
 )
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
+from openedx.core.djangoapps.user_api.models import DeletedUserID
 
 
 # Public access point for this function.
@@ -520,3 +523,40 @@ def _validate_email(email):
         raise AccountEmailInvalid(
             u"Email '{email}' format is not valid".format(email=email)
         )
+
+@intercept_errors(UserAPIInternalError, ignore_errors=[UserAPIRequestError])
+def delete_user_account(username):
+    """Delete an account for a particular user with GDPR norms.
+
+    Keyword Arguments:
+        username (unicode)
+
+    Returns:
+        True for deletion.
+
+    Raises:
+        UserNotAuthorized
+        UserNotFound
+
+    Example Usage:
+        >>>delete_user_account('staff') 
+        
+    """
+    existing_user, existing_user_profile = _get_user_and_profile(username)
+    if not existing_user:
+        raise UserNotFound()
+    if not existing_user.is_active:
+        raise UserNotAuthorized()
+    username_mask = str(random.randint(1,9999)) + existing_user.username
+    existing_user.username = hashlib.md5(username_mask).hexdigest()
+    existing_user.email = None
+    existing_user.is_active = False
+    existing_user.is_staff = False
+    DeletedUserID.objects.create(user=existing_user)
+    existing_user.save()
+    try:
+        existing_user_profile.delete()
+    except:
+        raise UserNotFound()
+    return True
+

@@ -29,6 +29,7 @@ from util import organizations_helpers as organization_api
 from util.views import handle_500
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.exceptions import ItemNotFoundError
+from openedx.core.djangoapps.user_api.models import DeletedUserID
 
 from certificates.api import (
     get_active_web_certificate,
@@ -290,12 +291,18 @@ def _update_social_context(request, context, course, user, user_certificate, pla
             smart_str(share_url)
         )
 
-
+@handle_500(
+    template_path="certificates/server-error.html",
+    test_func=lambda request: request.GET.get('preview', None)
+)
 def _update_context_with_user_info(context, user, user_certificate):
     """
     Updates context dictionary with user related info.
     """
-    user_fullname = user.profile.name
+    try:
+        user_fullname = user.profile.name
+    except:
+        raise Http404
     context['username'] = user.username
     context['course_mode'] = user_certificate.mode
     context['accomplishment_user_id'] = user.id
