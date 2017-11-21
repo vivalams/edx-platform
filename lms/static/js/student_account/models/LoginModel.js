@@ -3,8 +3,9 @@
     define([
         'jquery',
         'backbone',
+        'js/student_account/MSAMigrationStatus',
         'jquery.url'
-    ], function($, Backbone) {
+    ], function($, Backbone, MSAMigrationStatus) {
         return Backbone.Model.extend({
             defaults: {
                 email: '',
@@ -16,6 +17,7 @@
             urlRoot: '',
             msaMigrationEnabled: false,
             msa_migration_pipeline_status: null,
+            msaDefaultPassword: 'msa_email_lookup',
 
             initialize: function(attributes, options) {
                 this.ajaxType = options.method;
@@ -28,7 +30,8 @@
                 var headers = {'X-CSRFToken': $.cookie('csrftoken')},
                     data = {},
                     analytics,
-                    courseId = $.url('?course_id');
+                    courseId = $.url('?course_id'),
+                    MSA_MIGRATION_PIPELINE_STATUS = 'msa_migration_pipeline_status';
 
                 // If there is a course ID in the query string param,
                 // send that to the server as well so it can be included
@@ -39,23 +42,23 @@
                     });
                 }
 
-                console.log('MSA ENABLED: ', this.msaMigrationEnabled, this.msa_migration_pipeline_status)
-
                 // Include all form fields and analytics info in the data sent to the server
                 $.extend(data, model.attributes, {analytics: analytics});
 
                 if (this.msaMigrationEnabled) {
                     var msaAttributes = {};
-                    if (!data.hasOwnProperty('msa_migration_pipeline_status')) {
-                        console.log('adding here')
-                        msaAttributes['msa_migration_pipeline_status'] = this.msa_migration_pipeline_status || 'email_lookup'
+
+                    console.log(MSA_MIGRATION_PIPELINE_STATUS)
+
+                    if (!data.hasOwnProperty(MSA_MIGRATION_PIPELINE_STATUS)) {
+                        msaAttributes[MSA_MIGRATION_PIPELINE_STATUS] = this.msa_migration_pipeline_status || MSAMigrationStatus.EMAIL_LOOKUP
                     }
-                    if (msaAttributes['msa_migration_pipeline_status'] === 'email_lookup' || !data['password']) {
-                        msaAttributes['password'] = 'msa_email_lookup'
+                    if (msaAttributes[MSA_MIGRATION_PIPELINE_STATUS] === MSAMigrationStatus.EMAIL_LOOKUP || !data['password']) {
+                        msaAttributes['password'] = model.msaDefaultPassword
                     }
 
                     $.extend(data, msaAttributes);
-                    this.msa_migration_pipeline_status = data['msa_migration_pipeline_status']
+                    this.msa_migration_pipeline_status = data[MSA_MIGRATION_PIPELINE_STATUS]
                 }
                 $.ajax({
                     url: model.urlRoot,
@@ -65,12 +68,13 @@
                     success: function(json) {
                         if (model.msaMigrationEnabled) {
                             if (json.hasOwnProperty('value')) {
-                                data['msa_migration_pipeline_status'] = json['value']
+                                data[MSA_MIGRATION_PIPELINE_STATUS] = json['value']
                                 model.msa_migration_pipeline_status = json['value']
                             }
-                            if (data['msa_migration_pipeline_status'] === 'login_not_migrated') {
-                                if (data['password'] !== 'msa_email_lookup') {
-                                    data['msa_migration_pipeline_status'] = ''
+
+                            if (data[MSA_MIGRATION_PIPELINE_STATUS] === MSAMigrationStatus.LOGIN_NOT_MIGRATED) {
+                                if (data['password'] !== model.msaDefaultPassword) {
+                                    data[MSA_MIGRATION_PIPELINE_STATUS] = ''
                                 } else {
                                     data['password'] = ''
                                 }
@@ -79,7 +83,7 @@
                         model.trigger('sync', data);
                     },
                     error: function(error) {
-                        console.log('ERROR HERE: ', error)
+                        console.error('ERROR: ', error)
                         model.trigger('error', error);
                     }
                 })

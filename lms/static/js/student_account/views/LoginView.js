@@ -6,10 +6,11 @@
         'gettext',
         'edx-ui-toolkit/js/utils/html-utils',
         'js/student_account/views/FormView',
+        'js/student_account/MSAMigrationStatus',
         'text!templates/student_account/form_success.underscore',
         'text!templates/student_account/form_status.underscore'
     ],
-        function($, _, gettext, HtmlUtils, FormView, formSuccessTpl, formStatusTpl) {
+        function($, _, gettext, HtmlUtils, FormView, MSAMigrationStatus, formSuccessTpl, formStatusTpl) {
             return FormView.extend({
                 el: '#login-form',
                 tpl: '#login-tpl',
@@ -37,7 +38,7 @@
                     this.platformName = data.platformName;
                     this.resetModel = data.resetModel;
                     this.supportURL = data.supportURL;
-                    this.msaMigrationEnabled = data.msaMigrationEnabled
+                    this.msaMigrationEnabled = data.msaMigrationEnabled;
 
                     this.listenTo(this.model, 'sync', this.saveSuccess);
                     this.listenTo(this.resetModel, 'sync', this.resetEmail);
@@ -143,19 +144,19 @@
                 },
 
                 saveSuccess: function(data) {
-                    console.log('DATA HERE :', data)
                     switch (data.msa_migration_pipeline_status) {
-                        case 'login_not_migrated':
-                            this.$form.find('.password-password').show()
-                            this.toggleDisableButton(false)
-                            this.model.msa_migration_pipeline_status = 'login_not_migrated'
+                        case MSAMigrationStatus.LOGIN_NOT_MIGRATED:
+                            this.$form.find('.password-password').show();
+                            this.toggleDisableButton(false);
+                            this.model.msa_migration_pipeline_status = MSAMigrationStatus.LOGIN_NOT_MIGRATED;
                             break;
-                        case 'login_migrated':
-                            this.$form.find('.login-provider').click()
+                        case MSAMigrationStatus.LOGIN_MIGRATED:
+                            this.$form.find('.login-provider').click();
+                            this.toggleDisableButton(false);
                             break;
-                        case 'register_new_user':
-                            console.log('REGISTER HERE');
+                        case MSAMigrationStatus.REGISTER_NEW_USER:
                             this.$container.find('.form-toggle').click();
+                            this.toggleDisableButton(false);
                             break;
                         default:
                             this.trigger('auth-complete');

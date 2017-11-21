@@ -152,7 +152,7 @@ class LoginSessionView(APIView):
         # For the initial implementation, shim the existing login view
         # from the student Django app.
         from student.views import login_user
-        if request.POST.get('msa_migration_pipeline_status') == 'email_lookup':
+        if request.POST.get('msa_migration_pipeline_status') in ('EMAIL_LOOKUP', 'REGISTER_NEW_USER'):
             check_logged_in = False
         else:
             check_logged_in = True
