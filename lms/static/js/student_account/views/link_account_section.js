@@ -27,7 +27,7 @@
 
             renderFields: function() {
                 var view = this,
-                    sectionEl = $('.link-account-section-body');
+                    sectionEl = $('.account-settings-section-body');
                 _.each(view.options.fields, function(field) {
                     sectionEl.append(field.view.render().el);
                 });

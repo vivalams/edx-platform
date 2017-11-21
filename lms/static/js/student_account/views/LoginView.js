@@ -143,6 +143,7 @@
                 },
 
                 saveSuccess: function(data) {
+                    console.log('DATA HERE :', data)
                     switch (data.msa_migration_pipeline_status) {
                         case 'login_not_migrated':
                             this.$form.find('.password-password').show()
