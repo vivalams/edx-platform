@@ -13,7 +13,7 @@
             var linkAccountElement, linkAccountSection, linkAccountSectionView,
                 showLoadingError;
 
-            linkAccountElement = $('.wrapper-linkaccount-settings');
+            linkAccountElement = $('.wrapper-account-settings');
             linkAccountSection = {
                 el: linkAccountElement,
                 title: gettext('Linked Accounts'),

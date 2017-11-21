@@ -37,6 +37,7 @@
                     this.errorMessage = data.thirdPartyAuth.errorMessage || '';
                     this.platformName = data.platformName;
                     this.autoSubmit = data.thirdPartyAuth.autoSubmitRegForm;
+                    this.msaMigration = data.msaMigration
 
                     this.listenTo(this.model, 'sync', this.saveSuccess);
                 },

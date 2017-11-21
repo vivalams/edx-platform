@@ -69,6 +69,9 @@
 
                     this.platformName = options.platform_name;
                     this.supportURL = options.support_link;
+                    console.log(options)
+                    this.msaMigrationEnabled = options.enable_msa_migration;
+                    this.msa_migration_pipeline_status = null
 
                 // The login view listens for 'sync' events from the reset model
                     this.resetModel = new PasswordResetModel({}, {
@@ -98,6 +101,7 @@
                     if (Backbone.history.getHash() === 'forgot-password-modal') {
                         this.resetPassword();
                     }
+
                     this.loadForm(this.activeForm);
                 },
 
@@ -110,7 +114,9 @@
                     login: function(data) {
                         var model = new LoginModel({}, {
                             method: data.method,
-                            url: data.submit_url
+                            url: data.submit_url,
+                            msaMigrationEnabled: this.msaMigrationEnabled,
+                            msa_migration_pipeline_status: this.msa_migration_pipeline_status
                         });
 
                         this.subview.login = new LoginView({
@@ -119,7 +125,8 @@
                             resetModel: this.resetModel,
                             thirdPartyAuth: this.thirdPartyAuth,
                             platformName: this.platformName,
-                            supportURL: this.supportURL
+                            supportURL: this.supportURL,
+                            msaMigrationEnabled: this.msaMigrationEnabled
                         });
 
                     // Listen for 'password-help' event to toggle sub-views
@@ -155,7 +162,8 @@
                             fields: data.fields,
                             model: model,
                             thirdPartyAuth: this.thirdPartyAuth,
-                            platformName: this.platformName
+                            platformName: this.platformName,
+                            msaMigrationEnabled: this.msaMigrationEnabled
                         });
 
                     // Listen for 'auth-complete' event so we can enroll/redirect the user appropriately.
@@ -242,9 +250,6 @@
              *
              */
                 authComplete: function() {
-                    if (response != null && response.redirect_url != null) {
-                        this.nextUrl = response.redirect_url;
-                    }
                     if (this.thirdPartyAuth && this.thirdPartyAuth.finishAuthUrl) {
                         this.redirect(this.thirdPartyAuth.finishAuthUrl);
                     // Note: the third party auth URL likely contains another redirect URL embedded inside

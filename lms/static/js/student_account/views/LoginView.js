@@ -37,6 +37,7 @@
                     this.platformName = data.platformName;
                     this.resetModel = data.resetModel;
                     this.supportURL = data.supportURL;
+                    this.msaMigrationEnabled = data.msaMigrationEnabled
 
                     this.listenTo(this.model, 'sync', this.saveSuccess);
                     this.listenTo(this.resetModel, 'sync', this.resetEmail);
@@ -69,6 +70,15 @@
                     this.$formFeedback = this.$container.find('.js-form-feedback');
                     this.$submitButton = this.$container.find(this.submitButton);
 
+                    if (this.msaMigrationEnabled) {
+                        // If we are running the msaMigration and don't currently have state
+                        // for the user, we want to only show the email field and submit button.
+                        // Once they enter an email, this step will force them through the
+                        // MSA migration pipeline
+                        this.$container.find('.password-password, .checkbox-remember, .login-providers, .toggle-form').hide();
+                        this.$container.find('#login-password').prop('required', false)
+                    }
+
                     if (this.errorMessage) {
                         formErrorsTitle = _.sprintf(
                             gettext('An error occurred when signing you in to %s.'),
@@ -82,6 +92,7 @@
                          */
                         this.model.save();
                     }
+
                 },
 
                 forgotPassword: function(event) {
@@ -131,9 +142,27 @@
                     }
                 },
 
-                saveSuccess: function(response) {
-                    this.trigger('auth-complete', response);
-                    this.clearPasswordResetSuccess();
+                saveSuccess: function(data) {
+                    console.log('DATA HERE :', data)
+                    switch (data.msa_migration_pipeline_status) {
+                        case 'login_not_migrated':
+                            this.$form.find('.password-password').show()
+                            this.toggleDisableButton(false)
+                            this.model.msa_migration_pipeline_status = 'login_not_migrated'
+                            break;
+                        case 'login_migrated':
+                            this.$form.find('.login-provider').click()
+                            break;
+                        case 'register_new_user':
+                            console.log('REGISTER HERE');
+                            this.$container.find('.form-toggle').click();
+                            break;
+                        default:
+                            this.trigger('auth-complete');
+                            this.clearPasswordResetSuccess();
+                            break;
+
+                    }
                 },
 
                 saveError: function(error) {

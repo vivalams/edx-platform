@@ -110,15 +110,20 @@ def login_and_registration_form(request, initial_mode="login"):
     if ext_auth_response is not None:
         return ext_auth_response
 
+    third_party_auth = _third_party_auth_context(request, redirect_to, initial_mode)
+    if isinstance(third_party_auth, HttpResponse):
+        return third_party_auth
+
     # Otherwise, render the combined login/registration page
     context = {
         'data': {
             'login_redirect_url': redirect_to,
             'initial_mode': initial_mode,
-            'third_party_auth': _third_party_auth_context(request, redirect_to),
+            'third_party_auth': third_party_auth,
             'third_party_auth_hint': third_party_auth_hint or '',
             'platform_name': configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME),
             'support_link': configuration_helpers.get_value('SUPPORT_SITE_LINK', settings.SUPPORT_SITE_LINK),
+            'enable_msa_migration': True,
 
             # Include form descriptions retrieved from the user API.
             # We could have the JS client make these requests directly,
@@ -135,7 +140,7 @@ def login_and_registration_form(request, initial_mode="login"):
         'disable_footer': not configuration_helpers.get_value(
             'ENABLE_COMBINED_LOGIN_REGISTRATION_FOOTER',
             settings.FEATURES['ENABLE_COMBINED_LOGIN_REGISTRATION_FOOTER']
-        ),
+        )
     }
 
     return render_to_response('student_account/login_and_register.html', context)
@@ -191,7 +196,7 @@ def password_change_request_handler(request):
         return HttpResponseBadRequest(_("No email address provided."))
 
 
-def _third_party_auth_context(request, redirect_to):
+def _third_party_auth_context(request, redirect_to, initial_mode):
     """Context for third party auth providers and the currently running pipeline.
 
     Arguments:
@@ -233,6 +238,20 @@ def _third_party_auth_context(request, redirect_to):
             context["providers" if not enabled.secondary else "secondaryProviders"].append(info)
 
         running_pipeline = pipeline.get(request)
+        auto_register_provider = configuration_helpers.get_value(
+            'THIRD_PARTY_AUTH_AUTO_REGISTER_WITH_OAUTH_PROVIDER',
+            settings.FEATURES.get('THIRD_PARTY_AUTH_AUTO_REGISTER_WITH_OAUTH_PROVIDER', None)
+        )
+        if auto_register_provider and not running_pipeline:
+            auto_register_url = None
+            for provider in context["providers"]:
+                auto_register_provider_id = 'oa2-{}'.format(auto_register_provider)
+                if provider["id"] == auto_register_provider_id:
+                    key = "{}Url".format(initial_mode)
+                    auto_register_url = provider[key]
+            if auto_register_url is not None:
+                return redirect(auto_register_url)
+
         if running_pipeline is not None:
             current_provider = third_party_auth.provider.Registry.get_from_pipeline(running_pipeline)
 
