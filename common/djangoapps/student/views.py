@@ -1263,7 +1263,7 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
 
         email = request.POST['email']
         password = request.POST['password']
-        msa_migration_pipeline_status = request.POST.get('msa_migration_pipeline_status', 'email_lookup')
+        msa_migration_pipeline_status = request.POST.get('msa_migration_pipeline_status', 'EMAIL_LOOKUP')
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
@@ -1292,28 +1292,28 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
 
     msa_migration_enabled = configuration_helpers.get_value(
         "ENABLE_MSA_MIGRATION",
-        settings.FEATURES.get("ENABLE_MSA_MIGRATION", True)
+        settings.FEATURES.get("ENABLE_MSA_MIGRATION", False)
     )
 
     if msa_migration_enabled:
-        if msa_migration_pipeline_status == 'email_lookup':
+        if msa_migration_pipeline_status == 'EMAIL_LOOKUP':
             if user_found_by_email_lookup:
                 try:
                     # User has already migrated to Microsoft Account (MSA),
                     # redirect them through that flow.
                     UserSocialAuth.objects.get(user=user_found_by_email_lookup)
                     # UserSocialAuth.objects.get(user=user_found_by_email_lookup, provider='live')
-                    msa_migration_pipeline_status = 'login_migrated'
+                    msa_migration_pipeline_status = 'LOGIN_MIGRATED'
 
                 except UserSocialAuth.DoesNotExist:
                     # User has not migrated to Microsoft Account,
                     # return successfully found user to show password field.
-                    msa_migration_pipeline_status = 'login_not_migrated'
+                    msa_migration_pipeline_status = 'LOGIN_NOT_MIGRATED'
 
 
             else:
                 # New user
-                msa_migration_pipeline_status = 'register_new_user'
+                msa_migration_pipeline_status = 'REGISTER_NEW_USER'
 
             return JsonResponse({
                 "success": True,
