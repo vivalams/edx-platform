@@ -3,7 +3,7 @@ LTI Provider view functions
 """
 
 from django.conf import settings
-from django.http import HttpResponseBadRequest, HttpResponseForbidden, Http404
+from django.http import HttpResponseBadRequest, HttpResponseForbidden, Http404, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import logging
 
@@ -29,6 +29,13 @@ REQUIRED_PARAMETERS = [
 OPTIONAL_PARAMETERS = [
     'lis_result_sourcedid', 'lis_outcome_service_url',
     'tool_consumer_instance_guid'
+]
+
+# Required parameters that must be present to map the social auth msa login with rps
+SOCIAL_AUTH_MAPPING_REQUIRED_PARAMETERS = [
+    'oauth_version', 'oauth_consumer_key',
+    'oauth_signature', 'oauth_signature_method', 'oauth_timestamp',
+    'oauth_nonce', 'uid', 'puid', 'provider'
 ]
 
 
@@ -118,6 +125,28 @@ def get_required_parameters(dictionary, additional_params=None):
     return params
 
 
+def get_required_social_auth_parameters(dictionary, additional_params=None):
+    """
+    Extract all required LTI parameters from a dictionary and verify that none
+    are missing.
+
+    :param dictionary: The dictionary that should contain all required parameters
+    :param additional_params: Any expected parameters, beyond those required for
+        the LTI social auth MSA mapping with RPS.
+
+    :return: A new dictionary containing all the required parameters from the
+        original dictionary and additional parameters, or None if any expected
+        parameters are missing.
+    """
+    params = {}
+    additional_params = additional_params or []
+    for key in SOCIAL_AUTH_MAPPING_REQUIRED_PARAMETERS + additional_params:
+        if key not in dictionary:
+            return None
+        params[key] = dictionary[key]
+    return params
+
+
 def get_optional_parameters(dictionary):
     """
     Extract all optional LTI parameters from a dictionary. This method does not
@@ -156,3 +185,60 @@ def parse_course_and_usage_keys(course_id, usage_id):
     usage_id = unquote_slashes(usage_id)
     usage_key = UsageKey.from_string(usage_id).map_into_course(course_key)
     return course_key, usage_key
+
+
+@csrf_exempt
+def users_social_auth_mapping(request):
+    """
+    Endpoint for all requests to embed edX content via the LTI protocol. This
+    endpoint will be called by a POST message that contains the parameters for
+    an LTI launch (we support version 1.2 of the LTI specification):
+        http://www.imsglobal.org/lti/ltiv1p2/ltiIMGv1p2.html
+
+    An LTI launch is successful if:
+        - The launch contains all the required parameters
+        - The launch data is correctly signed using a known client key/secret
+          pair
+    """
+    if request.method != 'POST':
+        return HttpResponseNotAllowed('POST')
+
+    # Check the LTI parameters, and return 400 if any required parameters are
+    # missing
+    params = get_required_social_auth_parameters(request.POST)
+    if not params:
+        return HttpResponseBadRequest()
+
+    # Get the consumer information from either the instance GUID or the consumer key
+    try:
+        lti_consumer = LtiConsumer.get_or_supplement(None, params["oauth_consumer_key"])
+    except LtiConsumer.DoesNotExist:
+        return HttpResponseForbidden()
+
+    # Check the OAuth signature on the message
+    if not SignatureValidator(lti_consumer).verify(request):
+        return HttpResponseForbidden()
+
+    # First verify the mapping is already exist sanity check
+    try:
+        usersocialauth_mapping = UserSocialAuthMapping.objects.get(uid=uid, puid=puid)
+        return HttpResponse(status=200)
+    except UserSocialAuthMapping.DoesNotExist:
+        pass
+    provider = params["provider"]
+    uid = params["uid"]
+    puid = params["puid"]
+
+    # Check user social auth entry for uid and provider i.e. live
+    try:
+        usersocialauth = UserSocialAuth.objects.get(uid=uid, provider=provider)
+    except UserSocialAuth.DoesNotExist:
+        raise Http404
+
+    user_id = usersocialauth.user_id
+    try:
+        usersocialauth_mapping = UserSocialAuthMapping(uid=uid, puid=puid, user_id=user_id)
+        usersocialauth_mapping.save()
+    except Exception:
+        raise Http404
+    return HttpResponse(status=204)

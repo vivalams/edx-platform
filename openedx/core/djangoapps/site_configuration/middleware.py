@@ -7,6 +7,8 @@ from openedx.core.djangoapps.site_configuration import helpers as configuration_
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from re import compile
+from social.apps.django_app.default.models import UserSocialAuth
+from django.shortcuts import redirect
 
 
 class SessionCookieDomainOverrideMiddleware(object):
@@ -107,3 +109,39 @@ class LoginRequiredMiddleware:
             path = request.path_info.lstrip('/')
             if not any(m.match(path) for m in EXEMPT_URLS):
                 return login_required(view_func)(request, view_args, view_kwargs)
+
+class AccountLinkingMiddleware:
+    """
+    Middleware that requires to enable users to linked their account with edx user account
+    other than ACCOUNT_LINK if user is authenticated.
+    """
+
+    def __init__(self):
+        self.ACCOUNT_LINK_URL = '/account/link'
+        self.DEFAULT_ACCOUNT_LINK_EXEMPT_URLS = [
+            r'^account/link.*$',
+            r'^account/settings.*$',
+            r'^auth/.*$',
+            r'^admin.*$',
+            r'^logout.*$'
+        ]
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        """
+        If the site is configured to restrict not logged in users to the DEFAULT_ACCOUNT_LINK_EXEMPT_URLS
+        from accessing pages, wrap the next view with the django login_required middleware
+        """
+
+        enable_msa_migration = configuration_helpers.get_value("ENABLE_MSA_MIGRATION")
+        if request.user.is_authenticated() and enable_msa_migration:
+            is_redirection = None
+            try:
+                social_auth_users = UserSocialAuth.objects.get(user = request.user, provider="live")
+                return None
+            except UserSocialAuth.DoesNotExist:
+                is_redirection = True
+            if is_redirection:
+                path = request.path_info.lstrip('/')
+                EXEMPT_URLS = [compile(expr) for expr in self.DEFAULT_ACCOUNT_LINK_EXEMPT_URLS]
+                if not any(m.match(path) for m in EXEMPT_URLS):
+                    return redirect(self.ACCOUNT_LINK_URL)

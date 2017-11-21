@@ -1189,6 +1189,8 @@ MIDDLEWARE_CLASSES = (
 
     'openedx.core.djangoapps.site_configuration.middleware.LoginRequiredMiddleware',
 
+    'openedx.core.djangoapps.site_configuration.middleware.AccountLinkingMiddleware',
+
     # This must be last
     'openedx.core.djangoapps.site_configuration.middleware.SessionCookieDomainOverrideMiddleware',
 )

@@ -50,6 +50,7 @@ from third_party_auth.decorators import xframe_allow_whitelisted
 from util.bad_request_rate_limiter import BadRequestRateLimiter
 from util.date_utils import strftime_localized
 from util.enterprise_helpers import set_enterprise_branding_filter_param
+from social.apps.django_app.default.models import UserSocialAuth
 
 AUDIT_LOG = logging.getLogger("audit")
 log = logging.getLogger(__name__)
@@ -438,6 +439,41 @@ def finish_auth(request):  # pylint: disable=unused-argument
         'disable_courseware_js': True,
         'disable_footer': True,
     })
+
+
+@login_required
+@ensure_csrf_cookie
+def link_account(request):
+    user = request.user
+    context = {
+        'auth': {},
+        'platform_name': configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME),
+        'enable_account_linking': True,
+    }
+
+    if third_party_auth.is_enabled():
+        # If the account on the third party provider is already connected with another edX account,
+        # we display a message to the user.
+
+        auth_states = pipeline.get_provider_user_states(user)
+        context['auth']['providers'] = [{
+            'id': state.provider.provider_id,
+            'name': state.provider.name,  # The name of the provider e.g. Facebook
+            'connected': state.has_account,  # Whether the user's edX account is connected with the provider.
+            # If the user is not connected, they should be directed to this page to authenticate
+            # with the particular provider, as long as the provider supports initiating a login.
+            'connect_url': pipeline.get_login_url(
+                state.provider.provider_id,
+                pipeline.AUTH_ENTRY_ACCOUNT_SETTINGS,
+                # The url the user should be directed to after the auth process has completed.
+                redirect_url=reverse('dashboard'),
+            ),
+            'accepts_logins': state.provider.accepts_logins,
+            # If the user is connected, sending a POST request to this url removes the connection
+            # information for this provider from their edX account.
+        } for state in auth_states if state.provider.display_for_login or state.has_account]
+
+    return render_to_response("student_account/link_account.html", context)
 
 
 def account_settings_context(request):
