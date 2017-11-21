@@ -120,6 +120,8 @@ class AccountLinkingMiddleware:
         self.ACCOUNT_LINK_URL = '/account/link'
         self.DEFAULT_ACCOUNT_LINK_EXEMPT_URLS = [
             r'^account/link.*$',
+            r'^account/settings.*$',
+            r'^auth/.*$',
             r'^admin.*$',
             r'^logout.*$'
         ]
