@@ -37,7 +37,7 @@
                     this.errorMessage = data.thirdPartyAuth.errorMessage || '';
                     this.platformName = data.platformName;
                     this.autoSubmit = data.thirdPartyAuth.autoSubmitRegForm;
-                    this.msaMigration = data.msaMigration
+                    this.msaMigrationEnabled = data.msaMigrationEnabled;
 
                     this.listenTo(this.model, 'sync', this.saveSuccess);
                 },
@@ -60,6 +60,13 @@
                     }));
 
                     this.postRender();
+
+                    if (this.msaMigrationEnabled && !this.currentProvider) {
+                        // Hide all form content except the login-providers div.
+                        // We need to force users to register with their
+                        // Microsoft account
+                        this.$form.children().slice(1).hide();
+                    }
 
                     // Must be called after postRender, since postRender sets up $formFeedback.
                     if (this.errorMessage) {

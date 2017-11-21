@@ -1296,7 +1296,7 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
     )
 
     if msa_migration_enabled:
-        if msa_migration_pipeline_status == 'EMAIL_LOOKUP':
+        if msa_migration_pipeline_status in ('EMAIL_LOOKUP', 'REGISTER_NEW_USER'):
             if user_found_by_email_lookup:
                 try:
                     # User has already migrated to Microsoft Account (MSA),

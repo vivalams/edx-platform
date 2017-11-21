@@ -38,7 +38,7 @@
                     this.platformName = data.platformName;
                     this.resetModel = data.resetModel;
                     this.supportURL = data.supportURL;
-                    this.msaMigrationEnabled = data.msaMigrationEnabled
+                    this.msaMigrationEnabled = data.msaMigrationEnabled;
 
                     this.listenTo(this.model, 'sync', this.saveSuccess);
                     this.listenTo(this.resetModel, 'sync', this.resetEmail);
@@ -152,9 +152,11 @@
                             break;
                         case MSAMigrationStatus.LOGIN_MIGRATED:
                             this.$form.find('.login-provider').click();
+                            this.toggleDisableButton(false);
                             break;
                         case MSAMigrationStatus.REGISTER_NEW_USER:
                             this.$container.find('.form-toggle').click();
+                            this.toggleDisableButton(false);
                             break;
                         default:
                             this.trigger('auth-complete');

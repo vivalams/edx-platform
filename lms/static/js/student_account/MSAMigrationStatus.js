@@ -8,7 +8,7 @@
                 EMAIL_LOOKUP: 'EMAIL_LOOKUP',
                 LOGIN_NOT_MIGRATED: 'LOGIN_NOT_MIGRATED',
                 LOGIN_MIGRATED: 'LOGIN_MIGRATED',
-                REGISTER_NEW_USER: 'LOGIN_MIGRATED'
+                REGISTER_NEW_USER: 'REGISTER_NEW_USER'
             };
         }
     );

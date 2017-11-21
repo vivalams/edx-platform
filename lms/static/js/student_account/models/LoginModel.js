@@ -83,6 +83,7 @@
                         model.trigger('sync', data);
                     },
                     error: function(error) {
+                        console.error('ERROR: ', error)
                         model.trigger('error', error);
                     }
                 })
