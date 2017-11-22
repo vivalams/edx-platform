@@ -410,7 +410,7 @@ class UserGradesViewTest(GradeViewTestMixin, APITestCase):
         self.assertIn('error_code', resp.data)  # pylint: disable=no-member
         self.assertEqual(resp.data['error_code'], 'user_does_not_have_access')  # pylint: disable=no-member
 
-    @override_settings(BULK_GRADES_API_ADMIN_USERNAME='admin')
+    @override_settings(BULK_GRADES_API_ADMIN_USERNAME='global_staff')
     def test_username_all_accessible_to_bulk_grades_admin(self):
         """
         Test username == 'all' is only accessible if a
@@ -418,7 +418,7 @@ class UserGradesViewTest(GradeViewTestMixin, APITestCase):
         in settings
         """
         self.client.logout()
-        self.client.login(username=self.admin.username, password=self.password)
+        self.client.login(username=self.global_staff.username, password=self.password)
         resp = self.client.get(self.get_url('all'))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertIn('pagination', resp.data)  # pylint: disable=no-member
