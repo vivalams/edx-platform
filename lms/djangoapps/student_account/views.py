@@ -114,6 +114,11 @@ def login_and_registration_form(request, initial_mode="login"):
     if isinstance(third_party_auth, HttpResponse):
         return third_party_auth
 
+    enable_msa_migration = configuration_helpers.get_value(
+        "ENABLE_MSA_MIGRATION",
+        settings.FEATURES.get("ENABLE_MSA_MIGRATION", False)
+    )
+
     # Otherwise, render the combined login/registration page
     context = {
         'data': {
@@ -123,7 +128,7 @@ def login_and_registration_form(request, initial_mode="login"):
             'third_party_auth_hint': third_party_auth_hint or '',
             'platform_name': configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME),
             'support_link': configuration_helpers.get_value('SUPPORT_SITE_LINK', settings.SUPPORT_SITE_LINK),
-            'enable_msa_migration': True,
+            'enable_msa_migration': enable_msa_migration,
 
             # Include form descriptions retrieved from the user API.
             # We could have the JS client make these requests directly,
