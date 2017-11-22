@@ -56,14 +56,9 @@ class GradeViewMixin(DeveloperErrorViewMixin):
                 error_code='invalid_course_key'
             )
 
-        # See if the request has an explicit ORG filter on the request
-        # which limits which OAuth2 clients can see what courses
-        # based on the association with a RestrictedApplication
-        #
-        # For more information on RestrictedApplications and the
-        # permissions model, see openedx/core/lib/api/permissions.py
-        if hasattr(request, 'auth') and hasattr(request.auth, 'org_associations'):
-            if course_key.org not in request.auth.org_associations:
+        org_filter = self._get_org_filter(request)
+        if org_filter:
+            if course_key.org not in org_filter:
                 return self.make_error_response(
                     status_code=status.HTTP_403_FORBIDDEN,
                     developer_message='The OAuth2 RestrictedApplication is not associated with org.',
@@ -90,13 +85,13 @@ class GradeViewMixin(DeveloperErrorViewMixin):
             error_code='user_or_course_does_not_exist',
         )
 
-    def _get_courses(self, request, user, access_action):
+    def _get_courses(self, request, user, access_action, org_filter=None):
         """
         Get a users course enrollments based on the access_action
         and if the user has that access level and return the
         associated courses.
         """
-        enrollments = enrollment_data.get_course_enrollments(user.username)
+        enrollments = enrollment_data.get_course_enrollments(user.username, org_filter)
         course_key_strings = [enrollment.get('course_details').get('course_id') for enrollment in enrollments]
 
         courses = []
@@ -143,7 +138,11 @@ class GradeViewMixin(DeveloperErrorViewMixin):
         if username == 'all':
             try:
                 course = courses[0]
-                return [enrollment.user for enrollment in enrollment_data.get_user_enrollments(course.id, serialize=False)]
+
+                org_filter = self._get_org_filter(request)
+                return [enrollment.user for enrollment in enrollment_data.get_user_enrollments(
+                    course.id, org_filter=org_filter, serialize=False
+                )]
             except:
                 return self.make_error_response(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -209,6 +208,18 @@ class GradeViewMixin(DeveloperErrorViewMixin):
                 developer_message='Could not parse date one of the provided date filters',
                 error_code='date_filter_format'
             )
+
+    def _get_org_filter(self, request):
+        """
+        See if the request has an explicit ORG filter on the request
+        which limits which OAuth2 clients can see what courses
+        based on the association with a RestrictedApplication
+
+        For more information on RestrictedApplications and the
+        permissions model, see openedx/core/lib/api/permissions.py
+        """
+        if hasattr(request, 'auth') and hasattr(request.auth, 'org_associations'):
+            return request.auth.org_associations
 
     def perform_authentication(self, request):
         """
@@ -311,6 +322,8 @@ class CourseGradeView(GradeViewMixin, GenericAPIView):
 
         should_calculate_grade = request.GET.get('calculate')
         use_email = request.GET.get('use_email', None)
+        org_filter = self._get_org_filter(request)
+
         course = self._get_course(request, course_id, request.user, 'load')
 
         if isinstance(course, Response):
@@ -431,24 +444,32 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
         use_email = request.GET.get('use_email', None)
         start_date_string = request.GET.get('start_date')
         end_date_string = request.GET.get('end_date')
+        org_filter = self._get_org_filter(request)
 
         if username == 'all':
             # Essentially an export function of the PersistantGrades table.
             # Read all grades for all students, filter on start_date and end_date
-            if should_calculate_grade:
-                log.warning('Cannot calculate real-time bulk grades...reading from persisted grades')
-                should_calculate_grade = None
 
             # This is very sensitive functionality and is locked down to a single
             # explicitly set user in the AUTH settings (lms.auth.json).
             # This user is also required to have superuser status
             bulk_grades_admin = settings.BULK_GRADES_API_ADMIN_USERNAME
-            if not request.user.is_superuser or request.user.username != bulk_grades_admin:
+            if not request.user.is_staff or request.user.username != bulk_grades_admin:
                 return self.make_error_response(
                     status_code=status.HTTP_403_FORBIDDEN,
                     developer_message='The requesting user does not have the required credentials',
                     error_code='user_does_not_have_access'
                 )
+
+            # TODO: enable this functionality
+            # # This is very sensitive functionality and can only be accessed
+            # # by a staff user through Restricted OAuth
+            # if not (request.user.is_staff and hasattr(request, 'auth')):
+            #     return self.make_error_response(
+            #         status_code=status.HTTP_403_FORBIDDEN,
+            #         developer_message='The requesting user does not have the required credentials',
+            #         error_code='user_does_not_have_access'
+            #     )
 
             # Validate start and end date parameters
             start_date = self._parse_filter_date_string(start_date_string)
@@ -458,7 +479,9 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
             if isinstance(end_date, Response):
                 return end_date
 
-            persisted_grades = CourseGradeFactory().bulk_read(start_date=start_date, end_date=end_date)
+            persisted_grades = CourseGradeFactory().bulk_read(
+                start_date=start_date, end_date=end_date, org_filter=org_filter
+            )
             page = self.paginator.paginate_queryset(persisted_grades, self.request, view=self)
             grades_to_serialize = persisted_grades if not page else page
 
@@ -486,7 +509,7 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
             if isinstance(grade_user, Response):
                 return grade_user
 
-            courses = self._get_courses(request, grade_user, 'load')
+            courses = self._get_courses(request, grade_user, 'load', org_filter=org_filter)
 
             grade_user = self._get_effective_user(request, courses)
             if isinstance(grade_user, Response):

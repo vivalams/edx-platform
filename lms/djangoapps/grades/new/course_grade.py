@@ -386,7 +386,7 @@ class CourseGradeFactory(object):
 
         return CourseGrade.get_persisted_grade(student, course)
 
-    def bulk_read(self, user=None, start_date=None, end_date=None):
+    def bulk_read(self, user=None, org_filter=None, start_date=None, end_date=None):
         """
         Returns an array of CourseGrade objects from stored grade information
         :param username: username to filter on
