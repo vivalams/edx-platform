@@ -410,8 +410,7 @@ class UserGradesViewTest(GradeViewTestMixin, APITestCase):
         self.assertIn('error_code', resp.data)  # pylint: disable=no-member
         self.assertEqual(resp.data['error_code'], 'user_does_not_have_access')  # pylint: disable=no-member
 
-    @override_settings(BULK_GRADES_API_ADMIN_USERNAME='global_staff')
-    def test_username_all_accessible_to_bulk_grades_admin(self):
+    def test_username_all_accessible_to_restricted_oauth_application(self):
         """
         Test username == 'all' is only accessible if a
         user is superuser and username == BULK_GRADES_API_ADMIN_USERNAME

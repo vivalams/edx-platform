@@ -221,6 +221,15 @@ class GradeViewMixin(DeveloperErrorViewMixin):
         if hasattr(request, 'auth') and hasattr(request.auth, 'org_associations'):
             return request.auth.org_associations
 
+    def _elevate_access_if_restricted_application(self, request):
+        # We are authenticating through a restricted application so we
+        # grant the request user global staff access for the duration of
+        # this request.
+        # We DO NOT save this access. This allows us to use existing
+        # logic for permissions checks but still be secure.
+        if hasattr(request, 'auth') and hasattr(request.auth, 'org_associations'):
+            request.user.is_staff = True
+
     def perform_authentication(self, request):
         """
         Ensures that the user is authenticated (e.g. not an AnonymousUser), unless DEBUG mode is enabled.
@@ -322,8 +331,8 @@ class CourseGradeView(GradeViewMixin, GenericAPIView):
 
         should_calculate_grade = request.GET.get('calculate')
         use_email = request.GET.get('use_email', None)
-        org_filter = self._get_org_filter(request)
 
+        self._elevate_access_if_restricted_application(request)
         course = self._get_course(request, course_id, request.user, 'load')
 
         if isinstance(course, Response):
@@ -446,30 +455,20 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
         end_date_string = request.GET.get('end_date')
         org_filter = self._get_org_filter(request)
 
+        self._elevate_access_if_restricted_application(request)
+
         if username == 'all':
             # Essentially an export function of the PersistantGrades table.
             # Read all grades for all students, filter on start_date and end_date
 
-            # This is very sensitive functionality and is locked down to a single
-            # explicitly set user in the AUTH settings (lms.auth.json).
-            # This user is also required to have superuser status
-            bulk_grades_admin = settings.BULK_GRADES_API_ADMIN_USERNAME
-            if not request.user.is_staff or request.user.username != bulk_grades_admin:
+            # This is very sensitive functionality and can only be accessed
+            # by a staff user through Restricted OAuth
+            if not (request.user.is_staff and hasattr(request, 'auth')):
                 return self.make_error_response(
                     status_code=status.HTTP_403_FORBIDDEN,
                     developer_message='The requesting user does not have the required credentials',
                     error_code='user_does_not_have_access'
                 )
-
-            # TODO: enable this functionality
-            # # This is very sensitive functionality and can only be accessed
-            # # by a staff user through Restricted OAuth
-            # if not (request.user.is_staff and hasattr(request, 'auth')):
-            #     return self.make_error_response(
-            #         status_code=status.HTTP_403_FORBIDDEN,
-            #         developer_message='The requesting user does not have the required credentials',
-            #         error_code='user_does_not_have_access'
-            #     )
 
             # Validate start and end date parameters
             start_date = self._parse_filter_date_string(start_date_string)

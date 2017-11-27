@@ -189,7 +189,7 @@ class EnrollmentDataTest(ModuleStoreTestCase):
         (['honor', 'verified', 'audit'],),
     )
     @ddt.unpack
-    def test_get_user_enrollments(self, course_modes):
+    def test_get_user_enrollments(self, course_modes, enrollment_mode):
         self._create_course_modes(course_modes)
 
         # Try to get enrollments before they exist.
@@ -209,15 +209,13 @@ class EnrollmentDataTest(ModuleStoreTestCase):
             created_enrollments.append(data.create_course_enrollment(
                 user.username,
                 unicode(self.course.id),
-                'honor',
+                enrollment_mode,
                 True
             ))
 
         # Compare the created enrollments with the results
         # from the get user enrollments request.
         results = data.get_user_enrollments(unicode(self.course.id), serialize=True)
-        results_unserialized = data.get_user_enrollments(unicode(self.course.id))
-        # self.assertEqual(results, CourseEnrollmentSerializer(results_unserialized, many=True).data)
         self.assertEqual(results, created_enrollments)
 
     @ddt.data(
