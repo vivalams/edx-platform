@@ -562,6 +562,7 @@ def account_settings_context(request):
 
     return context
 
+
 @login_required
 @ensure_csrf_cookie
 def link_account_confirm(request):
