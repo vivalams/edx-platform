@@ -471,7 +471,7 @@ def link_account(request):
                 state.provider.provider_id,
                 pipeline.AUTH_ENTRY_ACCOUNT_SETTINGS,
                 # The url the user should be directed to after the auth process has completed.
-                redirect_url=reverse('dashboard'),
+                redirect_url=reverse('link_account_confirm'),
             ),
             'accepts_logins': state.provider.accepts_logins,
             # If the user is connected, sending a POST request to this url removes the connection
@@ -561,6 +561,16 @@ def account_settings_context(request):
         } for state in auth_states if state.provider.display_for_login or state.has_account]
 
     return context
+
+@login_required
+@ensure_csrf_cookie
+def link_account_confirm(request):
+    user = request.user
+    context = {
+        'email': user.email, 
+        'redirect_to': reverse('dashboard')
+    }
+    return render_to_response("student_account/link_account_confirm.html", context)
 
 
 def cookies_api(request):
