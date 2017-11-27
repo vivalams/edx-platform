@@ -77,7 +77,8 @@
                         // Once they enter an email, this step will force them through the
                         // MSA migration pipeline
                         this.$container.find('.password-password, .checkbox-remember, .login-providers, .toggle-form').hide();
-                        this.$container.find('#login-password').prop('required', false)
+                        this.$form.find('#login-password').prop('required', false);
+                        this.$form.find('#login-email-desc').text('Enter an email to login or register to ' + this.platformName);
                     }
 
                     if (this.errorMessage) {
@@ -151,8 +152,18 @@
                             this.model.msa_migration_pipeline_status = MSAMigrationStatus.LOGIN_NOT_MIGRATED;
                             break;
                         case MSAMigrationStatus.LOGIN_MIGRATED:
-                            this.$form.find('.login-provider').click();
-                            this.toggleDisableButton(false);
+                            var signInMessage = 'Signing you in with your Microsoft Account...';
+                            var signInHTML = HtmlUtils.joinHtml(
+                                HtmlUtils.HTML('<span class="fa fa-spinner fa-pulse message-in-progress" aria-hidden="true"></span><span class="sr">'),  // eslint-disable-line max-len
+                                gettext(signInMessage),
+                                HtmlUtils.HTML('</span>'),
+                                HtmlUtils.HTML('<span>' + signInMessage + '</span>')
+                            );
+                            this.$form.find('#login-email-desc').html(signInHTML.text);
+                            var self = this;
+                            setTimeout(function() {
+                                self.$form.find('.login-provider').click();
+                            }, 1000);
                             break;
                         case MSAMigrationStatus.REGISTER_NEW_USER:
                             this.$container.find('.form-toggle').click();
