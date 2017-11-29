@@ -106,7 +106,7 @@ class EnrollmentDataTest(ModuleStoreTestCase):
             self.assertIn(course_mode, result_slugs)
 
     @ddt.data(
-        # No course modes, no course enrollments.
+        # No course modes, no course enrollments, no org filter
         ([], []),
 
         # Audit / Verified / Honor course modes, with three course enrollments.
@@ -134,6 +134,11 @@ class EnrollmentDataTest(ModuleStoreTestCase):
         # from the get enrollments request.
         results = data.get_course_enrollments(self.user.username)
         self.assertEqual(results, created_enrollments)
+
+        # If the enrollment is in a course that doesn't have the org_filter,
+        # should return empty list
+        other_org_results = data.get_course_enrollments(self.user.username, org_filter=['other_org'])
+        self.assertEqual(other_org_results, [])
 
         # Now create a course enrollment with some invalid course (does
         # not exist in database) for the user and check that the method
@@ -181,12 +186,12 @@ class EnrollmentDataTest(ModuleStoreTestCase):
     @ddt.data(
         # Default (no course modes in the database)
         # Expect that users are automatically enrolled as "honor".
-        ([],),
+        ([], 'honor'),
 
         # Audit / Verified / Honor
         # We should always go to the "choose your course" page.
         # We should also be enrolled as "honor" by default.
-        (['honor', 'verified', 'audit'],),
+        (['honor', 'verified', 'audit'], 'verified'),
     )
     @ddt.unpack
     def test_get_user_enrollments(self, course_modes, enrollment_mode):
@@ -215,8 +220,17 @@ class EnrollmentDataTest(ModuleStoreTestCase):
 
         # Compare the created enrollments with the results
         # from the get user enrollments request.
-        results = data.get_user_enrollments(unicode(self.course.id), serialize=True)
+        results = data.get_user_enrollments(
+            unicode(self.course.id), org_filter=[self.course.org], serialize=True
+        )
         self.assertEqual(results, created_enrollments)
+
+        # If course.org not in org_filter
+        # should return an empty list
+        other_org_results = data.get_user_enrollments(
+            unicode(self.course.id), org_filter=['other_org'], serialize=True
+        )
+        self.assertEqual(other_org_results, [])
 
     @ddt.data(
         # Default (no course modes in the database)
