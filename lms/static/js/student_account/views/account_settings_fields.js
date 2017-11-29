@@ -212,7 +212,6 @@
                             value = this.fieldValue() ? [{'code': this.fieldValue()}] : [];
                         attributes[this.options.valueAttribute] = value;
                         this.saveAttributes(attributes);
-
                     }
                 }
             }),

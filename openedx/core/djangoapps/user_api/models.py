@@ -115,14 +115,3 @@ class UserOrgTag(TimeStampedModel):
 
     class Meta(object):
         unique_together = ("user", "org", "key")
-
-
-class DeletedUserID(models.Model):
-    """
-    This is the model for referencing a user after user chooses 
-    to delete his account.
-    """
-
-    user = models.ForeignKey(User, db_index=True)
-    deleted_datetime = models.DateTimeField(null=True, 
-        blank=True, default=datetime.now())

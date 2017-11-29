@@ -40,7 +40,6 @@ from .serializers import (
     UserReadOnlySerializer, _visible_fields  # pylint: disable=invalid-name
 )
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
-from openedx.core.djangoapps.user_api.models import DeletedUserID
 
 
 # Public access point for this function.
@@ -555,10 +554,9 @@ def delete_user_account(username):
         raise UserNotAuthorized()
     username_mask = str(random.randint(1,9999)) + username
     existing_user.username = hashlib.md5(username_mask).hexdigest()
-    existing_user.email = existing_user.username + "@edx.com"
+    existing_user.email = existing_user.username + "@deleteduser.com"
     existing_user.is_active = False
     existing_user.is_staff = False
-    DeletedUserID.objects.create(user=existing_user)
     existing_user.save()
 
     #User profile deletion

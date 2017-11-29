@@ -29,7 +29,6 @@ from util import organizations_helpers as organization_api
 from util.views import handle_500
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.exceptions import ItemNotFoundError
-from openedx.core.djangoapps.user_api.models import DeletedUserID
 
 from certificates.api import (
     get_active_web_certificate,
