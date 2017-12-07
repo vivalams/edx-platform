@@ -571,14 +571,14 @@ def delete_user_account(userid):
 
     #forum anonymizer
     try:
-        anon_user_discussions(username, existing_user.username)
+        anonymize_user_discussions(username, existing_user.username)
     except Exception:
         pass
         
     return True
 
 @intercept_errors(UserAPIInternalError, ignore_errors=[UserAPIRequestError])
-def anon_user_discussions(username, enc_username, **kwargs):
+def anonymize_user_discussions(username, enc_username, **kwargs):
     """Anonymize user's comments for a particular user with GDPR norms.
 
     Keyword Arguments:
@@ -592,7 +592,7 @@ def anon_user_discussions(username, enc_username, **kwargs):
         UserNotFound
 
     Example Usage:
-        >>>anon_user_discussions('staff') 
+        >>>anonymize_user_discussions('staff') 
         
     """
 
