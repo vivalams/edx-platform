@@ -388,6 +388,7 @@ def account_settings(request):
 
 @login_required
 @require_http_methods(['POST'])
+@ensure_csrf_cookie
 def delete_account(request):
     """Deletes the current user's account.
 
@@ -404,7 +405,7 @@ def delete_account(request):
 
     """
     del_status = json.dumps({
-        "del_user":delete_user_account(request.user.username)
+        "del_user":delete_user_account(request.user.id)
     })
 
     return HttpResponse(del_status, content_type="application/json")

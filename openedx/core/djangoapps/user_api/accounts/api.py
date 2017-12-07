@@ -528,7 +528,7 @@ def _validate_email(email):
         )
 
 @intercept_errors(UserAPIInternalError, ignore_errors=[UserAPIRequestError])
-def delete_user_account(username):
+def delete_user_account(userid):
     """Delete an account for a particular user with GDPR norms.
 
     Keyword Arguments:
@@ -547,6 +547,10 @@ def delete_user_account(username):
     """
 
     #User anonymizing
+    try:
+        username = User.objects.get(id=userid).username
+    except Exception:
+        raise UserNotFound()
     existing_user, existing_user_profile = _get_user_and_profile(username)
     if not existing_user:
         raise UserNotFound()
@@ -562,13 +566,13 @@ def delete_user_account(username):
     #User profile deletion
     try:
         existing_user_profile.delete()
-    except:
+    except Exception as err:
         raise UserNotFound()
 
     #forum anonymizer
     try:
         anon_user_discussions(username, existing_user.username)
-    except:
+    except Exception:
         pass
         
     return True
