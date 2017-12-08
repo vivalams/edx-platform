@@ -468,7 +468,8 @@ OAUTH2_PROVIDER = {
         # scopes to call into various APIs as read-only
         'enrollments:read': 'Retrieve a list of your course enrollments',
         'grades:read': 'Retrieve your grades for your enrolled courses',
-        'certificates:read': 'Retrieve your course certificates'
+        'grades:statistics': 'Retrieve grades for all students in a course',
+        'certificates:read': 'Retrieve your course certificates',
     },
 }
 # This is required for the migrations in oauth_dispatch.models

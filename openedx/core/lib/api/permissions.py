@@ -18,7 +18,7 @@ from openedx.core.djangoapps.oauth_dispatch.models import RestrictedApplication
 class OAuth2RestrictedApplicatonPermission(TokenHasScope):
     """
     This permission class will inspect a request which contains an
-    OAuth2 acess_token. The following business logic is applied:
+    OAuth2 access_token. The following business logic is applied:
 
     1) Is the OAuth2 token passed in a legacy django-oauth-provider (DOP) token, if so
        all applications connecting via DOP reflect trusted internal applications
@@ -70,6 +70,16 @@ class OAuth2RestrictedApplicatonPermission(TokenHasScope):
             # data filtering (aka RestrictedApplication's associated_orgs)
             # thus we must fail the request as that endpoint is not secure
             # yet for RestrictedApplications to call
+            return False
+
+        # get allowed user for the restricted application
+        restricted_users = restrictied_application.allowed_users
+        # if there are allowed user configured
+        # validate if requested user is part allowed users list
+        if restricted_users and request.user.username not in restricted_users:
+            # allowed users has been declared in the restricted application
+            # request user is not part of the allowed user list
+            # if user is part of the allowed user list, continue and validate permission
             return False
 
         # now call into DOT permissions check which will inspect the view for a
