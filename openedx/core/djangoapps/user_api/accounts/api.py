@@ -512,16 +512,9 @@ def anonymize_user_discussions(username, enc_username, **kwargs):
     content_collection = database[content_collection_name]
 
     # Anonymizing content collection
-    content_collection.bulk_write([
-        UpdateOne(filter={'author_username': username},
-                  update={'$set': {
-                      'author_username': enc_username,
-                      'anonymous': True
-                  }
-                  }
-                  ) for each in content_collection.find({})
-    ]
-    )
+    content_collection.bulk_write([UpdateOne(filter={'author_username': username},
+                                             update={'$set': {'author_username': enc_username, 'anonymous': True}}
+                                            ) for each in content_collection.find({})])
 
     # Anonymizing users collection
     users_collection = database[users_collection_name]

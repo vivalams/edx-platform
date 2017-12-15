@@ -2,7 +2,6 @@
 Tests for student deletion
 """
 import json
-import unittest
 
 from django.test import TestCase
 from django.test.client import Client
@@ -15,7 +14,7 @@ from mock import patch
 
 from openedx.core.djangolib.testing.utils import CacheIsolationTestCase
 from student.tests.factories import UserFactory, RegistrationFactory, UserProfileFactory
-from openedx.core.djangoapps.user_api.accounts.api import delete_user_account 
+from openedx.core.djangoapps.user_api.accounts.api import delete_user_account
 
 
 class UserDeleteTest(CacheIsolationTestCase):
@@ -56,15 +55,14 @@ class UserDeleteTest(CacheIsolationTestCase):
         with patch(patched_audit_log) as mock_audit_log:
             result = self.client.post(self.url, post_params)
         return result, mock_audit_log
-    
+
     def test_delete_success(self):
         '''
         Test if a user is deleted and all values are after creation
         '''
-        login_response, mock_audit_log = self._login_response('test@edx.org', 
-            'test_password', patched_audit_log='student.models.AUDIT_LOG')
+        login_response, mock_audit_log = self._login_response('test@edx.org', 'test_password', patched_audit_log='student.models.AUDIT_LOG')
         login_response = json.loads(login_response.content)
-        if login_response['success'] == True:
+        if login_response['success']:
             try:
                 response = delete_user_account(self.user.id)
                 self.assertEqual(response, True)
