@@ -14,11 +14,13 @@ from pytz import UTC
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.core.validators import validate_email, validate_slug, ValidationError
+from social.apps.django_app.default.models import UserSocialAuth
+
 from openedx.core.djangoapps.user_api.preferences.api import update_user_preferences
 from openedx.core.djangoapps.user_api.errors import PreferenceValidationError
-
 from student.models import User, UserProfile, Registration
 from student import views as student_views
+from third_party_auth.models import UserSocialAuthMapping
 from util.model_utils import emit_setting_changed_event
 
 from openedx.core.lib.api.view_utils import add_serializer_errors
@@ -410,6 +412,137 @@ def request_password_change(email, is_secure):
     else:
         # No user with the provided email address exists.
         raise UserNotFound
+
+
+@intercept_errors(UserAPIInternalError, ignore_errors=[UserAPIRequestError])
+def delete_user_account(user_id):
+    """Soft delete a user's account.
+    Associated records that would allow the user to be identified or continue to login
+    are deleted from the database.
+    However, the data in the auth_user table is only made anonymous.
+    This allows us to keep course progress and other associated data for the user for
+    analytics and reporting without keeping any PII data.
+
+    Keyword Arguments:
+        user_id - unique id for a user
+
+    Raises:
+        UserNotFound
+
+    Example Usage:
+        >>>delete_user_account(112)
+
+    """
+
+    # Get user's existing record and profile
+    try:
+        username = User.objects.get(id=user_id).username
+    except Exception:
+        raise UserNotFound()
+
+    existing_user, existing_user_profile = _get_user_and_profile(username)
+    if not existing_user.is_active:
+        raise UserNotFound()
+
+    # If we get here the user must have a profile, delete this record
+    existing_user_profile.delete()
+
+    # Delete user's social auth records if they exist
+    social_auth_records = UserSocialAuth.objects.filter(user=existing_user)
+    for social_auth_record in social_auth_records:
+        social_auth_record.delete()
+
+    # Delete user's Microsoft Live account PUID mapping if it exists
+    try:
+        social_auth_mapping = UserSocialAuthMapping.objects.get(user=existing_user)
+        social_auth_mapping.delete()
+    except Exception:
+        # This error is most likely a *.DoesNotExist,
+        # meaning the user does not have a social auth record
+        # We don't need to do anything special here and
+        # should NOT raise an exception
+        pass
+
+    # Anonymize forum discussions
+    try:
+        anonymize_user_discussions(username, existing_user.username)
+    except Exception:
+        pass
+
+    # Anonymize the user's records
+    username_mask = str(random.randint(1, 9999)) + username
+    existing_user.username = hashlib.md5(username_mask).hexdigest()
+    existing_user.email = existing_user.username + "@deleteduser.com"
+    existing_user.first_name = 'first_deleted'
+    existing_user.last_name = 'last_deleted'
+    existing_user.is_active = False
+    existing_user.is_staff = False
+    existing_user.save()
+
+
+@intercept_errors(UserAPIInternalError, ignore_errors=[UserAPIRequestError])
+def anonymize_user_discussions(username, enc_username, **kwargs):
+    """Anonymize user's comments for a particular user with GDPR norms.
+
+    Keyword Arguments:
+        username (unicode)
+
+    Returns:
+        True for deletion.
+
+    Raises:
+        UserNotAuthorized
+        UserNotFound
+
+    Example Usage:
+        >>>anonymize_user_discussions('staff')
+
+    """
+
+    port = int(os.environ.get('EDXAPP_TEST_MONGO_PORT', '27017'))
+    host = os.environ.get('EDXAPP_TEST_MONGO_HOST', 'localhost')
+
+    user = kwargs.get('user', '')
+    password = kwargs.get('password', '')
+    db_name = kwargs.get('database', 'cs_comments_service_development')
+    content_collection_name = kwargs.get('collection', 'contents')
+    users_collection_name = kwargs.get('collection', 'users')
+    # Other mongo connection arguments
+    extra = kwargs.get('extra', {})
+    # By default disable write acknowledgments, reducing the time
+    # blocking during an insert
+    extra['w'] = extra.get('w', 0)
+    # Make timezone aware by default
+    extra['tz_aware'] = extra.get('tz_aware', True)
+
+    # Connect to database and get collection
+    connection = MongoClient(
+        host=host,
+        port=port,
+        **extra
+    )
+    database = connection[db_name]
+
+    if user or password:
+        database.authenticate(user, password)
+
+    content_collection = database[content_collection_name]
+
+    # Anonymizing content collection
+    content_collection.bulk_write([UpdateOne(filter={'author_username': username},
+                                             update={'$set': {'author_username': enc_username, 'anonymous': True}}
+                                            ) for each in content_collection.find({})])
+
+    # Anonymizing users collection
+    users_collection = database[users_collection_name]
+    users_collection.update(
+        {'username': username},
+        {'$set': {
+            'username': enc_username
+        }
+        }, upsert=False, multi=False
+    )
+    return True
 
 
 def _validate_username(username):
