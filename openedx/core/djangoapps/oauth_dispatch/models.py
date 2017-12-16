@@ -37,7 +37,7 @@ class RestrictedApplication(models.Model):
     # so that clients of a specific OAuth2 Application will only be
     # able retrieve datasets that the OAuth2 Application is allowed to retrieve.
     _org_associations = models.TextField(null=True)
-
+    _allowed_users = models.TextField(null=True, blank=True)
     def __unicode__(self):
         """
         Return a unicode representation of this object
@@ -110,6 +110,28 @@ class RestrictedApplication(models.Model):
         """
 
         return scope in self.allowed_scopes
+
+    @property
+    def allowed_users(self):
+        """
+        Translate space delimited string to a list
+        """
+        return self._get_list_from_delimited_string(self._allowed_users)
+
+
+    @allowed_users.setter
+    def allowed_users(self, value):
+        """
+        Convert list to separated string
+        """
+        self._allowed_users = _DEFAULT_SEPARATOR.join(value)
+
+    def has_user(self, user):
+        """
+        Returns in the RestrictedApplication has the requested scope
+        """
+
+        return user in self.allowed_users
 
     @property
     def org_associations(self):

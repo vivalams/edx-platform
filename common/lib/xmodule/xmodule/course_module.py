@@ -515,11 +515,11 @@ class CourseFields(object):
     )
     cert_name_long = String(
         help=_(
-            'Use this setting only when generating PDF certificates. '
-            'Between quotation marks, enter the long name of the type of certificate that students '
-            'receive when they complete the course. For instance, "Certificate of Achievement".'
+            'Use this setting to link the course with github. '
+            'provide github url to this course provided by Microsoft'
+            'receive wh".'
         ),
-        display_name=_("Certificate Name (Long)"),
+        display_name=_("Github Sync URL"),
         scope=Scope.settings,
         default=""
     )

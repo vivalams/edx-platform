@@ -5,12 +5,19 @@ courses
 import base64
 import logging
 import os
+import wget
 import re
 import shutil
 import tarfile
 from path import Path as path
 from tempfile import mkdtemp
-
+import requests
+import zipfile
+import StringIO
+import urllib
+import subprocess
+import time
+from time import sleep 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import SuspiciousOperation, PermissionDenied
@@ -31,9 +38,8 @@ from opaque_keys.edx.locator import LibraryLocator
 from xmodule.modulestore.xml_importer import import_course_from_xml, import_library_from_xml
 from xmodule.modulestore.xml_exporter import export_course_to_xml, export_library_to_xml
 from xmodule.modulestore import COURSE_ROOT, LIBRARY_ROOT
-
 from student.auth import has_course_author_access
-
+from dashboard.git_import import cmd_log
 from openedx.core.lib.extract_tar import safetar_extractall
 from util.json_request import JsonResponse
 from util.views import ensure_valid_course_key
@@ -42,7 +48,7 @@ from contentstore.views.entrance_exam import (
     add_entrance_exam_milestone,
     remove_entrance_exam_milestone_reference
 )
-
+from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from contentstore.utils import reverse_course_url, reverse_usage_url, reverse_library_url
 
 
@@ -91,6 +97,139 @@ def import_handler(request, course_key_string):
         request, courselike_key, root_name, successful_url, context_name, courselike_module, import_func
     )
 
+def api_import_handler(course_key_string):
+    courselike_key = CourseKey.from_string(course_key_string)
+    library = isinstance(courselike_key, LibraryLocator)
+    if library:
+        root_name = LIBRARY_ROOT
+        successful_url = reverse_library_url('library_handler', courselike_key)
+        context_name = 'context_library'
+        courselike_module = modulestore().get_library(courselike_key)
+        import_func = import_library_from_xml
+    else:
+        root_name = COURSE_ROOT
+        successful_url = reverse_course_url('course_handler', courselike_key)
+        context_name = 'context_course'
+        courselike_module = modulestore().get_course(courselike_key)
+        import_func = import_course_from_xml
+    logging.info('Returning to another function #########')
+    return get_githubcourseBy_course_key(courselike_key)
+
+def get_githubcourseBy_course_key(courselike_key):
+    try:
+        logging.info('inside the get_githubcourseBy_course_key function #########')
+        url = CourseOverview.load_from_module_store(courselike_key).course_github_url
+        #url  = "https://github.com/manikarthikk/courseuploadpoc.git"
+        #if url:
+        #    local_filename = url.split('/')[-1]
+        print(url)
+        response = requests.get(url, stream=True)
+        logging.info('Response is  ############### {}'.format(response.status_code))
+        #if not local_filename.endswith('.tar.gz'):
+        #    raise Exception
+        data_root = path(settings.GITHUB_REPO_ROOT)
+        #data_root = '/home/yeshwanth1'
+        logging.info('data_root is ############### {}'.format(data_root))
+        subdir = base64.urlsafe_b64encode(repr(courselike_key))
+        logging.info('Stored in ############### {}'.format(subdir))
+        course_dir = data_root / subdir
+        logging.info('course_dir  is ############### {}'.format(course_dir))
+        #wget.download(url,course_dir)
+        #urllib.urlretrieve(url, course_dir + '/courseupload.tar.gz')
+        #filename = 'courseupload.tar.gz'
+        #command = 'sudo git clone ' + url
+        #command =  'wget --no-check-certificate ' + url + ' -P ' + course_dir
+        #p = subprocess.Popen([command], cwd=course_dir,shell=True)
+        try:
+            if not course_dir.isdir():
+                os.mkdir(course_dir)
+        except Exception as e:
+            log.info('Exception is   is ############### {}'.format(e))
+
+        course_zip_dir = 'course_zip'
+        cmd = ['git', 'clone', url, course_zip_dir,]
+        output = cmd_log(cmd, cwd=course_dir)
+        ##time.sleep(15)
+        #filename = local_filename
+        command = "find {} -iname '*.gz'".format(course_dir)
+        file_gz_path = [line for line in subprocess.check_output(command, shell=True).splitlines()][0]
+        #file_name = [line for line in subprocess.check_output("find 324 -iname '*.gz'", shell=True).splitlines()][0].split('/')[1]
+        temp_filepath = course_dir / course_zip_dir / file_gz_path
+        #temp_filepath = '/home/yeshwanth1'
+        logging.info('tempfilepath  is ############### {}'.format(temp_filepath))
+        #try:
+        #    if not course_dir.isdir():
+        #        os.mkdir(course_dir)
+        #except Exception as e:
+        #    log.info('Exception is   is ############### {}'.format(e))
+        #cmd = ['git', 'clone', url, course_dir]
+        #output = cmd_log(cmd, cwd=course_dir)
+        #try:
+        #    with open(temp_filepath,'wb+') as f:
+        #        for chunk in response.iter_content(chunk_size=1024):
+                #for chunk in zipfile.ZipFile(StringIO.StringIO(response.content(chunk_size=1024))): 
+        #            if chunk:
+        #                f.write(chunk)
+        #    logging.info('GOt the data in the temp dir #########')
+        #    size = os.path.getsize(temp_filepath)
+        #except Exception as e:
+        #    logging.info('Exception is   is ############### {}'.format(e))
+        #    pass
+        root_name = COURSE_ROOT
+        logging.info('rootname is   is ############### {}'.format(root_name))
+        tar_file = tarfile.open(temp_filepath)
+        #tar_file.extractall(path=".", members=None)
+        #tar_file.close()
+        #logging.info('tar_file is   is ############### {}'.format(tar_file))
+        try:
+            safetar_extractall(tar_file, (course_dir + '/').encode('utf-8'))
+        except SuspiciousOperation as exc:
+            logging.info('Exception oooccuurred')
+        except exception as e:
+            log.info('Exception is   is ############### {}'.format(e))
+        finally:
+            tar_file.close()
+        # find the 'course.xml' file
+        root_name = COURSE_ROOT
+        def get_all_files_2(directory):
+            """
+            For each file in the directory, yield a 2-tuple of (file-name,
+            directory-path)
+            """
+            for dirpath, _dirnames, filenames in os.walk(directory):
+                for filename in filenames:
+                    yield (filename, dirpath)
+        def get_dir_for_fname_2(directory, filename):
+            """
+            Returns the dirpath for the first file found in the directory
+            with the given name.  If there is no file in the directory with
+            the specified name, return None.
+            """
+            for fname, dirpath in get_all_files_2(directory):
+                if fname == filename:
+                    log.info('Exception is   is ############### {}'.format(fname))
+                    log.info('Exception is   is ############### {}'.format(filename))
+                    log.info('Exception is   is ############### {}'.format(dirpath))
+                    return dirpath
+            return None
+        dirpath = get_dir_for_fname_2(course_dir, root_name)
+        #if not dirpath:
+        #    raise Exception
+        import_func = import_course_from_xml
+        dirpath = os.path.relpath(dirpath, data_root)
+        try:
+            with dog_stats_api.timer('courselike_import.time',tags=[u"courselike:{}".format(courselike_key)]):
+                courselike_items = import_func(modulestore(),5,settings.GITHUB_REPO_ROOT,[dirpath],load_error_modules=False,static_content_store=contentstore(),target_id=courselike_key)
+                course = modulestore().get_course(courselike_key)
+        except Exception as e:
+            logging.info('Exception is   is ############### {}'.format(e))
+        finally:
+            if course_dir.isdir():
+                shutil.rmtree(course_dir)
+                log.info("Course import %s: Temp data cleared", courselike_key)
+    except Exception as e:
+        logging.info('Exception is   is ############### {}'.format(e))
+    return True
 
 def _import_handler(request, courselike_key, root_name, successful_url, context_name, courselike_module, import_func):
     """
@@ -180,7 +319,7 @@ def _import_handler(request, courselike_key, root_name, successful_url, context_
                 with open(temp_filepath, mode) as temp_file:
                     for chunk in request.FILES['course-data'].chunks():
                         temp_file.write(chunk)
-
+                logging.info('tempfile size $$$$ ############### {}'.format(temp_filepath))
                 size = os.path.getsize(temp_filepath)
 
                 if int(content_range['stop']) != int(content_range['end']) - 1:
@@ -260,6 +399,9 @@ def _import_handler(request, courselike_key, root_name, successful_url, context_
                     return None
 
                 dirpath = get_dir_for_fname(course_dir, root_name)
+                log.info('dirpath $$$$ ############### {}'.format(dirpath))
+                log.info('course_dir $$$$ ############### {}'.format(course_dir))
+                
                 if not dirpath:
                     _save_request_status(request, courselike_string, -2)
                     return JsonResponse(
@@ -271,9 +413,10 @@ def _import_handler(request, courselike_key, root_name, successful_url, context_
                     )
 
                 dirpath = os.path.relpath(dirpath, data_root)
-                logging.debug('found %s at %s', root_name, dirpath)
-
+                log.debug('found %s at %s', root_name, dirpath)
+                log.info('dir_path $$$$ ############### {}'.format(dirpath))
                 log.info("Course import %s: Extracted file verified", courselike_key)
+              
                 _save_request_status(request, courselike_string, 3)
 
                 with dog_stats_api.timer(

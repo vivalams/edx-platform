@@ -337,6 +337,11 @@ class CourseOverview(TimeStampedModel):
         longer escaped.
         """
         return block_metadata_utils.display_name_with_default_escaped(self)
+    @property
+    def course_github_url(self):
+        if self.cert_name_long:
+            k = self.cert_name_long
+            return k
 
     def has_started(self):
         """

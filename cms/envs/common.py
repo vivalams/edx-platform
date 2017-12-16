@@ -820,7 +820,7 @@ INSTALLED_APPS = (
 
     # Common views
     'openedx.core.djangoapps.common_views',
-
+    'rest_framework',
     # History tables
     'simple_history',
 

@@ -60,6 +60,7 @@ urlpatterns = patterns(
         'openedx.core.djangoapps.lang_pref.views.update_session_language',
         name='session_language'
     ),
+    url(r'^',include('cms.djangoapps.contentstore.api.urls')),
 
     # Darklang View to change the preview language (or dark language)
     url(r'^update_lang/', include('openedx.core.djangoapps.dark_lang.urls', namespace='dark_lang')),
@@ -115,6 +116,7 @@ urlpatterns += patterns(
         settings.COURSE_KEY_PATTERN), 'group_configurations_detail_handler'),
     url(r'^api/val/v0/', include('edxval.urls')),
     url(r'^api/tasks/v0/', include('user_tasks.urls')),
+    #url(r'^api/content_upload/',include('cms.djangoapps.contentstore.api.urls', namespace='content_upload_api')),
 )
 
 JS_INFO_DICT = {
