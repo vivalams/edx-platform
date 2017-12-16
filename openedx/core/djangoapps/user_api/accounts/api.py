@@ -598,7 +598,7 @@ def delete_user_account(user_id):
     except Exception:
         pass
 
-@intercept_errors(UserAPIInternalError, ignore_errors=[UserAPIRequestError])
+
 def anonymize_user_discussions(user_id, username, enc_username, **kwargs):
     """
     Anonymize user's comments for a particular user as per GDPR norms.
