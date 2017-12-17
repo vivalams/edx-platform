@@ -365,7 +365,25 @@ def get_courses(user, org=None, filter_=None):
     Returns a list of courses available, sorted by course.number and optionally
     filtered by org code (case-insensitive).
     """
-    courses = branding.get_visible_courses(org=org, filter_=filter_)
+    
+    microsoft_domain = '@microsoft'
+    psrtner_domain = '@dell'
+    if not user.is_anonymous() and microsoft_domain in user.email or user.is_staff:
+        orgl = ['ELMS','Partners','Microsoft']
+    elif not user.is_anonymous() and psrtner_domain in user.email:
+        orgl = ['Partners','Microsoft']
+    else:
+        orgl = ['Microsoft']
+    #site_dicts = configuration_helpers.get_value('SINGLE_SITE_DICT')
+    #if site_dicts:
+    #    for i in site_dicts:
+    #        if not user.is_anonymous() and i['domain'] in user.email:
+    #            orgl = i['orgs']
+    #        elif user.is_staff:
+    #            orgl = ['ELMS','Partners','Microsoft','edX']
+    #        else:
+    #            orgl = ['Microsoft']
+    courses = branding.get_visible_courses(orgl,org=org, filter_=filter_)
 
     permission_name = configuration_helpers.get_value(
         'COURSE_CATALOG_VISIBILITY_PERMISSION',

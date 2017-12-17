@@ -10,13 +10,14 @@ such as the site visible courses, university name and logo.
 from xmodule.modulestore.django import modulestore
 from xmodule.course_module import CourseDescriptor
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 
-def get_visible_courses(org=None, filter_=None):
+def get_visible_courses(orgl,org=None, filter_=None):
     """
     Return the set of CourseOverviews that should be visible in this branded
     instance.
@@ -29,7 +30,16 @@ def get_visible_courses(org=None, filter_=None):
     """
     courses = []
     current_site_orgs = configuration_helpers.get_current_site_orgs()
-
+    #CourseOverview()
+    #k.load_from_module_store('course-v1:edX+DemoX+Demo_Course')
+    from opaque_keys.edx.keys import CourseKey
+    #CourseKey.from_string(course_id)
+    #c_orgs = CourseOverview.load_from_module_store(CourseKey.from_string(course_id)).course_org_new
+    #if user:
+    #    email = user.email
+    #elif user.is_anonymous():
+    #    email = None
+    #current_course_orgs = k2.split('/') 
     if org:
         # Check the current site's orgs to make sure the org's courses should be displayed
         if not current_site_orgs or org in current_site_orgs:
@@ -56,13 +66,30 @@ def get_visible_courses(org=None, filter_=None):
             [SlashSeparatedCourseKey.from_deprecated_string(c) for c in settings.COURSE_LISTINGS[subdomain]]
         )
 
+    #c_orgs = CourseOverview.load_from_module_store(CourseKey.from_string(course_id)).course_org_new
+    #aaaallllcourses = []
+    #user_oorgs = ['Microsoft']
+    #for c_org in c_orgs:
+    #for u_org in user_oorgs:
+    #        return [course for course in courses if u_org in CourseOverview.load_from_module_store(CourseKey.from_string(course)).course_org_new]
+        
     if filtered_visible_ids:
         return [course for course in courses if course.id in filtered_visible_ids]
     else:
         # Filter out any courses based on current org, to avoid leaking these.
-        orgs = configuration_helpers.get_all_orgs()
-        return [course for course in courses if course.location.org not in orgs]
-
+        #orgs = configuration_helpers.get_all_orgs()
+        #return [course for course in courses if course.location.org not in orgs]
+        #user_oorgs = ['edx']
+        #user_oorgs = ['Shared']
+        #c_orgs = CourseOverview.load_from_module_store(CourseKey.from_string(course_id)).course_org_new
+        emty_list = []
+        for u_org in orgl:
+            for course in courses:
+                #if u_org in CourseOverview.load_from_module_store(CourseKey.from_string(str(course.id.to_deprecated_string()))).course_org_new:
+                if course.org == u_org:           
+                     emty_list.append(course)
+        return emty_list
+        #return [course for course in courses if u_org in CourseOverview.load_from_module_store(CourseKey.from_string(str(course.id.to_deprecated_string()))).course_org_new]
 
 def get_university_for_request():
     """

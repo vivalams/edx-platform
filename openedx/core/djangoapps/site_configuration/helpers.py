@@ -232,25 +232,3 @@ def page_title_breadcrumbs(*crumbs, **kwargs):
     else:
         return platform_name
 
-
-def get_preview_lms_base_values(org, default=None):
-    """
-    This function will return a dictionary of site's display name as key
-    and PREVIEW_LMS_BASE value as value based on org value.
-    """
-    site_dict = {}
-    for site in Site.objects.all():
-        try:
-            site_config = SiteConfiguration.objects.get(site=site)
-        except:
-            return default
-        if site_config.get_value('course_org_filter'):
-            if org in site_config.get_value('course_org_filter'):
-                lms_base_value = site_config.get_value('PREVIEW_LMS_BASE')
-                if site.name not in site_dict and lms_base_value:
-                    site_dict[site.name] = lms_base_value
-                else:
-                    site_dict[site.name] = settings.FEATURES.get('PREVIEW_LMS_BASE')
-        else:
-            return default
-    return site_dict

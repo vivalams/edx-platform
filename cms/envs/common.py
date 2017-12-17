@@ -1243,5 +1243,3 @@ RETRY_ACTIVATION_EMAIL_TIMEOUT = 0.5
 # How long until database records about the outcome of a task and its artifacts get deleted?
 USER_TASKS_MAX_AGE = timedelta(days=7)
 
-# this setting will enable dropdown with site names, used in multi sites with multiple org scenarios
-ENABLE_MULTI_SITE_VIEWLIVE_DROPDOWN = False
