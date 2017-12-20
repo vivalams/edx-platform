@@ -6,6 +6,8 @@ from django.http import Http404
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication 
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
@@ -14,16 +16,12 @@ from courseware.access import has_access
 from lms.djangoapps.courseware import courses
 from lms.djangoapps.courseware.exceptions import CourseAccessRedirect
 from lms.djangoapps.grades.api.serializers import GradingPolicySerializer
-<<<<<<< HEAD
 from lms.djangoapps.grades.course_grade_factory import CourseGradeFactory
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, view_auth_classes
 from student.roles import CourseStaffRole
-=======
-from lms.djangoapps.grades.new.course_grade import CourseGradeFactory
 from openedx.core.lib.api.authentication import OAuth2AuthenticationAllowInactiveUser
 from openedx.core.lib.api.permissions import OAuth2RestrictedApplicatonPermission
-from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin
->>>>>>> b65bdea... OAuth Restricted Application APIs (#174)
+
 
 log = logging.getLogger(__name__)
 USER_MODEL = get_user_model()
@@ -34,8 +32,6 @@ class GradeViewMixin(DeveloperErrorViewMixin):
     """
     Mixin class for Grades related views.
     """
-<<<<<<< HEAD
-=======
     authentication_classes = (
         OAuth2AuthenticationAllowInactiveUser,
         SessionAuthentication,
@@ -48,7 +44,6 @@ class GradeViewMixin(DeveloperErrorViewMixin):
     # scope
     required_scopes = ['grades:read']
 
->>>>>>> b65bdea... OAuth Restricted Application APIs (#174)
     def _get_course(self, course_key_string, user, access_action):
         """
         Returns the course for the given course_key_string after
