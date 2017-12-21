@@ -287,22 +287,14 @@ def users_delete_user_account(request):
     puid = params["puid"]
     # First verify the mapping is already exist sanity check
     try:
-        usersocialauth_mapping = UserSocialAuthMapping.objects.filter(puid=puid)
+        social_auth_mapping = UserSocialAuthMapping.objects.get(puid=puid)
     except UserSocialAuthMapping.DoesNotExist:
-        data = {
-            'response_code': 0,
-        }
-        return HttpResponse(json.dumps(data), content_type='application/json')
+        raise Http404
 
-    user_id = usersocialauth_mapping[0].user_id
+    user_id = social_auth_mapping.user_id
     try:
         delete_user_account(user_id)
     except Exception:
-        data = {
-            'response_code': 2,
-        }
-        return HttpResponse(json.dumps(data), content_type='application/json')
-    data = {
-        'response_code': 1,
-    }
-    return HttpResponse(json.dumps(data), content_type='application/json')
+        raise Http404
+
+    return HttpResponse("User deleted successfully")
