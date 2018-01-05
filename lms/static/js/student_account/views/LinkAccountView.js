@@ -33,7 +33,7 @@
                     screenReaderTitle = gettext('{accountName}');
 
                 if (this.options.acceptsLogins) {
-                      linkTitle = gettext('{accountName}');
+                      linkTitle = accountName,
                       linkClass = 'social-field-unlinked';
                       subTitle = StringUtils.interpolate(
                           gettext('Link your {accountName} account to your {platformName} account and use {accountName} to sign in to {platformName}.'),  // eslint-disable-line max-len

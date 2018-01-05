@@ -18,7 +18,7 @@
             linkAccountSection = {
                 el: linkAccountElement,
                 userName: StringUtils.interpolate(
-                    gettext('Hello {user_name} .'),
+                    gettext('Hello {user_name},'),
                     {user_name: userName}
                 ),
                 fields: _.map(authData.providers, function(provider) {

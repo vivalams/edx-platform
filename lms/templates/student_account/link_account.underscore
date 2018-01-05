@@ -5,9 +5,9 @@
                 <h1 class="section-header"><%- gettext("Account update required") %></h1>
                 <div class="account-settings-section-body">
                     <p class="account-settings-header-subtitle"><%- userName %></p>
-                    <p class="account-settings-header-subtitle">In order to provide you with better security and easier profile management, we are changing to Microsoft accounts for authentication.</p>
-                    <p class="account-settings-header-subtitle">Sign in with a new or existing Microsoft account, and your Microsoft Learning profile will be updated to use that account.</p>
-                    <p class="account-settings-header-subtitle">This will update your login and your name and email information, but your public username will remain the same.</p>
+                    <p class="account-settings-header-subtitle"><%- gettext("In order to provide you with better security and easier profile management, we are changing to Microsoft accounts for authentication") %></span>
+                    <p class="account-settings-header-subtitle"><%- gettext("Sign in with a new or existing Microsoft account, and your Microsoft Learning profile will be updated to use that account") %></span>
+                    <p class="account-settings-header-subtitle"><%- gettext("This will update your login and your name and email information, but your public username will remain the same.") %></span>
                 </div>
                 <div class="account-settings-section-body">
                     <div class="ui-loading-error is-hidden">

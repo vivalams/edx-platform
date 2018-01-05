@@ -453,7 +453,7 @@ def link_account(request):
     context = {
         'auth': {},
         'platform_name': configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME),
-        'user_name': "{} {}".format(user.first_name, user.last_name),
+        'user_name': user.profile.name,
         'enable_account_linking': True,
     }
 
