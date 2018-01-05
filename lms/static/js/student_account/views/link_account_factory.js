@@ -8,7 +8,8 @@
     ], function(gettext, $, _, Backbone, LinkAccountView, LinkAccountSectionView, StringUtils) {
         return function(
             authData,
-            platformName
+            platformName,
+            userName
         ) {
             var linkAccountElement, linkAccountSection, linkAccountSectionView,
                 showLoadingError;
@@ -16,10 +17,9 @@
             linkAccountElement = $('.wrapper-account-settings');
             linkAccountSection = {
                 el: linkAccountElement,
-                title: gettext('Linked Accounts'),
-                subtitle: StringUtils.interpolate(
-                    gettext('You can link your social media accounts to simplify signing in to {platform_name}.'),
-                    {platform_name: platformName}
+                userName: StringUtils.interpolate(
+                    gettext('Hello {user_name} .'),
+                    {user_name: userName}
                 ),
                 fields: _.map(authData.providers, function(provider) {
                     return {
