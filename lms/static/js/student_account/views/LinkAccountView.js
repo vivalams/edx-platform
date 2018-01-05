@@ -30,10 +30,13 @@
                 var linkTitle = '',
                     linkClass = '',
                     subTitle = '',
-                    screenReaderTitle = gettext('{accountName}');
+                    screenReaderTitle = StringUtils.interpolate(
+                            gettext('Sign in with {accountName}'),
+                            {accountName: this.options.title}
+                        );
 
                 if (this.options.acceptsLogins) {
-                      linkTitle = accountName,
+                      linkTitle = screenReaderTitle,
                       linkClass = 'social-field-unlinked';
                       subTitle = StringUtils.interpolate(
                           gettext('Link your {accountName} account to your {platformName} account and use {accountName} to sign in to {platformName}.'),  // eslint-disable-line max-len
