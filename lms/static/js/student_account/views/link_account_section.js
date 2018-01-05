@@ -16,8 +16,7 @@
 
             render: function() {
                 this.$el.html(_.template(sectionTemplate)({
-                    title: this.options.title,
-                    subtitle: this.options.subtitle
+                    userName: this.options.userName
                 }));
 
                 this.options.el.append(this.$el);
