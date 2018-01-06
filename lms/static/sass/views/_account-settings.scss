@@ -33,17 +33,17 @@
         }
     }
 }
+.link-account-confirm-header {
+    h1 {
+        color: #2e2e2e;
+        font: normal 2em/1.4em "Segoe UI","Open Sans",Verdana,Geneva,sans-serif,sans-serif;
+        letter-spacing: 1px;
+        margin-bottom: 30px;
+    }
+}
 
 .link-account-confirm-section {
     padding: ($baseline*2) 0;
-    text-align: center;
-
-  p {
-    @include font-size(24);
-    color: $lighter-base-font-color;
-    margin-bottom: $baseline;
-    text-shadow: 0 1px rgba(255,255,255, 0.6);
-  }
 
   a {
     background-color: $blue;

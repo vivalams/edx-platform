@@ -11,10 +11,8 @@ from openedx.core.djangolib.markup import HTML, Text
 <%block name="bodyclass">view-dashboard is-authenticated</%block>
 <main id="main" aria-label="Content" tabindex="-1">
     <div class="container dashboard" id="dashboard-main">
-      <div class="my-courses" id="my-courses">
-        <header class="">
-          <h1 class="header-courses">${_("Confirm account update")}</h1>
-        </header>
+      <div class="link-account-confirm-header">
+          <h1 class="header-title">${_("Confirm account update")}</h1>
           <div class="link-account-confirm-subtitle">
             <p>${_("Your full name and email will be updated with the following information:")}</p>
             <p>${_("Full name")}</p>
