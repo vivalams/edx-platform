@@ -12,8 +12,8 @@ from openedx.core.djangolib.markup import HTML, Text
 <main id="main" aria-label="Content" tabindex="-1">
     <div class="container dashboard" id="dashboard-main">
       <div class="my-courses" id="my-courses">
-        <header class="wrapper-header-courses">
-          <h2 class="header-courses">${_("Confirm account update")}</h2>
+        <header class="">
+          <h1 class="header-courses">${_("Confirm account update")}</h1>
         </header>
           <div class="link-account-confirm-subtitle">
             <p>${_("Your full name and email will be updated with the following information:")}</p>
@@ -27,7 +27,7 @@ from openedx.core.djangolib.markup import HTML, Text
               </a>
               .
             </span>
-            <div class="empty-dashboard-message">
+            <div class="link-account-confirm-section">
                <a href="${redirect_to}">
                   ${_("Confirm")}
               </a>
