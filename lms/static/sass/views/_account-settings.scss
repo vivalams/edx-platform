@@ -117,6 +117,16 @@
             font-size: em(18);
             line-height: normal;
             color: $dark-gray;
+            padding-bottom: 10px;
+        }
+
+        .link-account-social-field-section {
+           .social-field-unlinked {
+               background: none !important;
+               box-shadow: none !important;
+               padding: 0px !important;
+               margin: 0px !important;
+           }
         }
 
         .account-settings-section-body {
@@ -297,13 +307,6 @@
                     }
                 }
 
-                .link-account-social-field-section {
-                    background: none !important;
-                    box-shadow: none !important;
-                    padding: 0px !important;
-                    margin: 0px !important;
-                }
-                
                 .u-field-message {
                     position: relative;
                     padding: 24px 0 0 ($baseline*5);

@@ -569,8 +569,10 @@ def account_settings_context(request):
 def link_account_confirm(request):
     user = request.user
     context = {
-        'email': user.email, 
-        'redirect_to': reverse('dashboard')
+        'email': user.email,
+        'user_name': user.profile.name,
+        'redirect_to': reverse('dashboard'),
+        'diconnect_url': '/auth/disconnect/live/?'
     }
     return render_to_response("student_account/link_account_confirm.html", context)
 
