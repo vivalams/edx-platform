@@ -17,13 +17,12 @@ from openedx.core.djangolib.markup import HTML, Text
             <p>${_("Your full name and email will be updated with the following information:")}</p>
             <p>${_("Full name")}</p>
             <p class="link-account-confirm-subtitle">${user_name}</p>
-            <p>${_("Email (Use this to login")}</p>
+            <p>${_("Email (Use this to login)")}</p>
             <p class="link-account-confirm-subtitle">${email}</p>
             <p class="link-account-confirm-subtitle">${_("If this is not the account you want, you can ")}
               <a href="${disconnect_url}">
                 ${_("sign in with a different account")}
-              </a>
-              .
+              </a>.
             </p>
             <div class="link-account-confirm-section">
                <a href="${redirect_to}">
