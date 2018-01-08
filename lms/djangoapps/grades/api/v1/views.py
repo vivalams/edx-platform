@@ -13,11 +13,11 @@ from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
 
 from courseware.access import has_access
-from lms.djangoapps.ccx.utils import prep_course_for_grading
 from lms.djangoapps.courseware import courses
 from lms.djangoapps.courseware.exceptions import CourseAccessRedirect
 from lms.djangoapps.grades.api.serializers import GradingPolicySerializer
-from lms.djangoapps.grades.new.course_grade import CourseGrade, CourseGradeFactory
+from lms.djangoapps.grades.course_grade import CourseGrade
+from lms.djangoapps.grades.course_grade_factory import CourseGradeFactory
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.lib.api.paginators import NamespacedPageNumberPagination
 from openedx.core.lib.api.permissions import IsStaffOrOwner, OAuth2RestrictedApplicatonPermission
@@ -141,22 +141,12 @@ class GradeViewMixin(DeveloperErrorViewMixin):
                 error_code='no_course_enrollments'
             )
 
-    def _read_or_create_grade(self, user, course, calculate=None, use_email=None):
+    def _get_grade_response(self, user, course, calculate=None, use_email=None):
         """
-        Read or create a new CourseGrade for the specified user and course.
+        Get the grade for the specified user and course.
         """
-        if calculate is not None:
-            course_grade = CourseGradeFactory().create(user, course, read_only=False)
-        else:
-            course_grade = CourseGradeFactory().get_persisted(user, course)
-
-        # Handle the case of a course grade not existing,
-        # return a Zero course grade
-        if not course_grade:
-            course_grade = CourseGrade(user, course, None)
-            course_grade._percent = 0.0
-            course_grade._letter_grade = None
-            course_grade._passed = False
+     
+        course_grade = CourseGradeFactory().read(user, course)
 
         if use_email is not None:
             user = user.email
@@ -183,15 +173,6 @@ class GradeViewMixin(DeveloperErrorViewMixin):
         if hasattr(request, 'auth') and hasattr(request.auth, 'org_associations'):
             return request.auth.org_associations
 
-    def _elevate_access_if_restricted_application(self, request):
-        # We are authenticating through a restricted application so we
-        # grant the request user global staff access for the duration of
-        # this request.
-        # We DO NOT save this access. This allows us to use existing
-        # logic for permissions checks but still be secure.
-        if hasattr(request, 'auth') and hasattr(request.auth, 'org_associations'):
-            request.user.is_staff = True
-
     def perform_authentication(self, request):
         """
         Ensures that the user is authenticated (e.g. not an AnonymousUser), unless DEBUG mode is enabled.
@@ -201,17 +182,18 @@ class GradeViewMixin(DeveloperErrorViewMixin):
             raise AuthenticationFailed
 
 
-class CourseGradeView(GradeViewMixin, GenericAPIView):
+class UserGradeView(GradeViewMixin, GenericAPIView):
     """
     **Use Case**
 
         * Get the current course grades for a user in a course.
 
-        The currently logged-in user may request her own enrolled user's grades.
+        The currently logged-in user may request her own grades, or a user with staff access to the course may request
+        any enrolled user's grades.
 
     **Example Request**
 
-        GET /api/grades/v1/course_grade/{course_id}/users/?username={username}
+        GET /api/grades/v0/course_grade/{course_id}/users/?username={username}
 
     **GET Parameters**
 
@@ -244,7 +226,7 @@ class CourseGradeView(GradeViewMixin, GenericAPIView):
 
         [{
             "username": "bob",
-            "course_key": "course-v1:edX+DemoX+Demo_Course",
+            "course_key": "edX/DemoX/Demo_Course",
             "passed": false,
             "percent": 0.03,
             "letter_grade": None,
@@ -269,28 +251,36 @@ class CourseGradeView(GradeViewMixin, GenericAPIView):
         Return:
             A JSON serialized representation of the requesting user's current grade status.
         """
-        should_calculate_grade = request.GET.get('calculate')
-        use_email = request.GET.get('use_email', None)
 
-        course = self._get_course(request, course_id, request.user, 'load')
+        # See if the request has an explicit ORG filter on the request
+        # which limits which OAuth2 clients can see what courses
+        # based on the association with a RestrictedApplication
+        #
+        # For more information on RestrictedApplications and the
+        # permissions model, see openedx/core/lib/api/permissions.py
+        if hasattr(request, 'auth') and hasattr(request.auth, 'org_associations'):
+            course_key = CourseKey.from_string(course_id)
+            if course_key.org not in request.auth.org_associations:
+                return self.make_error_response(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    developer_message='The OAuth2 RestrictedApplication is not associated with org.',
+                    error_code='course_org_not_associated_with_calling_application'
+                )
 
+        course = self._get_course(course_id, request.user, 'load')
         if isinstance(course, Response):
             # Returns a 404 if course_id is invalid, or request.user is not enrolled in the course
             return course
 
         grade_user = self._get_effective_user(request, course)
-        prep_course_for_grading(course, request)
-
         if isinstance(grade_user, Response):
             # Returns a 403 if the request.user can't access grades for the requested user,
-            # or a 404 if the requested user does not exist or the course had no enrollments.
+            # or a 404 if the requested user does not exist.
             return grade_user
-        else:
-            # Grade for one user in course
-            course_grade = self._read_or_create_grade(grade_user, course, should_calculate_grade, use_email)
-            response = [course_grade]
 
-        return Response(response)
+        use_email = request.GET.get('use_email', None)
+
+        return self._get_grade_response(grade_user, course, use_email)
 
 
 class CourseGradeAllUsersView(GradeViewMixin, GenericAPIView):
@@ -356,7 +346,7 @@ class CourseGradeAllUsersView(GradeViewMixin, GenericAPIView):
 
     # needed for passing OAuth2RestrictedApplicatonPermission checks
     # for RestrictedApplications (only). A RestrictedApplication can
-    # only call this method if it is allowed to receive a 'grades:read'
+    # only call this method if it is allowed to receive a 'grades:statistics'
     # scope
     required_scopes = ['grades:statistics']
     restricted_oauth_required = True
@@ -372,7 +362,6 @@ class CourseGradeAllUsersView(GradeViewMixin, GenericAPIView):
             Return:
                 A JSON serialized representation of the requesting user's current grade status.
         """
-        should_calculate_grade = request.GET.get('calculate')
         use_email = request.GET.get('use_email', None)
 
         course = self._get_course(request, course_id, request.user, 'load')
@@ -390,11 +379,9 @@ class CourseGradeAllUsersView(GradeViewMixin, GenericAPIView):
         paged_enrollments = self.paginator.paginate_queryset(enrollments_in_course, self.request, view=self)
         response = []
 
-        prep_course_for_grading(course, request)
-
         for enrollment in paged_enrollments:
             user = enrollment.user
-            course_grade = self._read_or_create_grade(user, course, should_calculate_grade, use_email)
+            course_grade = self._get_grade_response(user, course, use_email)
             response.append(course_grade)
 
         return Response(response)

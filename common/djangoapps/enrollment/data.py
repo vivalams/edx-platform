@@ -42,22 +42,19 @@ def get_course_enrollments(user_id, org_filter=None):
         A serializable list of dictionaries of all aggregated enrollment data for a user.
 
     """
-    qset = CourseEnrollment.objects.filter(
+    # org_filter = 'edx'
+
+    enrollments_filter = dict(
         user__username=user_id,
         is_active=True
-    ).order_by('created')
+    )
 
     # apply ORG filter, if specified
     # NOTE, do not do a Falsy type check here because an empty list
     # and None do not have the same semantic meaning. None means no filtering.
     # Empty list means 'filter everything out'
     if org_filter is not None:
-        _set = []
-        for enrollment in qset:
-            if enrollment.course_id.org in org_filter:
-                _set.append(enrollment)
-
-        qset = _set
+        enrollments_filter['course__display_org_with_default'] = org_filter
 
     enrollments = CourseEnrollmentSerializer(qset, many=True).data
 
@@ -124,7 +121,7 @@ def get_user_enrollments(course_id, org_filter=None, serialize=True):
         course_id = CourseKey.from_string(course_id)
     try:
 
-        qset = CourseEnrollment.objects.filter(
+        enrollments_filter = dict(
             course_id=course_id
         )
 
@@ -133,12 +130,9 @@ def get_user_enrollments(course_id, org_filter=None, serialize=True):
         # and None do not have the same semantic meaning. None means no filtering.
         # Empty list means 'filter everything out'
         if org_filter is not None:
-            _set = []
-            for enrollment in qset:
-                if enrollment.course_id.org in org_filter:
-                    _set.append(enrollment)
+            enrollments_filter['course__display_org_with_default'] = org_filter
 
-            qset = _set
+        qset = CourseEnrollment.objects.filter(**enrollments_filter)
 
         if serialize:
             return CourseEnrollmentSerializer(qset, many=True).data

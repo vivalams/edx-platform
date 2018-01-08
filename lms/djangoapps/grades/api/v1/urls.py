@@ -8,10 +8,10 @@ from lms.djangoapps.grades.api.views import CourseGradingPolicy
 urlpatterns = patterns(
     '',
     url(
-        r'^course_grade/{course_id}/users/$'.format(
+        r'^v0/course_grade/{course_id}/users/$'.format(
             course_id=settings.COURSE_ID_PATTERN,
         ),
-        views.CourseGradeView.as_view(), name='user_grade_detail'
+        views.UserGradeView.as_view(), name='user_grade_detail'
     ),
     url(
         r'^course_grade/{course_id}/all_users/$'.format(
