@@ -12,7 +12,7 @@
             },
             initialize: function(options) {
                 this.options = _.extend({}, options);
-                _.bindAll(this,"addItem");
+                _.bindAll(this,"disconnect");
             },
             disconnect: function() {
                 var data = {};
