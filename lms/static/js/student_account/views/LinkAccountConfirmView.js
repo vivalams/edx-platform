@@ -32,9 +32,9 @@
                         view.showErrorMessage(xhr);
                     }
                 });
-            },
-            return LinkAccountConfirmView;
-        }
+            }
+        });
+        return LinkAccountConfirmView;
     });
 }).call(this, define || RequireJS.define);
 
