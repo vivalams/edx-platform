@@ -6,6 +6,8 @@ from django.http import Http404
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication 
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
@@ -17,6 +19,9 @@ from lms.djangoapps.grades.api.serializers import GradingPolicySerializer
 from lms.djangoapps.grades.course_grade_factory import CourseGradeFactory
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, view_auth_classes
 from student.roles import CourseStaffRole
+from openedx.core.lib.api.authentication import OAuth2AuthenticationAllowInactiveUser
+from openedx.core.lib.api.permissions import OAuth2RestrictedApplicatonPermission
+
 
 log = logging.getLogger(__name__)
 USER_MODEL = get_user_model()
@@ -27,6 +32,18 @@ class GradeViewMixin(DeveloperErrorViewMixin):
     """
     Mixin class for Grades related views.
     """
+    authentication_classes = (
+        OAuth2AuthenticationAllowInactiveUser,
+        SessionAuthentication,
+    )
+    permission_classes = (IsAuthenticated, OAuth2RestrictedApplicatonPermission,)
+
+    # needed for passing OAuth2RestrictedApplicatonPermission checks
+    # for RestrictedApplications (only). A RestrictedApplication can
+    # only call this method if it is allowed to receive a 'grades:read'
+    # scope
+    required_scopes = ['grades:read']
+
     def _get_course(self, course_key_string, user, access_action):
         """
         Returns the course for the given course_key_string after
@@ -171,6 +188,21 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
         Return:
             A JSON serialized representation of the requesting user's current grade status.
         """
+
+        # See if the request has an explicit ORG filter on the request
+        # which limits which OAuth2 clients can see what courses
+        # based on the association with a RestrictedApplication
+        #
+        # For more information on RestrictedApplications and the
+        # permissions model, see openedx/core/lib/api/permissions.py
+        if hasattr(request, 'auth') and hasattr(request.auth, 'org_associations'):
+            course_key = CourseKey.from_string(course_id)
+            if course_key.org not in request.auth.org_associations:
+                return self.make_error_response(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    developer_message='The OAuth2 RestrictedApplication is not associated with org.',
+                    error_code='course_org_not_associated_with_calling_application'
+                )
 
         course = self._get_course(course_id, request.user, 'load')
         if isinstance(course, Response):
