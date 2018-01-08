@@ -6,7 +6,7 @@
         'backbone',
         'gettext'
     ], function($, _, Backbone, gettext) {
-        var LinkAccountConfirmView = Backbone.View.extend({({
+        var LinkAccountConfirmView = Backbone.View.extend({
             events: {
                 "click #link-account-disconnect": "disconnect",
             },
