@@ -12,7 +12,6 @@
             },
             initialize: function(options) {
                 this.options = _.extend({}, options);
-                _.bindAll(this,"disconnect");
             },
             disconnect: function() {
                 var data = {};
@@ -22,11 +21,11 @@
                 var view = this;
                 $.ajax({
                     type: 'POST',
-                    url: this.options.disconnectUrl,
+                    url: this.options.disConnectUrl,
                     data: data,
                     dataType: 'html',
                     success: function() {
-
+                        alert("success");
                     },
                     error: function(xhr) {
                         view.showErrorMessage(xhr);
