@@ -16,7 +16,7 @@ from openedx.core.djangolib.markup import HTML, Text
 </%static:require_module>
 </%block>
 <main id="main" aria-label="Content" tabindex="-1">
-    <div class="container dashboard" id="dashboard-main">
+    <div class="container dashboard" id="link-account-confirm-main">
       <div class="link-account-confirm-header">
           <h1 class="header-title">${_("Confirm account update")}</h1>
           <div class="link-account-confirm-subtitle">
@@ -26,7 +26,7 @@ from openedx.core.djangolib.markup import HTML, Text
             <p>${_("Email (Use this to login)")}</p>
             <p class="link-account-confirm-subtitle">${email}</p>
             <p class="link-account-confirm-subtitle">${_("If this is not the account you want, you can ")}
-              <a href="#" id="link-account-disconnect">
+              <a href="#" class="link-account-disconnect">
                 ${_("sign in with a different account")}
               </a>.
             </p>
