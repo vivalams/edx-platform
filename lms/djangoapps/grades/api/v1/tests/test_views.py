@@ -296,7 +296,7 @@ class CurrentGradeViewTest(GradeViewTestMixin, APITestCase):
         """
         Test that the user gets her grade in case she answered tests with an insufficient score.
         """
-        with patch('lms.djangoapps.grades.new.course_grade.CourseGradeFactory.get_persisted') as mock_grade:
+        with patch('lms.djangoapps.grades.course_grade_factory.CourseGradeFactory.read') as mock_grade:
             grade_fields = {
                 'letter_grade': grade['letter_grade'],
                 'percent': grade['percent'],

@@ -54,7 +54,9 @@ def get_course_enrollments(user_id, org_filter=None):
     # and None do not have the same semantic meaning. None means no filtering.
     # Empty list means 'filter everything out'
     if org_filter is not None:
-        enrollments_filter['course__display_org_with_default'] = org_filter
+        enrollments_filter['course__org__in'] = org_filter
+
+    qset = CourseEnrollment.objects.filter(**enrollments_filter)
 
     enrollments = CourseEnrollmentSerializer(qset, many=True).data
 
@@ -130,7 +132,7 @@ def get_user_enrollments(course_id, org_filter=None, serialize=True):
         # and None do not have the same semantic meaning. None means no filtering.
         # Empty list means 'filter everything out'
         if org_filter is not None:
-            enrollments_filter['course__display_org_with_default'] = org_filter
+            enrollments_filter['course__org__in'] = org_filter
 
         qset = CourseEnrollment.objects.filter(**enrollments_filter)
 

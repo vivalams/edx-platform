@@ -122,14 +122,12 @@ class GradeViewMixin(DeveloperErrorViewMixin):
                 error_code='user_does_not_exist'
             )
 
-    def _get_all_users(self, request, courses):
+    def _get_all_users(self, request, course):
         """
         Validates course enrollments and returns the users course enrollment data
         Returns a 404 error response if the user course enrollments does not exist.
         """
         try:
-            course = courses[0]
-
             org_filter = self._get_org_filter(request)
             return enrollment_data.get_user_enrollments(
                 course.id, org_filter=org_filter, serialize=False
@@ -141,13 +139,10 @@ class GradeViewMixin(DeveloperErrorViewMixin):
                 error_code='no_course_enrollments'
             )
 
-    def _get_grade_response(self, user, course, calculate=None, use_email=None):
+    def _make_grade_response(self, user, course, course_grade, use_email=None):
         """
-        Get the grade for the specified user and course.
+        Serialize a single grade to dict to use in Repsonses
         """
-     
-        course_grade = CourseGradeFactory().read(user, course)
-
         if use_email is not None:
             user = user.email
         else:
@@ -267,7 +262,7 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
                     error_code='course_org_not_associated_with_calling_application'
                 )
 
-        course = self._get_course(course_id, request.user, 'load')
+        course = self._get_course(request, course_id, request.user, 'load')
         if isinstance(course, Response):
             # Returns a 404 if course_id is invalid, or request.user is not enrolled in the course
             return course
@@ -280,7 +275,10 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
 
         use_email = request.GET.get('use_email', None)
 
-        return self._get_grade_response(grade_user, course, use_email)
+        course_grade = CourseGradeFactory().read(grade_user, course)
+        response = self._make_grade_response(grade_user, course, course_grade, use_email)
+
+        return Response([response])
 
 
 class CourseGradeAllUsersView(GradeViewMixin, GenericAPIView):
@@ -370,19 +368,20 @@ class CourseGradeAllUsersView(GradeViewMixin, GenericAPIView):
             # Returns a 404 if course_id is invalid, or request.user is not enrolled in the course
             return course
 
-        enrollments_in_course = self._get_all_users(request, [course])
+        enrollments_in_course = self._get_all_users(request, course)
         if isinstance(enrollments_in_course, Response):
             # Returns a 403 if the request.user can't access grades for the requested user,
             # or a 404 if the requested user does not exist or the course had no enrollments.
             return enrollments_in_course
 
         paged_enrollments = self.paginator.paginate_queryset(enrollments_in_course, self.request, view=self)
-        response = []
+        users = (enrollment.user for enrollment in paged_enrollments)
+        grades = CourseGradeFactory().iter(users, course)
 
-        for enrollment in paged_enrollments:
-            user = enrollment.user
-            course_grade = self._get_grade_response(user, course, use_email)
-            response.append(course_grade)
+        response = []
+        for user, course_grade, __ in grades:
+            course_grade_res = self._make_grade_response(user, course, course_grade, use_email)
+            response.append(course_grade_res)
 
         return Response(response)
 
