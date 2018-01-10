@@ -104,7 +104,7 @@ from util.milestones_helpers import (
 
 from util.password_policy_validators import validate_password_strength
 import third_party_auth
-from third_party_auth.models import UserSocialAuthMapping
+from third_party_auth.models import UserSocialAuthMapping, OAuth2ProviderConfig
 from third_party_auth import pipeline, provider
 from student.helpers import (
     check_verify_status_by_course,
@@ -2700,6 +2700,11 @@ class LogoutView(TemplateView):
 
         # Clear the cookie used by the edx.org marketing site
         delete_logged_in_cookies(response)
+        if third_party_auth.is_enabled():
+            provider = OAuth2ProviderConfig.current("live")
+            client_id = provider.get_setting("KEY")
+            redirect_url = configuration_helpers.get_value('LMS_ROOT_URL')
+            return redirect("https://login.live.com/oauth20_logout.srf?client_id={}&redirect_uri={}".format(client_id, redirect_url))
 
         return response
 

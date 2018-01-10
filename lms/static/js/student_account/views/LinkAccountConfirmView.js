@@ -26,7 +26,7 @@
                     data: data,
                     dataType: 'html',
                     success: function() {
-                        alert("success");
+                        window.location.href = '/logout';
                     },
                     error: function(xhr) {
                         view.showErrorMessage(xhr);
