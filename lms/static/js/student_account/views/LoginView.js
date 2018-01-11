@@ -78,7 +78,6 @@
                         // MSA migration pipeline
                         this.$container.find('.password-password, .checkbox-remember, .login-providers, .toggle-form').hide();
                         this.$form.find('#login-password').prop('required', false);
-                        this.$form.find('#login-email-desc').text('Enter an email to login or register to ' + this.platformName);
                     }
 
                     if (this.errorMessage) {
@@ -166,7 +165,22 @@
                             }, 1000);
                             break;
                         case MSAMigrationStatus.REGISTER_NEW_USER:
-                            this.$container.find('.form-toggle').click();
+
+                            var toggleForm = this.toggleForm;
+
+                            var msg = HtmlUtils.joinHtml(
+                                _.sprintf(
+                                    gettext('This email is not registered with %(platformName)s.' +
+                                            ' Please try a different email or '),
+                                    {platformName: this.platformName}
+                                ),
+                                HtmlUtils.HTML('<a href="/register" class="form-toggle" data-type="register">register</a>'),
+                                gettext(' before signing in.')
+                            )
+
+                            this.errors = ['<li>' + msg + '</li>'];
+                            this.clearPasswordResetSuccess();
+                            this.renderErrors(this.defaultFormErrorsTitle, this.errors);
                             this.toggleDisableButton(false);
                             break;
                         default:

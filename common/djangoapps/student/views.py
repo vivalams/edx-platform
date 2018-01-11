@@ -1207,6 +1207,11 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
     user = None
     platform_name = configuration_helpers.get_value("platform_name", settings.PLATFORM_NAME)
 
+    msa_migration_enabled = configuration_helpers.get_value(
+        "ENABLE_MSA_MIGRATION",
+        settings.FEATURES.get("ENABLE_MSA_MIGRATION", False)
+    )
+
     if third_party_auth_requested and not trumped_by_first_party_auth:
         # The user has already authenticated via third-party auth and has not
         # asked to do first party auth by supplying a username or password. We
@@ -1263,7 +1268,8 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
 
         email = request.POST['email']
         password = request.POST['password']
-        msa_migration_pipeline_status = request.POST.get('msa_migration_pipeline_status', 'EMAIL_LOOKUP')
+        if msa_migration_enabled:
+            msa_migration_pipeline_status = request.POST.get('msa_migration_pipeline_status', 'EMAIL_LOOKUP')
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
@@ -1289,11 +1295,6 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
 
     # see if account has been locked out due to excessive login failures
     user_found_by_email_lookup = user
-
-    msa_migration_enabled = configuration_helpers.get_value(
-        "ENABLE_MSA_MIGRATION",
-        settings.FEATURES.get("ENABLE_MSA_MIGRATION", False)
-    )
 
     if msa_migration_enabled:
         if msa_migration_pipeline_status in ('EMAIL_LOOKUP', 'REGISTER_NEW_USER'):
