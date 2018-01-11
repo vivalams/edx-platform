@@ -1,8 +1,8 @@
 <main id="main" aria-label="Content">
     <div class="account-settings-container">
         <div class="account-settings-sections">
-            <div class="section">
-                <h1 class="header-title"><%- gettext("Account update required") %></h1>
+            <div class="section link-account-header">
+                <h1><%- gettext("Account update required") %></h1>
                 <div class="account-settings-header">
                     <p class="link-account-header-subtitle"><%- userName %></p>
                     <p class="link-account-header-subtitle"><%- gettext("In order to provide you with better security and easier profile management, we are changing to Microsoft accounts for authentication") %></span>
