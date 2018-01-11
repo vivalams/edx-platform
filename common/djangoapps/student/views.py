@@ -2700,7 +2700,7 @@ class LogoutView(TemplateView):
 
         # Clear the cookie used by the edx.org marketing site
         delete_logged_in_cookies(response)
-        if third_party_auth.is_enabled():
+        if third_party_auth.is_enabled() and pipeline.running(request):
             provider = OAuth2ProviderConfig.current("live")
             client_id = provider.get_setting("KEY")
             redirect_url = configuration_helpers.get_value('LMS_ROOT_URL')

@@ -36,10 +36,14 @@
 .link-account-confirm-header {
     h1 {
         color: #2e2e2e;
-        font: normal 2em/1.4em "Segoe UI","Open Sans",Verdana,Geneva,sans-serif,sans-serif;
+        font: normal 2em/1.4em "Segoe UI Light","Segoe UI Regular","Segoe UI",Verdana,Geneva,sans-serif,sans-serif;
         letter-spacing: 1px;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
         text-align: left !important;
+    }
+    .link-account-confirm-subtitle {
+        font-family: "Segoe UI Bold","Segoe UI Regular","Segoe UI"
+        font-weight: 700;
     }
 }
 
