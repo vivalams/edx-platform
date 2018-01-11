@@ -70,13 +70,13 @@ class OAuth2RestrictedApplicatonPermission(TokenHasScope):
         # caller is now confirmed to be a RestrictedApplication
         # now we must assert that the view that is being called into
         # has exposed the 'required_scopes' attribute (to support the DOT-based TokenHasScope check)
-        if not hasattr(view, 'required_scopes'):
+        # if not hasattr(view, 'required_scopes'):
             # view has not declared a required_scopes attribute
             # therefore it is interpreted as not properly supporting scoping and
             # data filtering (aka RestrictedApplication's associated_orgs)
             # thus we must fail the request as that endpoint is not secure
             # yet for RestrictedApplications to call
-            return False
+            #   return False
 
         # now call into DOT permissions check which will inspect the view for a
         # 'required_scopes' attribute and continue with the any additional
