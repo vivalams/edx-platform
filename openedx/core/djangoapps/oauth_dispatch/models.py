@@ -36,7 +36,7 @@ class RestrictedApplication(models.Model):
     # this field will be used to implement appropriate data filtering
     # so that clients of a specific OAuth2 Application will only be
     # able retrieve datasets that the OAuth2 Application is allowed to retrieve.
-    _org_associations = models.TextField(null=True)
+    _org_associations = models.ManyToManyField(Organization)
 
     def __unicode__(self):
         """
@@ -116,7 +116,8 @@ class RestrictedApplication(models.Model):
         """
         Translate space delimited string to a list
         """
-        return self._get_list_from_delimited_string(self._org_associations)
+        org_list = [org for org in self._org_associations.all()]
+        return org_list
 
     @org_associations.setter
     def org_associations(self, value):
