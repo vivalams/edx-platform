@@ -7,10 +7,12 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework import exceptions as drf_exceptions
 from rest_framework_oauth.authentication import OAuth2Authentication
 from oauth2_provider.ext.rest_framework.permissions import TokenHasScope
+from provider.oauth2.models import AccessToken as DOPAccessToken
 
 from provider.oauth2 import models as dop_models
 from oauth2_provider import models as dot_models
 
+from openedx.core.djangoapps.oauth_dispatch.models import RestrictedApplication
 from openedx.core.lib.api.exceptions import AuthenticationFailed
 
 
@@ -69,7 +71,6 @@ class SessionAuthenticationAllowInactiveUser(SessionAuthentication):
 
         # CSRF passed with authenticated user
         return (user, None)
-
 
 class OAuth2AuthenticationAllowInactiveUser(OAuth2Authentication):
     """
@@ -160,7 +161,6 @@ class OAuth2AuthenticationAllowInactiveUser(OAuth2Authentication):
         token_query = dot_models.AccessToken.objects.select_related('user')
         return token_query.filter(token=access_token).first()
 
-class OAuth2RestrictedApplicatonAuthentication(TokenHasScope):
     def has_scopes(self, request, view):
         restricted_oauth_required = False
         if hasattr(view, 'restricted_oauth_required'):
