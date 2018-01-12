@@ -153,3 +153,38 @@ class OAuth2AuthenticationAllowInactiveUser(OAuth2Authentication):
         """
         token_query = dot_models.AccessToken.objects.select_related('user')
         return token_query.filter(token=access_token).first()
+
+    def has_scopes(self, request, view):
+        restricted_oauth_required = False
+        if hasattr(view, 'restricted_oauth_required'):
+            restricted_oauth_required = True
+
+        token = request.auth
+        if not token:
+            if not restricted_oauth_required:
+                # If we are not an OAuth2 request - some APIs in Open edX allow for Django Session
+                # based authentication, then we must pass here and continue with other
+                # possible authorization checks declared on the API endpoint
+                return True
+            else:
+                return False
+
+        # check to see if token is a DOP token
+        # if so this represents a client which is implicitly trusted
+        # (since it is an internal Open edX application)
+        if isinstance(token, DOPAccessToken):
+            return True
+
+        restrictied_application = RestrictedApplication.get_restricted_application_from_token(token.token)
+        if not restrictied_application:
+            # Application is not a restricted application, therefore it is trusted and can pass
+            # this specific check, although the API endpoint might declare other permission
+            # checks
+            return True
+        if not hasattr(view, 'required_scopes'):
+            # view has not declared a required_scopes attribute
+            # therefore it is interpreted as not properly supporting scoping and
+            # data filtering (aka RestrictedApplication's associated_orgs)
+            # thus we must fail the request as that endpoint is not secure
+            # yet for RestrictedApplications to call
+            return False
