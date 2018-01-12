@@ -136,36 +136,7 @@ class RestrictedApplication(models.Model):
         """
         Returns if the RestriectedApplication is associated with the requested org
         """
-
         return org in self.org_associations
-
-    @property
-    def allowed_users(self):
-        """
-        Translate space delimited string to a list
-        """
-        return self._get_list_from_delimited_string(self._allowed_users)
-
-    @allowed_users.setter
-    def allowed_users(self, value):
-        """
-        Convert list to separated string
-        """
-        self._allowed_users = _DEFAULT_SEPARATOR.join(value)
-
-    def has_user(self, user):
-        """
-        Returns in the RestrictedApplication has the requested users
-        """
-
-        return user in self.allowed_users
-
-    def has_users(self):
-        """
-        Returns True if users are specified in RestrictedApplication
-
-        """
-        return bool(self._get_list_from_delimited_string(self._allowed_users))
 
     @classmethod
     def set_access_token_as_expired(cls, access_token):
