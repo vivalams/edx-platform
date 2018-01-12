@@ -38,13 +38,6 @@ class RestrictedApplication(models.Model):
     # able retrieve datasets that the OAuth2 Application is allowed to retrieve.
     _org_associations = models.TextField(null=True)
 
-    # a space separated list of users that this application is associated with
-    # this field will be used to implement appropriate data filtering
-    # so that clients of a specific OAuth2 Application will only be
-    # able retrieve datasets that the OAuth2 Application is allowed to retrieve.
-    # OPTIONAL field if no filtering on users required
-    _allowed_users = models.TextField(null=True, blank=True)
-
     def __unicode__(self):
         """
         Return a unicode representation of this object
