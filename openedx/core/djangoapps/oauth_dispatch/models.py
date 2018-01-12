@@ -117,7 +117,7 @@ class RestrictedApplication(models.Model):
         """
         Translate space delimited string to a list
         """
-        org_list = [each for each in self._org_associations.all()]
+        org_list = [each.split('(')[0].strip() for each in self._org_associations.all()]
         return org_list
 
     @org_associations.setter
