@@ -120,7 +120,7 @@ class RestrictedApplication(models.Model):
         org_objs = self._org_associations.all()
         org_list = []
         for each in org_objs:
-            org_list.append(each.split('(')[0].strip())
+            org_list.append(each.__str__().split('(')[0].strip())
         return org_list
 
     @org_associations.setter
