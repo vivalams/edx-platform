@@ -174,7 +174,7 @@
                                             ' Please try a different email or '),
                                     {platformName: this.platformName}
                                 ),
-                                HtmlUtils.HTML('<a href="/register" class="form-toggle" data-type="register">register</a>'),
+                                HtmlUtils.HTML('<a href="/register" class="form-toggle btn-neutral btn-register" data-type="register">register</a>'),
                                 gettext(' before signing in.')
                             )
 

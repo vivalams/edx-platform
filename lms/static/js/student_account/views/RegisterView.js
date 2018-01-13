@@ -68,18 +68,8 @@
                         // Hide all form content except the login-providers div.
                         // We need to force users to register with their
                         // Microsoft account
-                        var len = this.$form.children().length;
-                        this.$form.children().slice(1).hide();
-                        console.log(this.$form)
 
-                        // var forceMsaRegisterHTML = HtmlUtils.joinHtml(
-                        //     HtmlUtils.HTML('<p>'),
-                        //     gettext('Sign in with or create a Microsoft account to access courses.'),
-                        //     HtmlUtils.HTML('</p>'),
-                        //     HtmlUtils.HTML('<button class="nav-btn btn-primary">Get Started</button>')
-                        // );
-                        //
-                        // this.$form.children = forceMsaRegisterHTML;
+                        this.$form.children().slice(1).hide();
                     }
 
                     // Must be called after postRender, since postRender sets up $formFeedback.
