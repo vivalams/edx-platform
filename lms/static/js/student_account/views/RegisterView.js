@@ -4,10 +4,11 @@
         'jquery',
         'underscore',
         'gettext',
+        'edx-ui-toolkit/js/utils/html-utils',
         'js/student_account/views/FormView',
         'text!templates/student_account/form_status.underscore'
     ],
-        function($, _, gettext, FormView, formStatusTpl) {
+        function($, _, gettext, HtmlUtils, FormView, formStatusTpl) {
             return FormView.extend({
                 el: '#register-form',
 
@@ -15,7 +16,8 @@
 
                 events: {
                     'click .js-register': 'submitForm',
-                    'click .login-provider': 'thirdPartyAuth'
+                    'click .login-provider': 'thirdPartyAuth',
+                    'click .login-provider-msa-migration': 'thirdPartyAuth'
                 },
 
                 formType: 'register',
@@ -55,7 +57,8 @@
                             currentProvider: this.currentProvider,
                             providers: this.providers,
                             hasSecondaryProviders: this.hasSecondaryProviders,
-                            platformName: this.platformName
+                            platformName: this.platformName,
+                            msaMigrationEnabled: this.msaMigrationEnabled
                         }
                     }));
 
@@ -65,6 +68,7 @@
                         // Hide all form content except the login-providers div.
                         // We need to force users to register with their
                         // Microsoft account
+
                         this.$form.children().slice(1).hide();
                     }
 

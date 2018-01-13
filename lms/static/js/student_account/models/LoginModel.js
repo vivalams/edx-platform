@@ -48,8 +48,6 @@
                 if (this.msaMigrationEnabled) {
                     var msaAttributes = {};
 
-                    console.log(MSA_MIGRATION_PIPELINE_STATUS)
-
                     if (!data.hasOwnProperty(MSA_MIGRATION_PIPELINE_STATUS)) {
                         msaAttributes[MSA_MIGRATION_PIPELINE_STATUS] = this.msa_migration_pipeline_status || MSAMigrationStatus.EMAIL_LOOKUP
                     }
@@ -83,7 +81,6 @@
                         model.trigger('sync', data);
                     },
                     error: function(error) {
-                        console.error('ERROR: ', error)
                         model.trigger('error', error);
                     }
                 })

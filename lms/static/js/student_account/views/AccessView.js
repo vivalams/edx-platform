@@ -69,9 +69,8 @@
 
                     this.platformName = options.platform_name;
                     this.supportURL = options.support_link;
-                    console.log(options)
                     this.msaMigrationEnabled = options.enable_msa_migration;
-                    this.msa_migration_pipeline_status = null
+                    this.msa_migration_pipeline_status = null;
 
                 // The login view listens for 'sync' events from the reset model
                     this.resetModel = new PasswordResetModel({}, {
