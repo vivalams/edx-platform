@@ -110,6 +110,7 @@ class LoginRequiredMiddleware:
             if not any(m.match(path) for m in EXEMPT_URLS):
                 return login_required(view_func)(request, view_args, view_kwargs)
 
+
 class AccountLinkingMiddleware(object):
     """
     Middleware that requires to enable users to linked their account with edx user account
@@ -122,16 +123,19 @@ class AccountLinkingMiddleware(object):
         from accessing pages, wrap the next view with the django login_required middleware
         """
 
-        enable_msa_migration = configuration_helpers.get_value("ENABLE_MSA_MIGRATION", settings.ENABLE_MSA_MIGRATION)
+        enable_msa_migration = configuration_helpers.get_value(
+            "ENABLE_MSA_MIGRATION",
+            settings.ENABLE_MSA_MIGRATION
+        )
         if request.user.is_authenticated() and enable_msa_migration:
-            is_redirection = None
             try:
-                social_auth_users = UserSocialAuth.objects.get(user = request.user, provider="live")
-                return None
+                UserSocialAuth.objects.get(user=request.user, provider="live")
             except UserSocialAuth.DoesNotExist:
-                is_redirection = True
-            if is_redirection:
-                account_linking_redirect_urls = configuration_helpers.get_value("DEFAULT_ACCOUNT_LINK_REDIRECT_URLS", settings.DEFAULT_ACCOUNT_LINK_REDIRECT_URLS)
+                # Redirect users to account link page if they don't have a live account linked already
+                account_linking_redirect_urls = configuration_helpers.get_value(
+                    "DEFAULT_ACCOUNT_LINK_REDIRECT_URLS",
+                    settings.DEFAULT_ACCOUNT_LINK_REDIRECT_URLS
+                )
                 path = request.path_info.lstrip('/')
                 REDIRECT_URLS = [compile(expr) for expr in account_linking_redirect_urls]
                 if any(m.match(path) for m in REDIRECT_URLS):

@@ -110,9 +110,9 @@ def login_and_registration_form(request, initial_mode="login"):
     if ext_auth_response is not None:
         return ext_auth_response
 
-    third_party_auth = _third_party_auth_context(request, redirect_to, initial_mode)
-    if isinstance(third_party_auth, HttpResponse):
-        return third_party_auth
+    third_party_auth_context = _third_party_auth_context(request, redirect_to, initial_mode)
+    if isinstance(third_party_auth_context, HttpResponse):
+        return third_party_auth_context
 
     enable_msa_migration = configuration_helpers.get_value(
         "ENABLE_MSA_MIGRATION",
@@ -124,7 +124,7 @@ def login_and_registration_form(request, initial_mode="login"):
         'data': {
             'login_redirect_url': redirect_to,
             'initial_mode': initial_mode,
-            'third_party_auth': third_party_auth,
+            'third_party_auth': third_party_auth_context,
             'third_party_auth_hint': third_party_auth_hint or '',
             'platform_name': configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME),
             'support_link': configuration_helpers.get_value('SUPPORT_SITE_LINK', settings.SUPPORT_SITE_LINK),

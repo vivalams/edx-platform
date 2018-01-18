@@ -64,12 +64,16 @@
 
                     this.postRender();
 
-                    if (this.msaMigrationEnabled && !this.currentProvider) {
+                    if (this.msaMigrationEnabled) {
                         // Hide all form content except the login-providers div.
                         // We need to force users to register with their
                         // Microsoft account
 
-                        this.$form.children().slice(1).hide();
+
+                        if (!this.currentProvider) {
+                            this.$form.children().slice(1).hide();
+                        }
+                        $(this.$el).find('.toggle-form').hide();
                     }
 
                     // Must be called after postRender, since postRender sets up $formFeedback.
@@ -102,18 +106,31 @@
 
                 saveError: function(error) {
                     $(this.el).show(); // Show in case the form was hidden for auto-submission
-                    this.errors = _.flatten(
-                        _.map(
-                            // Something is passing this 'undefined'. Protect against this.
-                            JSON.parse(error.responseText || '[]'),
-                            function(errorList) {
-                                return _.map(
-                                    errorList,
-                                    function(errorItem) { return '<li>' + errorItem.user_message + '</li>'; }
-                                );
-                            }
-                        )
-                    );
+                    if (error.status === 409 && error.responseJSON.hasOwnProperty('email')) {
+                        var msgText = error.responseJSON.email[0].user_message;
+                        var msg = HtmlUtils.joinHtml(
+                            _.sprintf(
+                                gettext(msgText + " If you already have an account, "),
+                                {platformName: this.platformName}
+                            ),
+                            HtmlUtils.HTML('<a href="/logout?next=%2Flogin" class="btn-neutral btn-register" data-type="login">login</a>'),
+                            gettext(' instead.')
+                        );
+                        this.errors = ['<li>' + msg + '</li>'];
+                    } else {
+                        this.errors = _.flatten(
+                            _.map(
+                                // Something is passing this 'undefined'. Protect against this.
+                                JSON.parse(error.responseText || '[]'),
+                                function(errorList) {
+                                    return _.map(
+                                        errorList,
+                                        function(errorItem) { return '<li>' + errorItem.user_message + '</li>'; }
+                                    );
+                                }
+                            )
+                        );
+                    }
                     this.renderErrors(this.defaultFormErrorsTitle, this.errors);
                     this.toggleDisableButton(false);
                 },

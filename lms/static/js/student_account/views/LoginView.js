@@ -176,7 +176,7 @@
                                 ),
                                 HtmlUtils.HTML('<a href="/register" class="form-toggle btn-neutral btn-register" data-type="register">register</a>'),
                                 gettext(' before signing in.')
-                            )
+                            );
 
                             this.errors = ['<li>' + msg + '</li>'];
                             this.clearPasswordResetSuccess();
