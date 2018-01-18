@@ -76,7 +76,9 @@
                         // for the user, we want to only show the email field and submit button.
                         // Once they enter an email, this step will force them through the
                         // MSA migration pipeline
-                        this.$container.find('.password-password, .checkbox-remember, .login-providers, .toggle-form').hide();
+                        this.$container.find(
+                            '.password-password, .checkbox-remember, .login-providers, .toggle-form'
+                        ).attr('aria-hidden', 'true').hide();
                         this.$form.find('#login-password').prop('required', false);
                     }
 
@@ -146,7 +148,7 @@
                 saveSuccess: function(data) {
                     switch (data.msa_migration_pipeline_status) {
                         case MSAMigrationStatus.LOGIN_NOT_MIGRATED:
-                            this.$form.find('.password-password').show();
+                            this.$form.find('.password-password').attr('aria-hidden', 'false').show();
                             this.toggleDisableButton(false);
                             this.model.msa_migration_pipeline_status = MSAMigrationStatus.LOGIN_NOT_MIGRATED;
                             break;

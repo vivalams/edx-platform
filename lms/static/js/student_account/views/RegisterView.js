@@ -71,9 +71,9 @@
 
 
                         if (!this.currentProvider) {
-                            this.$form.children().slice(1).hide();
+                            this.$form.children().slice(1).attr('aria-hidden', 'true').hide();
                         }
-                        $(this.$el).find('.toggle-form').hide();
+                        $(this.$el).find('.toggle-form').attr('aria-hidden', 'true').hide();
                     }
 
                     // Must be called after postRender, since postRender sets up $formFeedback.
@@ -81,6 +81,8 @@
                         this.renderErrors(formErrorsTitle, [this.errorMessage]);
                     } else if (this.currentProvider) {
                         this.renderAuthWarning();
+                        // Don't allow user to edit email or name
+                        this.$form.find('#register-email, #register-name').prop('disabled', true);
                     }
 
                     if (this.autoSubmit) {
