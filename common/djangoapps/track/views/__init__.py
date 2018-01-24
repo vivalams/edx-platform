@@ -1,5 +1,6 @@
 import datetime
 import json
+import string
 
 import pytz
 
@@ -123,18 +124,21 @@ def user_track(request):
 
     GET or POST call should provide "event_type", "event", and "page" arguments.
     """
+    name = _get_request_value(request, 'event_type')
+    data = _get_request_value(request, 'event', {})
+    page = _get_request_value(request, 'page')
+    referer = _get_request_value(request, 'HTTP_REFERER')
+
     try:
         username = request.user.username
 
         if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
+            page = string.replace(page, username, '')
+            referer = string.replace(referer, username, '')
             username = ''
 
     except:
         username = "anonymous"
-
-    name = _get_request_value(request, 'event_type')
-    data = _get_request_value(request, 'event', {})
-    page = _get_request_value(request, 'page')
 
     if isinstance(data, basestring) and len(data) > 0:
         try:
@@ -167,12 +171,20 @@ def server_track(request, event_type, event, page=None):
         return  # don't log
 
     context_override = eventtracker.get_tracker().resolve_context()
+    referer_override = _get_request_header(request, 'HTTP_REFERER')
+
     try:
         username = request.user.username
         """Check if we want to keep username"""
         if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
+            if isinstance(event, str):
+                event = string.replace(event, username, '')
+            context_override['path'] = string.replace(context_override['path'], username, '')
+            referer_override = string.replace(referer_override, username, '')
+            event_type = string.replace(event_type, username, '')
             username = ''
             context_override['username'] = ''
+
 
         """Check if this is an event(e.g. video) that needs anonymization"""
         if is_anonymization_needed(request):
@@ -188,7 +200,7 @@ def server_track(request, event_type, event, page=None):
     event = {
         "username": username,
         "ip": get_request_ip(request),
-        "referer": _get_request_header(request, 'HTTP_REFERER'),
+        "referer": referer_override,
         "accept_language": _get_request_header(request, 'HTTP_ACCEPT_LANGUAGE'),
         "event_source": "server",
         "event_type": event_type,
@@ -240,8 +252,10 @@ def task_track(request_info, task_info, event_type, event, page=None):
         context_override = eventtracker.get_tracker().resolve_context()
 
         if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
+            event_type = string.replace(event_type, username, '')
             username = ''
             context_override['username'] = username
+            context_override['path'] = string.replace(context_override['path'], username, '')
 
         event = {
             "username": username,
