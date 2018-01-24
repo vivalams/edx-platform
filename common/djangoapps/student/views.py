@@ -41,6 +41,7 @@ from provider.oauth2.models import Client
 from ratelimitbackend.exceptions import RateLimitException
 
 from social.apps.django_app import utils as social_utils
+from social.apps.django_app.default.models import UserSocialAuth
 from social.backends import oauth as social_oauth
 from social.exceptions import AuthException, AuthAlreadyAssociated
 from social.apps.django_app.default.models import UserSocialAuth
@@ -102,7 +103,7 @@ from util.milestones_helpers import (
 
 from util.password_policy_validators import validate_password_strength
 import third_party_auth
-from third_party_auth.models import UserSocialAuthMapping
+from third_party_auth.models import UserSocialAuthMapping, OAuth2ProviderConfig
 from third_party_auth import pipeline, provider
 from student.helpers import (
     check_verify_status_by_course,
@@ -588,8 +589,8 @@ def dashboard(request):
 
     """
     user = request.user
-    enable_msa_migration = configuration_helpers.get_value("ENABLE_MSA_MIGRATION")
-    if enable_msa_migration:
+    
+    if configuration_helpers.get_value("ENABLE_MSA_MIGRATION"):
         is_redirection = None
         try:
             # Check to see user social entry for this user
@@ -1189,6 +1190,7 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
     backend_name = None
     email = None
     password = None
+    msa_migration_pipeline_status = None
     redirect_url = None
     response = None
     running_pipeline = None
@@ -1197,6 +1199,11 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
     trumped_by_first_party_auth = bool(request.POST.get('email')) or bool(request.POST.get('password'))
     user = None
     platform_name = configuration_helpers.get_value("platform_name", settings.PLATFORM_NAME)
+
+    msa_migration_enabled = configuration_helpers.get_value(
+        "ENABLE_MSA_MIGRATION",
+        settings.FEATURES.get("ENABLE_MSA_MIGRATION", False)
+    )
 
     if third_party_auth_requested and not trumped_by_first_party_auth:
         # The user has already authenticated via third-party auth and has not
@@ -1254,6 +1261,8 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
 
         email = request.POST['email']
         password = request.POST['password']
+        if msa_migration_enabled:
+            msa_migration_pipeline_status = request.POST.get('msa_migration_pipeline_status', 'EMAIL_LOOKUP')
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
@@ -1279,6 +1288,32 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
 
     # see if account has been locked out due to excessive login failures
     user_found_by_email_lookup = user
+
+    if msa_migration_enabled:
+        if msa_migration_pipeline_status in ('EMAIL_LOOKUP', 'REGISTER_NEW_USER'):
+            if user_found_by_email_lookup:
+                try:
+                    # User has already migrated to Microsoft Account (MSA),
+                    # redirect them through that flow.
+                    UserSocialAuth.objects.get(user=user_found_by_email_lookup)
+                    # UserSocialAuth.objects.get(user=user_found_by_email_lookup, provider='live')
+                    msa_migration_pipeline_status = 'LOGIN_MIGRATED'
+
+                except UserSocialAuth.DoesNotExist:
+                    # User has not migrated to Microsoft Account,
+                    # return successfully found user to show password field.
+                    msa_migration_pipeline_status = 'LOGIN_NOT_MIGRATED'
+
+
+            else:
+                # New user
+                msa_migration_pipeline_status = 'REGISTER_NEW_USER'
+
+            return JsonResponse({
+                "success": True,
+                "value": msa_migration_pipeline_status
+            })
+
     if user_found_by_email_lookup and LoginFailures.is_feature_enabled():
         if LoginFailures.is_user_locked_out(user_found_by_email_lookup):
             lockout_message = _('This account has been temporarily locked due '
@@ -1384,6 +1419,14 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
             raise
 
         redirect_url = None  # The AJAX method calling should know the default destination upon success
+        try:
+            # Check to see user social entry for this user
+            social_auth_users = UserSocialAuth.objects.filter(user__username=user.username)
+            if not social_auth_users:
+                redirect_url = "/account/link"
+        except UserSocialAuth.DoesNotExist:
+            redirect_url = "/account/link"
+
         if third_party_auth_successful:
             redirect_url = pipeline.get_complete_url(backend_name)
 
@@ -2647,6 +2690,11 @@ class LogoutView(TemplateView):
 
         # Clear the cookie used by the edx.org marketing site
         delete_logged_in_cookies(response)
+        if third_party_auth.is_enabled() and pipeline.running(request):
+            provider = OAuth2ProviderConfig.current("live")
+            client_id = provider.get_setting("KEY")
+            redirect_url = configuration_helpers.get_value('LMS_ROOT_URL')
+            return redirect("https://login.live.com/oauth20_logout.srf?client_id={}&redirect_uri={}".format(client_id, redirect_url))
 
         return response
 

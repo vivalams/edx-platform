@@ -152,7 +152,11 @@ class LoginSessionView(APIView):
         # For the initial implementation, shim the existing login view
         # from the student Django app.
         from student.views import login_user
-        return shim_student_view(login_user, check_logged_in=True)(request)
+        if request.POST.get('msa_migration_pipeline_status') in ('EMAIL_LOOKUP', 'REGISTER_NEW_USER'):
+            check_logged_in = False
+        else:
+            check_logged_in = True
+        return shim_student_view(login_user, check_logged_in=check_logged_in)(request)
 
 
 class RegistrationView(APIView):

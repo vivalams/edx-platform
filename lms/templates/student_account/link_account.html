@@ -1,0 +1,22 @@
+<%!
+    import json
+    from django.utils.translation import ugettext as _
+    from openedx.core.djangolib.js_utils import dump_js_escaped_json
+%>
+<%namespace name='static' file='/static_content.html'/>
+
+<%inherit file="../main.html" />
+
+<%block name="pagetitle">${_("Sign in or Register")}</%block>
+<div class="wrapper-account-settings"></div>
+<%block name="headextra">
+    <%static:css group='style-course'/>
+</%block>
+<%block name="js_extra">
+<%static:require_module module_name="js/student_account/views/link_account_factory" class_name="LinkAccountFactory">
+        var authData = ${ auth | n, dump_js_escaped_json },
+            platformName = ${ platform_name | n, dump_js_escaped_json },
+            userName = ${ user_name | n, dump_js_escaped_json };
+        LinkAccountFactory(authData, platformName, userName);
+</%static:require_module>
+</%block>

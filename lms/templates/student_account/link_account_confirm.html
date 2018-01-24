@@ -1,0 +1,38 @@
+<%page expression_filter="h"/>
+<%inherit file="/main.html" />
+<%namespace name='static' file='/static_content.html'/>
+<%!
+from django.utils.translation import ugettext as _
+from openedx.core.djangolib.js_utils import dump_js_escaped_json, js_escaped_string
+from openedx.core.djangolib.markup import HTML, Text
+%>
+
+<%block name="pagetitle">${_("Account confirmation")}</%block>
+<%block name="bodyclass">view-dashboard is-authenticated</%block>
+<%block name="js_extra">
+<%static:require_module module_name="js/student_account/views/link_account_confirm_factory" class_name="LinkAccountConfirmFactory">
+        var disConnectUrl = ${ disconnect_url | n, dump_js_escaped_json };
+        LinkAccountConfirmFactory(disConnectUrl);
+</%static:require_module>
+</%block>
+<main id="main" aria-label="Content" tabindex="-1">
+    <div class="container dashboard" id="link-account-confirm-main">
+      <div class="link-account-header">
+          <h1 class="header-title">${_("Confirm account update")}</h1>
+          <div>
+            <p>${_("Your full name and email will be updated with the following information:")}</p>
+            <p>${_("Full name")}</p>
+            <p class="link-account-confirm-subtitle">${user_name}</p>
+            <p>${_("Email (Use this to login)")}</p>
+            <p class="link-account-confirm-subtitle">${email}</p>
+            <p>${_("If this is not the account you want, you can ")}
+              <a href="#" class="link-account-disconnect">${_("sign in with a different account")}</a>.
+            </p>
+            <div class="link-account-confirm-section">
+               <a href="${redirect_to}">${_("Confirm")}</a>
+            </div>
+        </div>
+      </div>
+    </div>
+</main>
+
