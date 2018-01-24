@@ -589,7 +589,6 @@ def dashboard(request):
 
     """
     user = request.user
-    
     if configuration_helpers.get_value("ENABLE_MSA_MIGRATION"):
         is_redirection = None
         try:
