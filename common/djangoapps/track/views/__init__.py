@@ -123,7 +123,6 @@ def user_track(request):
 
     GET or POST call should provide "event_type", "event", and "page" arguments.
     """
-
     try:
         username = request.user.username
 
@@ -168,13 +167,12 @@ def server_track(request, event_type, event, page=None):
         return  # don't log
 
     context_override = eventtracker.get_tracker().resolve_context()
-
     try:
         username = request.user.username
         """Check if we want to keep username"""
         if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
             username = ''
-            context_override['username'] = username
+            context_override['username'] = ''
 
         """Check if this is an event(e.g. video) that needs anonymization"""
         if is_anonymization_needed(request):
