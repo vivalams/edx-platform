@@ -165,7 +165,6 @@ def _track_event(event_name, bookmark):
     bookmark_id = bookmark.resource_id
 
     if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
-        context_override['path'] = string.replace(context_override['path'], bookmark.user.username, str(bookmark.user.id))
         bookmark_id = string.replace(bookmark.resource_id, bookmark.user.username, str(bookmark.user.id))
 
     with tracker.get_tracker().context(event_name, context_override):

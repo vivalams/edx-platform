@@ -125,19 +125,19 @@ def user_track(request):
 
     GET or POST call should provide "event_type", "event", and "page" arguments.
     """
-    name = _get_request_value(request, 'event_type')
-    data = _get_request_value(request, 'event', {})
-    page = _get_request_value(request, 'page')
 
     try:
         username = request.user.username
 
         if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
-            page = string.replace(page, username, '')
             username = ''
 
     except:
         username = "anonymous"
+
+    name = _get_request_value(request, 'event_type')
+    data = _get_request_value(request, 'event', {})
+    page = _get_request_value(request, 'page')
 
     if isinstance(data, basestring) and len(data) > 0:
         try:
@@ -170,7 +170,6 @@ def server_track(request, event_type, event, page=None):
         return  # don't log
 
     context_override = eventtracker.get_tracker().resolve_context()
-    referer_override = _get_request_header(request, 'HTTP_REFERER')
 
     try:
         username = request.user.username
@@ -180,24 +179,8 @@ def server_track(request, event_type, event, page=None):
 
     """Check if we want to keep username"""
     if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
-        if isinstance(event, str):
-            event = string.replace(event, username, '')
-
-        """Clean path from usernames, this happens for account_settings urls"""
-        event_type = string.replace(event_type, username, '')
-        event_type = re.sub(r'(?is)/submission_history/.+/', '/submission_history//', event_type, 1)
-
-        """Clean path from usernames"""
-        context_override['path'] = re.sub(r'(?is)/submission_history/.+/', '/submission_history//',
-                                              context_override['path'], 1)
-        context_override['path'] = string.replace(context_override['path'], username, '')
-
-        """Clean referer from usernames"""
-        referer_override = string.replace(referer_override, username, '')
-
-        """Clean usernames"""
         username = ''
-        context_override['username'] = ''
+        context_override['username'] = username
 
     """Check if this is an event(e.g. video) that needs anonymization"""
     if is_anonymization_needed(request):
@@ -211,7 +194,7 @@ def server_track(request, event_type, event, page=None):
     event = {
         "username": username,
         "ip": get_request_ip(request),
-        "referer": referer_override,
+        "referer": _get_request_header(request, 'HTTP_REFERER'),
         "accept_language": _get_request_header(request, 'HTTP_ACCEPT_LANGUAGE'),
         "event_source": "server",
         "event_type": event_type,
