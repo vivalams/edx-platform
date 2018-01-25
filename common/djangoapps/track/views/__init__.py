@@ -1,7 +1,5 @@
 import datetime
 import json
-import re
-import string
 
 import pytz
 
@@ -173,22 +171,20 @@ def server_track(request, event_type, event, page=None):
 
     try:
         username = request.user.username
+        """Check if we want to keep username"""
+        if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
+            username = ''
+            context_override['username'] = username
 
+        """Check if this is an event(e.g. video) that needs anonymization"""
+        if is_anonymization_needed(request):
+            context_override['user_id'] = ''
+            if isinstance(event, dict):
+                """WAMS is logging the user_id for events that are triggered from the media player, if that is the case anonyimize that as well"""
+                if 'user_id' in event:
+                    event['user_id'] = ''
     except:
         username = "anonymous"
-
-    """Check if we want to keep username"""
-    if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
-        username = ''
-        context_override['username'] = username
-
-    """Check if this is an event(e.g. video) that needs anonymization"""
-    if is_anonymization_needed(request):
-        context_override['user_id'] = ''
-        if isinstance(event, dict):
-            """WAMS is logging the user_id for events that are triggered from the media player, if that is the case anonyimize that as well"""
-            if 'user_id' in event:
-                event['user_id'] = ''
 
     # define output:
     event = {
@@ -246,10 +242,8 @@ def task_track(request_info, task_info, event_type, event, page=None):
         context_override = eventtracker.get_tracker().resolve_context()
 
         if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
-            event_type = string.replace(event_type, username, '')
-            context_override['path'] = string.replace(context_override['path'], username, '')
-            context_override['username'] = ''
             username = ''
+            context_override['username'] = username
 
         event = {
             "username": username,
