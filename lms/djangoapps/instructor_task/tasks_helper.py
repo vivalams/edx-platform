@@ -447,7 +447,7 @@ def _get_module_instance_for_task(course_id, student, module_descriptor, xmodule
 
     student_username = student.username
     if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
-        student_username = ''
+        student_username = student.id
 
     request_info = xmodule_instance_args.get('request_info', {}) if xmodule_instance_args is not None else {}
     task_info = {"student": student_username, "task_id": _get_task_id_from_xmodule_args(xmodule_instance_args)}

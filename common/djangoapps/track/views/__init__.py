@@ -1,5 +1,6 @@
 import datetime
 import json
+import re
 import string
 
 import pytz
@@ -127,14 +128,12 @@ def user_track(request):
     name = _get_request_value(request, 'event_type')
     data = _get_request_value(request, 'event', {})
     page = _get_request_value(request, 'page')
-    referer = _get_request_value(request, 'HTTP_REFERER')
 
     try:
         username = request.user.username
 
         if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
             page = string.replace(page, username, '')
-            referer = string.replace(referer, username, '')
             username = ''
 
     except:
@@ -175,26 +174,38 @@ def server_track(request, event_type, event, page=None):
 
     try:
         username = request.user.username
-        """Check if we want to keep username"""
-        if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
-            if isinstance(event, str):
-                event = string.replace(event, username, '')
-            context_override['path'] = string.replace(context_override['path'], username, '')
-            referer_override = string.replace(referer_override, username, '')
-            event_type = string.replace(event_type, username, '')
-            username = ''
-            context_override['username'] = ''
 
-
-        """Check if this is an event(e.g. video) that needs anonymization"""
-        if is_anonymization_needed(request):
-            context_override['user_id'] = ''
-            if isinstance(event, dict):
-                """WAMS is logging the user_id for events that are triggered from the media player, if that is the case anonyimize that as well"""
-                if 'user_id' in event:
-                    event['user_id'] = ''
     except:
         username = "anonymous"
+
+    """Check if we want to keep username"""
+    if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
+        if isinstance(event, str):
+            event = string.replace(event, username, '')
+
+        """Clean path from usernames, this happens for account_settings urls"""
+        event_type = string.replace(event_type, username, '')
+        event_type = re.sub(r'(?is)/submission_history/.+/', '/submission_history//', event_type, 1)
+
+        """Clean path from usernames"""
+        context_override['path'] = re.sub(r'(?is)/submission_history/.+/', '/submission_history//',
+                                              context_override['path'], 1)
+        context_override['path'] = string.replace(context_override['path'], username, '')
+
+        """Clean referer from usernames"""
+        referer_override = string.replace(referer_override, username, '')
+
+        """Clean usernames"""
+        username = ''
+        context_override['username'] = ''
+
+    """Check if this is an event(e.g. video) that needs anonymization"""
+    if is_anonymization_needed(request):
+        context_override['user_id'] = ''
+        if isinstance(event, dict):
+            """WAMS is logging the user_id for events that are triggered from the media player, if that is the case anonyimize that as well"""
+            if 'user_id' in event:
+                event['user_id'] = ''
 
     # define output:
     event = {
@@ -253,9 +264,9 @@ def task_track(request_info, task_info, event_type, event, page=None):
 
         if settings.FEATURES.get('SQUELCH_PII_IN_LOGS', False):
             event_type = string.replace(event_type, username, '')
-            username = ''
-            context_override['username'] = username
             context_override['path'] = string.replace(context_override['path'], username, '')
+            context_override['username'] = ''
+            username = ''
 
         event = {
             "username": username,
