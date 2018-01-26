@@ -177,5 +177,3 @@ def _track_event(event_name, bookmark):
                 'component_usage_id': unicode(bookmark.usage_key),
             }
         )
-
-
