@@ -3059,5 +3059,9 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 ############# Settings for MSA account linking ###########################
 
 ENABLE_MSA_MIGRATION = False
-ACCOUNT_LINK_URL = '/account/link'
-DEFAULT_ACCOUNT_LINK_REDIRECT_URLS = [r'^courses.*$', r'^dashboard.*$', r'^u/.*$']
+MSA_ACCOUNT_LINK_URL = '/account/link'
+MSA_ACCOUNT_LINK_CONFIRM_URL = '/account/link/confirm'
+MSA_DEFAULT_ACCOUNT_LINK_REDIRECT_URLS = [
+    r'^courses.*$', r'^dashboard.*$', r'^u/.*$', r'^{}*$'.format(MSA_ACCOUNT_LINK_CONFIRM_URL.lstrip('/'))
+]
+MSA_ACCOUNT_MIGRATION_COMPLETED_KEY = 'microsoft_account_migration_confirmed'

@@ -11,8 +11,11 @@ from openedx.core.djangolib.markup import HTML, Text
 <%block name="bodyclass">view-dashboard is-authenticated</%block>
 <%block name="js_extra">
 <%static:require_module module_name="js/student_account/views/link_account_confirm_factory" class_name="LinkAccountConfirmFactory">
-        var disConnectUrl = ${ disconnect_url | n, dump_js_escaped_json };
-        LinkAccountConfirmFactory(disConnectUrl);
+    var newEmail = ${ new_email | n, dump_js_escaped_json };
+    var newFullName = ${ new_full_name | n, dump_js_escaped_json };
+    var disconnectUrl = ${ disconnect_url | n, dump_js_escaped_json };
+    var userAccountsApiUrl = ${ user_accounts_api_url | n, dump_js_escaped_json };
+    LinkAccountConfirmFactory(newEmail, newFullName, disconnectUrl, userAccountsApiUrl);
 </%static:require_module>
 </%block>
 <main id="main" aria-label="Content" tabindex="-1">
@@ -22,16 +25,15 @@ from openedx.core.djangolib.markup import HTML, Text
           <div>
             <p>${_("Your full name and email will be updated with the following information:")}</p>
             <p>${_("Full name")}</p>
-            <p class="link-account-confirm-subtitle">${user_name}</p>
+            <p class="link-account-confirm-subtitle">${new_full_name}</p>
             <p>${_("Email (Use this to login)")}</p>
-            <p class="link-account-confirm-subtitle">${email}</p>
-            <p>${_("If this is not the account you want, you can ")}
-              <a href="#" class="link-account-disconnect">${_("sign in with a different account")}</a>.
-            </p>
+            <p class="link-account-confirm-subtitle">${new_email}</p>
+            <p>${_("If this is not the account you want, you can cancel and sign in with a different Microsoft Account")}</p>
             <div class="link-account-confirm-section">
-               <a href="${redirect_to}">${_("Confirm")}</a>
+                <button class="link-account-disconnect">${_("Cancel")}</button>
+                <button class="link-account-confirm">${_("Confirm")}</button>
             </div>
-        </div>
+          </div>
       </div>
     </div>
 </main>

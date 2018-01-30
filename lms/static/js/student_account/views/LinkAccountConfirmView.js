@@ -10,6 +10,7 @@
             el: "#link-account-confirm-main",
             events: {
                 "click .link-account-disconnect": "disconnect",
+                "click .link-account-confirm": "confirm"
             },
             initialize: function(options) {
                 this.options = _.extend({}, options);
@@ -22,19 +23,42 @@
                 var view = this;
                 $.ajax({
                     type: 'POST',
-                    url: this.options.disConnectUrl,
+                    url: this.options.disconnectUrl,
                     data: data,
                     dataType: 'html',
                     success: function() {
                         window.location.href = '/logout';
                     },
                     error: function(xhr) {
-                        view.showErrorMessage(xhr);
+                        console.error('Error Disconnecting User Account')
                     }
                 });
+            },
+            confirm: function() {
+                var data = {
+                    'email': this.options.newEmail,
+                    'name': this.options.newFullName,
+                    'force_email_update': true
+                };
+
+                var view = this;
+
+                var defaultOptions = {
+                    contentType: 'application/merge-patch+json',
+                    patch: true,
+                    wait: true,
+                    // data: JSON.stringify(_.extend(data, this.model.attributes)),
+                    success: function(model, res) {
+                        model.unset('force_email_update', {silent: true});
+                        window.location.href = '/dashboard';
+                    },
+                    error: function(model, xhr) {
+                        view.disconnect();
+                    }
+                };
+                this.model.save(data, defaultOptions);
             }
         });
         return LinkAccountConfirmView;
     });
 }).call(this, define || RequireJS.define);
-

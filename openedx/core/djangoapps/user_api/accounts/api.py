@@ -3,9 +3,7 @@ Programmatic integration point for User API Accounts sub-application
 """
 import os
 import random
-import pymongo
-from pymongo import MongoClient
-from pymongo.operations import UpdateOne
+import uuid
 from django.utils.translation import ugettext as _
 from django.db import transaction, IntegrityError
 import datetime
@@ -16,6 +14,7 @@ from django.conf import settings
 from django.core.validators import validate_email, validate_slug, ValidationError
 from social.apps.django_app.default.models import UserSocialAuth
 
+from edxmako.shortcuts import render_to_string
 from openedx.core.djangoapps.user_api.preferences.api import update_user_preferences
 from openedx.core.djangoapps.user_api.errors import PreferenceValidationError
 from student.models import User, UserProfile, Registration
@@ -106,7 +105,7 @@ def get_account_settings(request, usernames=None, configuration=None, view=None)
 
 
 @intercept_errors(UserAPIInternalError, ignore_errors=[UserAPIRequestError])
-def update_account_settings(requesting_user, update, username=None):
+def update_account_settings(requesting_user, update, username=None, force_email_update=False):
     """Update user account information.
 
     Note:
@@ -119,6 +118,8 @@ def update_account_settings(requesting_user, update, username=None):
         update (dict): The updated account field values.
         username (str): Optional username specifying which account should be updated. If not specified,
             `requesting_user.username` is assumed.
+        force_email_update (bool): Optional flag, update the user's email address if this flag
+            is set with the ENABLE_MSA_MIGRATION flag in settings/site config
 
     Raises:
         UserNotFound: no user with username `username` exists (or `requesting_user.username` if
@@ -242,13 +243,82 @@ def update_account_settings(requesting_user, update, username=None):
 
     # And try to send the email change request if necessary.
     if changing_email:
-        try:
-            student_views.do_email_change_request(existing_user, new_email)
-        except ValueError as err:
-            raise AccountUpdateError(
-                u"Error thrown from do_email_change_request: '{}'".format(err.message),
-                user_message=err.message
-            )
+        msa_migration_enabled = configuration_helpers.get_value(
+            "ENABLE_MSA_MIGRATION",
+            settings.FEATURES.get("ENABLE_MSA_MIGRATION", False)
+        )
+        if force_email_update and msa_migration_enabled:
+            # If MSA Migration is enabled and we're coming through
+            # the link/account/confirm page ajax call, force update the user's email.
+            with transaction.atomic():
+                address_context = {
+                    'old_email': existing_user.email,
+                    'new_email': new_email
+                }
+
+                if len(User.objects.filter(email=new_email)) != 0:
+                    transaction.set_rollback(True)
+                    raise AccountUserAlreadyExists
+
+                subject = render_to_string('emails/email_change_subject.txt', address_context)
+                subject = ''.join(subject.splitlines())
+                message = render_to_string('emails/confirm_email_change.txt', address_context)
+                meta = existing_user_profile.get_meta()
+                if 'old_emails' not in meta:
+                    meta['old_emails'] = []
+                meta['old_emails'].append([existing_user.email, datetime.datetime.now(UTC).isoformat()])
+                existing_user_profile.set_meta(meta)
+                existing_user_profile.save()
+                # Send it to the old email...
+                try:
+                    existing_user.email_user(
+                        subject,
+                        message,
+                        configuration_helpers.get_value('email_from_address', settings.DEFAULT_FROM_EMAIL)
+                    )
+                except Exception:  # pylint: disable=broad-except
+                    transaction.set_rollback(True)
+                    raise AccountUpdateError(
+                        u"Error thrown from emailing old email address for user: '{}'".format(err.message),
+                        user_message=err.message
+                    )
+
+                existing_user.email = new_email
+                existing_user.save()
+
+                # And send it to the new email...
+                try:
+                    existing_user.email_user(
+                        subject,
+                        message,
+                        configuration_helpers.get_value('email_from_address', settings.DEFAULT_FROM_EMAIL)
+                    )
+                except Exception:  # pylint: disable=broad-except
+                    transaction.set_rollback(True)
+                    raise AccountUpdateError(
+                        u"Error thrown from emailing new email address for user: '{}'".format(err.message),
+                        user_message=err.message
+                    )
+
+                try:
+                    # Flag to show user has completed and confirmed Microsoft Account Migration
+                    meta[settings.MSA_ACCOUNT_MIGRATION_COMPLETED_KEY] = True
+                    existing_user_profile.set_meta(meta)
+                    existing_user_profile.save()
+                except Exception:  # pylint: disable=broad-except
+                    transaction.set_rollback(True)
+                    raise AccountUpdateError(
+                        u"Error saving user confirmation: '{}'".format(err.message),
+                        user_message=err.message
+                    )
+        else:
+            try:
+                student_views.do_email_change_request(existing_user, new_email)
+            except ValueError as err:
+                raise AccountUpdateError(
+                    u"Error thrown from do_email_change_request: '{}'".format(err.message),
+                    user_message=err.message
+                )
 
 
 def _get_user_and_profile(username):

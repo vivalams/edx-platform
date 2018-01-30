@@ -3,12 +3,14 @@ This file contains Django middleware related to the site_configuration app.
 """
 
 from django.conf import settings
-from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from django.contrib.auth.decorators import login_required
-from django.conf import settings
+from django.core.urlresolvers import reverse
 from re import compile
 from social.apps.django_app.default.models import UserSocialAuth
 from django.shortcuts import redirect
+
+from student.models import UserProfile
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 
 class SessionCookieDomainOverrideMiddleware(object):
@@ -132,11 +134,25 @@ class AccountLinkingMiddleware(object):
                 UserSocialAuth.objects.get(user=request.user, provider="live")
             except UserSocialAuth.DoesNotExist:
                 # Redirect users to account link page if they don't have a live account linked already
-                account_linking_redirect_urls = configuration_helpers.get_value(
-                    "DEFAULT_ACCOUNT_LINK_REDIRECT_URLS",
-                    settings.DEFAULT_ACCOUNT_LINK_REDIRECT_URLS
-                )
-                path = request.path_info.lstrip('/')
-                REDIRECT_URLS = [compile(expr) for expr in account_linking_redirect_urls]
-                if any(m.match(path) for m in REDIRECT_URLS):
-                    return redirect(settings.ACCOUNT_LINK_URL)
+                return self._redirect_if_not_allowed_url(request, settings.MSA_ACCOUNT_LINK_URL)
+
+            try:
+                user_profile = UserProfile.objects.get(user=request.user)
+                meta = user_profile.get_meta()
+                _ = meta[settings.MSA_ACCOUNT_MIGRATION_COMPLETED_KEY]
+            except KeyError:
+                return self._redirect_if_not_allowed_url(request, settings.MSA_ACCOUNT_LINK_CONFIRM_URL)
+
+    def _redirect_if_not_allowed_url(self, request, redirect_to):
+        """
+        If not navigating to an allowed configured url, redirect to redirect_to
+        """
+        account_linking_redirect_urls = configuration_helpers.get_value(
+            "MSA_DEFAULT_ACCOUNT_LINK_REDIRECT_URLS",
+            settings.MSA_DEFAULT_ACCOUNT_LINK_REDIRECT_URLS
+        )
+        REDIRECT_URLS = [compile(expr) for expr in account_linking_redirect_urls]
+        path = request.path_info.lstrip('/')
+
+        if any(m.match(path) for m in REDIRECT_URLS) and path != redirect_to.lstrip('/'):
+            return redirect(redirect_to)

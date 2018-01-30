@@ -450,6 +450,12 @@ def finish_auth(request):  # pylint: disable=unused-argument
 @ensure_csrf_cookie
 def link_account(request):
     user = request.user
+    _redirect_if_migration_complete(user)
+
+    meta = user.profile.get_meta()
+    if meta.get(settings.MSA_ACCOUNT_MIGRATION_COMPLETED_KEY):
+        return redirect(reverse('dashboard'))
+
     context = {
         'auth': {},
         'platform_name': configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME),
@@ -568,11 +574,24 @@ def account_settings_context(request):
 @ensure_csrf_cookie
 def link_account_confirm(request):
     user = request.user
+    _redirect_if_migration_complete(user)
+
+    auth_states = pipeline.get_provider_user_states(user)
+    live_auth_state = auth_states[0]
+
+    social_user = UserSocialAuth.objects.get(user=user)
+    first_name = social_user.extra_data.get('first_name')
+    last_name = social_user.extra_data.get('last_name')
+    email = social_user.uid
+
     context = {
-        'email': user.email,
-        'user_name': user.profile.name,
+        'new_email': email,
+        'new_full_name': ' '.join([first_name, last_name]),
         'redirect_to': reverse('dashboard'),
-        'disconnect_url': '/auth/disconnect/live/?'
+        'disconnect_url': pipeline.get_disconnect_url(
+            live_auth_state.provider.provider_id, live_auth_state.association_id
+        ),
+        'user_accounts_api_url': reverse("accounts_api", kwargs={'username': user.username})
     }
 
     return render_to_response("student_account/link_account_confirm.html", context)
@@ -596,3 +615,13 @@ def cookies_api(request):
 
         except:
             log.info('Failed in calling cookies api {}'.format(settings.API_COOKIE_URL))
+            return HttpResponseBadRequest()
+
+
+def _redirect_if_migration_complete(user):
+    """ If user has migrated to Microsoft Account already, don't allow them
+        to view the account migration pages anymore, redirect to dashboard
+    """
+    meta = user.profile.get_meta()
+    if meta.get(settings.MSA_ACCOUNT_MIGRATION_COMPLETED_KEY):
+        return redirect(reverse('dashboard'))
