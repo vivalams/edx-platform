@@ -577,20 +577,27 @@ def link_account_confirm(request):
     _redirect_if_migration_complete(user)
 
     auth_states = pipeline.get_provider_user_states(user)
-    live_auth_state = auth_states[0]
+    live_auth_state = [{
+        'provider_id': state.provider.provider_id,
+        'association_id': state.association_id,
+    } for state in auth_states if state.provider.provider_id == 'oa2-live' and state.provider.display_for_login]
+
+    disconnect_url = '/auth/disconnect/live/?'
+    if len(live_auth_state) > 0:
+        disconnect_url = pipeline.get_disconnect_url(
+            live_auth_state[0].get('provider_id'), live_auth_state[0].get('association_id')
+        )
 
     social_user = UserSocialAuth.objects.get(user=user)
     first_name = social_user.extra_data.get('first_name')
     last_name = social_user.extra_data.get('last_name')
-    email = social_user.uid
+    email = social_user.extra_data.get('email')
 
     context = {
         'new_email': email,
         'new_full_name': ' '.join([first_name, last_name]),
         'redirect_to': reverse('dashboard'),
-        'disconnect_url': pipeline.get_disconnect_url(
-            live_auth_state.provider.provider_id, live_auth_state.association_id
-        ),
+        'disconnect_url': disconnect_url,
         'user_accounts_api_url': reverse("accounts_api", kwargs={'username': user.username}),
         'enable_account_linking': True
     }
