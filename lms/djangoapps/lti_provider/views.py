@@ -3,7 +3,7 @@ LTI Provider view functions
 """
 
 from django.conf import settings
-from django.http import HttpResponseBadRequest, HttpResponseForbidden, Http404, HttpResponse, HttpResponseNotAllowed, JsonResponse
+from django.http import HttpResponseBadRequest, HttpResponseForbidden, Http404, HttpResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
 import logging
 from lti_provider.outcomes import store_outcome_parameters
@@ -297,5 +297,5 @@ def users_delete_user_account(request):
     except Exception:
         raise Http404
 
-    return JsonResponse({'user_id': user_id})
+    return HttpResponse(user_id)
 

@@ -591,7 +591,8 @@ def link_account_confirm(request):
         'disconnect_url': pipeline.get_disconnect_url(
             live_auth_state.provider.provider_id, live_auth_state.association_id
         ),
-        'user_accounts_api_url': reverse("accounts_api", kwargs={'username': user.username})
+        'user_accounts_api_url': reverse("accounts_api", kwargs={'username': user.username}),
+        'enable_account_linking': True
     }
 
     return render_to_response("student_account/link_account_confirm.html", context)

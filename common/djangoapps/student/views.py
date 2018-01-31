@@ -2660,6 +2660,12 @@ def change_email_settings(request):
     return JsonResponse({"success": True})
 
 
+@login_required
+@ensure_csrf_cookie
+def disconnect_account_link(request):
+    html = "<html><body>disconnected</body></html>"
+    return HttpResponse(html)
+
 class LogoutView(TemplateView):
     """
     Logs out user and redirects.
@@ -2693,7 +2699,10 @@ class LogoutView(TemplateView):
         if third_party_auth.is_enabled() and pipeline.running(request):
             provider = OAuth2ProviderConfig.current("live")
             client_id = provider.get_setting("KEY")
+            redirect_login = request.GET.get('redirect_login', '')
             redirect_url = configuration_helpers.get_value('LMS_ROOT_URL')
+            if redirect_login == 'true':
+                redirect_url = redirect_url + '/login'
             return redirect("https://login.live.com/oauth20_logout.srf?client_id={}&redirect_uri={}".format(client_id, redirect_url))
 
         return response
@@ -2734,3 +2743,4 @@ class LogoutView(TemplateView):
         })
 
         return context
+

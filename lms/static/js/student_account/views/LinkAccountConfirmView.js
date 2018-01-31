@@ -27,7 +27,7 @@
                     data: data,
                     dataType: 'html',
                     success: function() {
-                        window.location.href = '/logout';
+                        window.location.href = '/logout?redirect_login=true';
                     },
                     error: function(xhr) {
                         console.error('Error Disconnecting User Account')
