@@ -240,13 +240,13 @@ def update_account_settings(requesting_user, update, username=None, force_email_
         raise AccountUpdateError(
             u"Error thrown when saving account updates: '{}'".format(err.message)
         )
-
+    meta = existing_user_profile.get_meta()
+    msa_migration_enabled = configuration_helpers.get_value(
+        "ENABLE_MSA_MIGRATION",
+        settings.FEATURES.get("ENABLE_MSA_MIGRATION", False)
+    )
     # And try to send the email change request if necessary.
     if changing_email:
-        msa_migration_enabled = configuration_helpers.get_value(
-            "ENABLE_MSA_MIGRATION",
-            settings.FEATURES.get("ENABLE_MSA_MIGRATION", False)
-        )
         if force_email_update and msa_migration_enabled:
             # If MSA Migration is enabled and we're coming through
             # the link/account/confirm page ajax call, force update the user's email.
@@ -263,7 +263,6 @@ def update_account_settings(requesting_user, update, username=None, force_email_
                 subject = render_to_string('emails/email_change_subject.txt', address_context)
                 subject = ''.join(subject.splitlines())
                 message = render_to_string('emails/confirm_email_change.txt', address_context)
-                meta = existing_user_profile.get_meta()
                 if 'old_emails' not in meta:
                     meta['old_emails'] = []
                 meta['old_emails'].append([existing_user.email, datetime.datetime.now(UTC).isoformat()])
@@ -299,18 +298,6 @@ def update_account_settings(requesting_user, update, username=None, force_email_
                         u"Error thrown from emailing new email address for user: '{}'".format(err.message),
                         user_message=err.message
                     )
-
-                try:
-                    # Flag to show user has completed and confirmed Microsoft Account Migration
-                    meta[settings.MSA_ACCOUNT_MIGRATION_COMPLETED_KEY] = True
-                    existing_user_profile.set_meta(meta)
-                    existing_user_profile.save()
-                except Exception:  # pylint: disable=broad-except
-                    transaction.set_rollback(True)
-                    raise AccountUpdateError(
-                        u"Error saving user confirmation: '{}'".format(err.message),
-                        user_message=err.message
-                    )
         else:
             try:
                 student_views.do_email_change_request(existing_user, new_email)
@@ -319,7 +306,18 @@ def update_account_settings(requesting_user, update, username=None, force_email_
                     u"Error thrown from do_email_change_request: '{}'".format(err.message),
                     user_message=err.message
                 )
-
+    if force_email_update and msa_migration_enabled:
+        try:
+            # Flag to show user has completed and confirmed Microsoft Account Migration
+            meta[settings.MSA_ACCOUNT_MIGRATION_COMPLETED_KEY] = True
+            existing_user_profile.set_meta(meta)
+            existing_user_profile.save()
+        except Exception as err:  # pylint: disable=broad-except
+            transaction.set_rollback(True)
+            raise AccountUpdateError(
+               u"Error saving user confirmation: '{}'".format(err.message),
+               user_message=err.message
+            )
 
 def _get_user_and_profile(username):
     """

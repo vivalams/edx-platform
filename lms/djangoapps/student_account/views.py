@@ -592,10 +592,16 @@ def link_account_confirm(request):
     first_name = social_user.extra_data.get('first_name')
     last_name = social_user.extra_data.get('last_name')
     email = social_user.extra_data.get('email')
-
+    new_full_name = ' '.join([first_name, last_name])
+    user_data = {'force_email_update': True}
+    if new_full_name != user.profile.name:
+        user_data['name'] = new_full_name
+    if email != user.email:
+        user_data['email'] = email
     context = {
+        'user_data': user_data,
         'new_email': email,
-        'new_full_name': ' '.join([first_name, last_name]),
+        'new_full_name': new_full_name,
         'redirect_to': reverse('dashboard'),
         'disconnect_url': disconnect_url,
         'user_accounts_api_url': reverse("accounts_api", kwargs={'username': user.username}),

@@ -35,28 +35,23 @@
                 });
             },
             confirm: function() {
-                var data = {
-                    'email': this.options.newEmail,
-                    'name': this.options.newFullName,
-                    'force_email_update': true
-                };
-
-                var view = this;
-
-                var defaultOptions = {
-                    contentType: 'application/merge-patch+json',
-                    patch: true,
-                    wait: true,
-                    // data: JSON.stringify(_.extend(data, this.model.attributes)),
-                    success: function(model, res) {
-                        model.unset('force_email_update', {silent: true});
-                        window.location.href = '/dashboard';
-                    },
-                    error: function(model, xhr) {
-                        view.disconnect();
-                    }
-                };
-                this.model.save(data, defaultOptions);
+                if (this.options.userData != null) {
+                    var view = this;
+                    var defaultOptions = {
+                        contentType: 'application/merge-patch+json',
+                        patch: true,
+                        wait: true,
+                        success: function(model, res) {
+                            window.location.href = '/dashboard';
+                        },
+                        error: function(model, xhr) {
+                            window.location.href = '/dashboard';
+                        }
+                    };
+                    this.model.save(this.options.userData, defaultOptions);
+                } else {
+                    console.error("Error Updating User Account")
+                }
             }
         });
         return LinkAccountConfirmView;

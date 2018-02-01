@@ -1666,6 +1666,10 @@ def _do_create_account(form, custom_form=None):
     extended_profile = form.cleaned_extended_profile
     if extended_profile:
         profile.meta = json.dumps(extended_profile)
+    if configuration_helpers.get_value("ENABLE_MSA_MIGRATION"):
+        meta = profile.get_meta()
+        meta[settings.MSA_ACCOUNT_MIGRATION_COMPLETED_KEY] = True
+        profile.set_meta(meta)
     try:
         profile.save()
     except Exception:  # pylint: disable=broad-except
@@ -2696,7 +2700,7 @@ class LogoutView(TemplateView):
 
         # Clear the cookie used by the edx.org marketing site
         delete_logged_in_cookies(response)
-        if third_party_auth.is_enabled() and pipeline.running(request):
+        if third_party_auth.is_enabled() and configuration_helpers.get_value("ENABLE_MSA_MIGRATION"):
             provider = OAuth2ProviderConfig.current("live")
             client_id = provider.get_setting("KEY")
             redirect_login = request.GET.get('redirect_login', '')
