@@ -289,7 +289,7 @@ def users_delete_user_account(request):
     try:
         social_auth_mapping = UserSocialAuthMapping.objects.get(puid=puid)
     except UserSocialAuthMapping.DoesNotExist:
-        raise Http404
+        return HttpResponse(-1)
 
     user_id = social_auth_mapping.user_id
     try:
