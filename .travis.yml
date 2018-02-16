@@ -52,7 +52,7 @@ branches:
   only:
   - master
   - oxa/master.fic
-  - oxa/release.fic
+  - oxa/release.fic_new
   - oxa/dev.fic
   - oxa/ci-docker
 
