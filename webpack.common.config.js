@@ -22,10 +22,8 @@ module.exports = {
 
     entry: {
         // Studio
-        AssetsPage: './node_modules/@edx/studio-frontend/src/index.jsx',
         Import: './cms/static/js/features/import/factories/import.js',
         CourseOrLibraryListing: './cms/static/js/features_jsx/studio/CourseOrLibraryListing.jsx',
-        AccessibilityPage: './node_modules/@edx/studio-frontend/src/accessibilityIndex.jsx',
         'js/pages/login': './cms/static/js/pages/login.js',
 
         // LMS
@@ -34,6 +32,7 @@ module.exports = {
         LearnerAnalyticsDashboard: './lms/static/js/learner_analytics_dashboard/LearnerAnalyticsDashboard.jsx',
         UpsellExperimentModal: './lms/static/common/js/components/UpsellExperimentModal.jsx',
         PortfolioExperimentUpsellModal: './lms/static/common/js/components/PortfolioExperimentUpsellModal.jsx',
+        ViewedEvent: './lms/static/completion/js/ViewedEvent.js',
 
         // Features
         CourseGoals: './openedx/features/course_experience/static/course_experience/js/CourseGoals.js',
@@ -127,7 +126,6 @@ module.exports = {
             {
                 test: /\.(js|jsx)$/,
                 include: [
-                    /studio-frontend/,
                     /paragon/
                 ],
                 use: 'babel-loader'
