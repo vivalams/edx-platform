@@ -92,6 +92,32 @@ def get_course_enrollment(username, course_id):
         return None
 
 
+def get_user_enrollments(course_id, serialize=True):
+    """Based on the course id, return all user enrollments in the course
+    Args:
+        course_id (str): The course to retrieve enrollment information for.
+        serialize (bool): Boolean denoting whether to serialize the enrollments
+        response or return the queryset
+    Returns:
+        A course's user enrollments as a queryset or serializable dictionary list
+    Raises:
+        CourseEnrollment.DoesNotExist
+    """
+    if isinstance(course_id, unicode):
+        course_id = CourseKey.from_string(course_id)
+    try:
+        qset = CourseEnrollment.objects.filter(
+            course_id=course_id, is_active=True
+        ).order_by('created')
+
+        if serialize:
+            return CourseEnrollmentSerializer(qset, many=True).data
+        else:
+            return qset
+    except CourseEnrollment.DoesNotExist:
+        return None
+
+
 def create_course_enrollment(username, course_id, mode, is_active):
     """Create a new course enrollment for the given user.
 
