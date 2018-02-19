@@ -148,7 +148,9 @@
                 saveSuccess: function(data) {
                     switch (data.msa_migration_pipeline_status) {
                         case MSAMigrationStatus.LOGIN_NOT_MIGRATED:
-                            this.$form.find('.password-password').attr('aria-hidden', 'false').show();
+                            var $passwordField = this.$form.find('.password-password');
+                            $passwordField.attr('aria-hidden', 'false').show();
+                            $passwordField.find('#login-password').val("")
                             this.toggleDisableButton(false);
                             this.model.msa_migration_pipeline_status = MSAMigrationStatus.LOGIN_NOT_MIGRATED;
                             break;

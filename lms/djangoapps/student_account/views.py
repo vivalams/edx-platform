@@ -452,14 +452,10 @@ def link_account(request):
     user = request.user
     _redirect_if_migration_complete(user)
 
-    meta = user.profile.get_meta()
-    if meta.get(settings.MSA_ACCOUNT_MIGRATION_COMPLETED_KEY):
-        return redirect(reverse('dashboard'))
-
     context = {
         'auth': {},
         'platform_name': configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME),
-        'user_name': user.profile.name,
+        'user_name': user.profile.name or user.username,
         'enable_account_linking': True,
     }
 
@@ -580,7 +576,7 @@ def link_account_confirm(request):
     live_auth_state = [{
         'provider_id': state.provider.provider_id,
         'association_id': state.association_id,
-    } for state in auth_states if state.provider.provider_id == 'oa2-live' and state.provider.display_for_login]
+    } for state in auth_states if state.provider.provider_id == 'oa2-azuread-oauth2' and state.provider.display_for_login]
 
     disconnect_url = '/auth/disconnect/live/?'
     if len(live_auth_state) > 0:

@@ -820,8 +820,7 @@ class RegistrationView(APIView):
 
         # Translators: "Terms of service" is a legal document users must agree to
         # in order to register a new account.
-        label = _(u"I agree to the {platform_name} {terms_of_service}").format(
-            platform_name=configuration_helpers.get_value("PLATFORM_NAME", settings.PLATFORM_NAME),
+        label = _(u"I agree to the {terms_of_service}").format(        
             terms_of_service=terms_label
         )
 
@@ -834,6 +833,48 @@ class RegistrationView(APIView):
 
         form_desc.add_field(
             "terms_of_service",
+            label=label,
+            field_type="checkbox",
+            default=False,
+            required=required,
+            error_messages={
+                "required": error_msg
+            },
+            supplementalLink=terms_link,
+            supplementalText=terms_text
+        )
+
+    def _add_disclosure_notice_field(self, form_desc, required=True):
+        """Add a disclosure notice field.
+
+        Arguments:
+            form_desc: A form description
+
+        Keyword Arguments:
+            required (bool): Whether this field is required; defaults to True
+
+        """
+        # Translators: This is a legal document users must agree to
+        # in order to register a new account.
+        terms_label = _(u"Disclosure Notice")
+        terms_link = marketing_link("DN")
+        terms_text = _(u"Review the Disclosure Notice")
+
+        # Translators: "Terms of service" is a legal document users must agree to
+        # in order to register a new account.
+        label = _(u"I agree to the {disclosure_notice}").format(            
+            disclosure_notice=terms_label
+        )
+
+        # Translators: "Terms of service" is a legal document users must agree to
+        # in order to register a new account.
+        error_msg = _(u"You must agree to the {platform_name} {disclosure_notice}").format(
+            platform_name=configuration_helpers.get_value("PLATFORM_NAME", settings.PLATFORM_NAME),
+            disclosure_notice=terms_label
+        )
+
+        form_desc.add_field(
+            "disclosure_notice",
             label=label,
             field_type="checkbox",
             default=False,

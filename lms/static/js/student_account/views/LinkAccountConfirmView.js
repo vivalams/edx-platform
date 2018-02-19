@@ -29,8 +29,10 @@
                     success: function() {
                         window.location.href = '/logout?redirect_login=true';
                     },
-                    error: function(xhr) {
-                        console.error('Error Disconnecting User Account')
+                    error: function(error, param) {
+                        console.error(error)
+                        console.log(param)
+                        console.error('Error Disconnecting User Account', error)
                     }
                 });
             },

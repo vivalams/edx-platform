@@ -70,7 +70,7 @@
             },
             inProgressMessage: function() {
                 return HtmlUtils.joinHtml(this.indicators.inProgress, (
-                    this.options.connected ? gettext('Unlinking') : gettext('Updating')
+                    gettext('Updating')
                 ));
             }
         });
