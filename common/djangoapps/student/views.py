@@ -1413,15 +1413,6 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
             log.exception(exc)
             raise
 
-        redirect_url = None  # The AJAX method calling should know the default destination upon success
-        try:
-            # Check to see user social entry for this user
-            social_auth_users = UserSocialAuth.objects.filter(user__username=user.username)
-            if not social_auth_users:
-                redirect_url = "/account/link"
-        except UserSocialAuth.DoesNotExist:
-            redirect_url = "/account/link"
-
         if third_party_auth_successful:
             redirect_url = pipeline.get_complete_url(backend_name)
 
