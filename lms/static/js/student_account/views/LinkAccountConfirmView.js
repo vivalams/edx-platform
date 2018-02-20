@@ -26,12 +26,10 @@
                     url: this.options.disconnectUrl,
                     data: data,
                     dataType: 'html',
-                    success: function() {
-                        window.location.href = '/logout?redirect_login=true';
+                    success: function(p, s) {                        
+                        window.location.href = '/logout?msa_only=true';
                     },
-                    error: function(error, param) {
-                        console.error(error)
-                        console.log(param)
+                    error: function(error) {    
                         console.error('Error Disconnecting User Account', error)
                     }
                 });
@@ -47,7 +45,7 @@
                             window.location.href = '/dashboard';
                         },
                         error: function(model, xhr) {
-                            window.location.href = '/dashboard';
+                            console.error('Error with Microsoft Account migration confirmation', model, xhr)
                         }
                     };
                     this.model.save(this.options.userData, defaultOptions);

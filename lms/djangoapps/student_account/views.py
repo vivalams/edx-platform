@@ -576,8 +576,8 @@ def link_account_confirm(request):
     live_auth_state = [{
         'provider_id': state.provider.provider_id,
         'association_id': state.association_id,
-    } for state in auth_states if state.provider.provider_id == 'oa2-azuread-oauth2' and state.provider.display_for_login]
-
+    } for state in auth_states if state.provider.provider_id == 'oa2-live' and state.provider.display_for_login]
+    
     disconnect_url = '/auth/disconnect/live/?'
     if len(live_auth_state) > 0:
         disconnect_url = pipeline.get_disconnect_url(
