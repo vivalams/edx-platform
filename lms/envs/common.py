@@ -811,7 +811,7 @@ EVENT_TRACKING_BACKENDS = {
     }
 }
 EVENT_TRACKING_PROCESSORS = []
-# print(FEATURES)
+
 # Backwards compatibility with ENABLE_SQL_TRACKING_LOGS feature flag.
 # In the future, adding the backend to TRACKING_BACKENDS should be enough.
 if FEATURES.get('ENABLE_SQL_TRACKING_LOGS'):
