@@ -44,7 +44,6 @@ from social.apps.django_app import utils as social_utils
 from social.apps.django_app.default.models import UserSocialAuth
 from social.backends import oauth as social_oauth
 from social.exceptions import AuthException, AuthAlreadyAssociated
-from social.apps.django_app.default.models import UserSocialAuth
 
 from edxmako.shortcuts import render_to_response, render_to_string
 
