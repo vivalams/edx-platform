@@ -31,7 +31,8 @@
 
     /* Remove autocomplete yellow background */
     input:-webkit-autofill {
-        -webkit-box-shadow:0 0 0 50px white inset;
+        border-color: #fff;
+        -webkit-box-shadow:0 0 0 50px #fbfbfb inset;
         -webkit-text-fill-color: #333;
     }
 
