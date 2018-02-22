@@ -145,7 +145,7 @@
                 },
 
                 renderAuthWarning: function() {
-                    var msgPart1 = gettext('You\'ve successfully signed into %(currentProvider)s.'),
+                    var msgPart1 = gettext('You\'ve successfully signed in with your %(currentProvider)s.'),
                         msgPart2 = gettext(
                             'We just need a little more information before you start learning with %(platformName)s.'
                         ),
