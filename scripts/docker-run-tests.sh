@@ -50,7 +50,7 @@ echo 'Running Tests'
 echo $TEST_SUITE 
 echo $SHARD 
 
-# These variables are becoming unset inside docker container
+# These variables aren't set inside ./scripts/all-tests so we re-export them
 export TEST_SUITE=$TEST_SUITE
 export SHARD=$SHARD
 export CODE_COV_TOKEN=$CODE_COV_TOKEN

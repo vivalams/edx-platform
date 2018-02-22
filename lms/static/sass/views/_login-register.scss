@@ -31,12 +31,14 @@
 
     /* Remove autocomplete yellow background */
     input:-webkit-autofill {
-        -webkit-box-shadow:0 0 0 50px white inset;
+        border: 1px solid #e4e4e4;
+        -webkit-box-shadow:0 0 0 50px #fbfbfb inset;
         -webkit-text-fill-color: #333;
     }
 
     input:-webkit-autofill:focus {
-        -webkit-box-shadow: white, 0 0 0 50px white inset;
+        border: 1px solid #e4e4e4;
+        -webkit-box-shadow:0 0 0 50px #fbfbfb inset;
         -webkit-text-fill-color: #333;
     }
 
