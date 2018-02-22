@@ -179,6 +179,7 @@ class RegistrationView(APIView):
         "goals",
         "honor_code",
         "terms_of_service",
+        "disclosure_notice",
     ]
 
     # This end-point is available to anonymous users,
@@ -411,7 +412,16 @@ class RegistrationView(APIView):
 
         # Translators: These instructions appear on the registration form, immediately
         # below a field meant to hold the user's full name.
-        name_instructions = _(u"Your legal name, used for any certificates you earn.")
+        name_instructions = u"Your legal name, used for any certificates you earn."
+
+        if configuration_helpers.get_value('ENABLE_MSA_MIGRATION', False):
+            name_instructions = name_instructions + \
+                u"You can update this information from your <br>" + \
+                u"{link_start}Microsoft Account Settings{link_end}.".format(
+                    link_start=u'<a href="https://account.microsoft.com">', link_end=u'</a>'
+                )
+
+        name_instructions = _(name_instructions)
 
         form_desc.add_field(
             "name",

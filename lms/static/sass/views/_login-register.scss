@@ -110,6 +110,11 @@
         }
     }
 
+    .description-text {
+        @extend %t-copy-sub1;
+        text-align: center;
+    }
+
     %nav-btn-base {
         @extend %btn-secondary-blue-outline;
         width: 100%;
@@ -186,7 +191,7 @@
     }
 
     %bold-label {
-        @include font-size(16);
+        @include font-size(14);
         font-family: $sans-serif;
         font-weight: $font-semibold;
     }
@@ -213,7 +218,9 @@
         }
 
         &.select-gender,
-        &.select-year_of_birth {
+        &.select-year_of_birth,
+        &.checkbox-terms_of_service,
+        &.checkbox-disclosure_notice {
             display: inline-block;
             width: calc( 50% - 10px );
         }
@@ -246,13 +253,25 @@
             &.error {
                 color: $red;
             }
-            
+
+            &[for="register-email"],
+            &[for="register-name"],
+            &[for="register-username"],
+            &[for="register-password"],
+            &[for="login-email"],
+            &[for="login-username"],
+            &[for="login-password"] {
+                @extend %bold-label;
+            }
+
             &[for="register-data_sharing_consent"],
             &[for="register-honor_code"],
-            &[for="register-terms_of_service"] {
+            &[for="register-terms_of_service"],
+            &[for="register-disclosure_notice"] {
+                @extend %t-copy-sub1;
                 display: inline-block;
                 margin: 5px 5px 0 0;
-                width: 90%;
+                width: 85%;
                 vertical-align: top;
             }
 
@@ -309,6 +328,10 @@
             &.error {
                 border-color: tint($red,50%);
             }
+
+            &.disabled {
+                background: #F0F0F0;
+            }
         }
 
         input {
@@ -357,14 +380,14 @@
     }
 
     .action-primary {
+        @include font-size(14);
         @extend %btn-primary-blue;
         width: 100%;
         margin-top: 1em;
         padding: ($baseline/2);
         text-transform: none;
-        font-weight: 600;
+        font-weight: normal;
         letter-spacing: normal;
-
         .icon {
             @extend %sso-icon;
         }
@@ -603,4 +626,11 @@
     #finish-auth-status li:last-child {
         font-weight: bold;
     }
+}
+
+.supplemental-link {
+    @extend %t-copy-sub1;
+    display: block;
+    margin: 0 0 ($baseline/2) 0;
+    color: $base-font-color;
 }
