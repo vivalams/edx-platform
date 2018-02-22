@@ -5,15 +5,17 @@
                 <h1><%- gettext("Account update required") %></h1>
                 <div class="account-settings-header">
                     <p class="link-account-header-subtitle"><%- userName %></p>
-                    <p class="link-account-header-subtitle"><%- gettext("In order to provide you with better security and easier profile management, we are changing to Microsoft accounts for authentication") %></span>
-                    <p class="link-account-header-subtitle"><%- gettext("Sign in with a new or existing Microsoft account, and your Microsoft Learning profile will be updated to use that account") %></span>
-                    <p class="link-account-header-subtitle"><%- gettext("This will update your login and your name and email information, but your public username will remain the same.") %></span>
+                    <p class="link-account-header-subtitle"><%- gettext("To comply with the General Data Protection Regulation (GDPR) and to better protect your privacy, you are now required to sign in with a Microsoft account. (If you don’t have one, you’ll be able to create one during the sign-in process.)") %></span>
+                    <p class="link-account-header-subtitle"><%- gettext("Your name and email will be updated with the information in your Microsoft account, but your public username will remain the same.") %></span>
                 </div>
                 <div class="account-settings-section-body link-account-social-field-section">
                     <div class="ui-loading-error is-hidden">
                         <span class="fa fa-exclamation-triangle message-error" aria-hidden="true"></span>
                         <span class="copy"><%- gettext("An error occurred. Please reload the page.") %></span>
                     </div>
+                </div>
+                <div class="link-account-below-button-link" >
+                    <a target="_blank" href="https://www.microsoft.com/en-us/TrustCenter/Privacy/gdpr/default.aspx">Read more about GDPR</a>
                 </div>
             </div>
         </div>
