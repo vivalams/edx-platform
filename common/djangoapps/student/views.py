@@ -593,7 +593,7 @@ def dashboard(request):
         try:
             # Check to see user social entry for this user
             social_user = UserSocialAuth.objects.get(user=user)
-            _ = UserSocialAuthMapping.objects.get(uid=social_user.uid)
+            UserSocialAuthMapping.objects.get(uid=social_user.uid)
         except UserSocialAuthMapping.DoesNotExist:
             is_redirection = True
         except Exception:
