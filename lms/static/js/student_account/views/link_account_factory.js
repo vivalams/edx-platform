@@ -11,8 +11,7 @@
             platformName,
             userName
         ) {
-            var linkAccountElement, linkAccountSection, linkAccountSectionView,
-                showLoadingError;
+            var linkAccountElement, linkAccountSection, linkAccountSectionView;
 
             linkAccountElement = $('.wrapper-account-settings');
             linkAccountSection = {
@@ -23,7 +22,7 @@
                 ),
                 fields: _.map(authData.providers, function(provider) {
                     return {
-                        'view': new LinkAccountView({
+                        view: new LinkAccountView({
                             title: provider.name,
                             valueAttribute: 'auth-' + provider.id,
                             helpMessage: '',
@@ -42,6 +41,6 @@
             return {
                 linkAccountSectionView: linkAccountSectionView
             };
-         };
+        };
     });
 }).call(this, define || RequireJS.define);

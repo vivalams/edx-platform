@@ -31,7 +31,9 @@
                     data = {},
                     analytics,
                     courseId = $.url('?course_id'),
-                    MSA_MIGRATION_PIPELINE_STATUS = 'msa_migration_pipeline_status';
+                    MSA_MIGRATION_PIPELINE_STATUS = 'msa_migration_pipeline_status',
+                    msaAttributes = {};
+
 
                 // If there is a course ID in the query string param,
                 // send that to the server as well so it can be included
@@ -46,17 +48,18 @@
                 $.extend(data, model.attributes, {analytics: analytics});
 
                 if (this.msaMigrationEnabled) {
-                    var msaAttributes = {};
-
                     if (!data.hasOwnProperty(MSA_MIGRATION_PIPELINE_STATUS)) {
-                        msaAttributes[MSA_MIGRATION_PIPELINE_STATUS] = this.msa_migration_pipeline_status || MSAMigrationStatus.EMAIL_LOOKUP
+                        msaAttributes[MSA_MIGRATION_PIPELINE_STATUS] = (
+                            this.msa_migration_pipeline_status || MSAMigrationStatus.EMAIL_LOOKUP
+                        );
                     }
-                    if (msaAttributes[MSA_MIGRATION_PIPELINE_STATUS] === MSAMigrationStatus.EMAIL_LOOKUP || !data['password']) {
-                        msaAttributes['password'] = model.msaDefaultPassword
+                    if (msaAttributes[MSA_MIGRATION_PIPELINE_STATUS] === (
+                        MSAMigrationStatus.EMAIL_LOOKUP || !data.password)) {
+                        msaAttributes.password = model.msaDefaultPassword;
                     }
 
                     $.extend(data, msaAttributes);
-                    this.msa_migration_pipeline_status = data[MSA_MIGRATION_PIPELINE_STATUS]
+                    this.msa_migration_pipeline_status = data[MSA_MIGRATION_PIPELINE_STATUS];
                 }
                 $.ajax({
                     url: model.urlRoot,
@@ -66,15 +69,15 @@
                     success: function(json) {
                         if (model.msaMigrationEnabled) {
                             if (json.hasOwnProperty('value')) {
-                                data[MSA_MIGRATION_PIPELINE_STATUS] = json['value']
-                                model.msa_migration_pipeline_status = json['value']
+                                data[MSA_MIGRATION_PIPELINE_STATUS] = json.value;
+                                model.msa_migration_pipeline_status = json.value;
                             }
 
                             if (data[MSA_MIGRATION_PIPELINE_STATUS] === MSAMigrationStatus.LOGIN_NOT_MIGRATED) {
-                                if (data['password'] !== model.msaDefaultPassword) {
-                                    data[MSA_MIGRATION_PIPELINE_STATUS] = ''
+                                if (data.password !== model.msaDefaultPassword) {
+                                    data[MSA_MIGRATION_PIPELINE_STATUS] = '';
                                 } else {
-                                    data['password'] = ''
+                                    data.password = '';
                                 }
                             }
                         }

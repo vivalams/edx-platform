@@ -7,11 +7,11 @@
         ],
         function($, _, Backbone, LinkAccountConfirmView, UserAccountModel) {
             return function(disconnectUrl, userAccountsApiUrl, userData) {
+                var view;
                 var userAccountModel = new UserAccountModel({});
-                userAccountModel = new UserAccountModel();
                 userAccountModel.url = userAccountsApiUrl;
 
-                var view = new LinkAccountConfirmView({
+                view = new LinkAccountConfirmView({
                     userData: userData,
                     disconnectUrl: disconnectUrl,
                     userAccountsApiUrl: userAccountsApiUrl,

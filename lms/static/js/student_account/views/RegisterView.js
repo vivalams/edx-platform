@@ -71,9 +71,15 @@
 
 
                         if (!this.currentProvider) {
-                            this.$form.children().slice(1).attr('aria-hidden', 'true').hide();
+                            this.$form.children()
+                                .slice(1)
+                                .attr('aria-hidden', 'true')
+                                .hide();
                         }
-                        $(this.$el).find('.toggle-form').attr('aria-hidden', 'true').hide();
+                        $(this.$el)
+                            .find('.toggle-form')
+                            .attr('aria-hidden', 'true')
+                            .hide();
                     }
 
                     // Must be called after postRender, since postRender sets up $formFeedback.
@@ -109,15 +115,19 @@
                 },
 
                 saveError: function(error) {
+                    var msgText, msg;
                     $(this.el).show(); // Show in case the form was hidden for auto-submission
                     if (error.status === 409 && error.responseJSON.hasOwnProperty('email')) {
-                        var msgText = error.responseJSON.email[0].user_message;
-                        var msg = HtmlUtils.joinHtml(
+                        msgText = error.responseJSON.email[0].user_message;
+                        msg = HtmlUtils.joinHtml(
                             _.sprintf(
                                 gettext(msgText + " If you already have an account, "),
                                 {platformName: this.platformName}
                             ),
-                            HtmlUtils.HTML('<a href="/logout?next=%2Flogin" class="btn-neutral btn-register" data-type="login">login</a>'),
+                            HtmlUtils.HTML(
+                                '<a href="/logout?next=%2Flogin" class="btn-neutral btn-register" data-type="login">',
+                                gettext('login'),
+                                '</a>'),
                             gettext(' instead.')
                         );
                         this.errors = ['<li>' + msg + '</li>'];

@@ -19,7 +19,7 @@
         return FieldViews.LinkFieldView.extend({
             fieldTemplate: field_social_link_template,
             className: function() {
-                return 'u-field u-field-social u-field-' + this.options.valueAttribute;
+                return 'u-field u-field-social' + this.options.valueAttribute;
             },
             initialize: function(options) {
                 this.options = _.extend({}, options);

@@ -1,4 +1,4 @@
-(function(define, undefined) {
+(function(define) {
     'use strict';
     define([
         'gettext',
@@ -26,9 +26,9 @@
 
             renderFields: function() {
                 var view = this,
-                    sectionEl = $('.link-account-social-field-section');
+                    $sectionEl = $('.link-account-social-field-section');
                 _.each(view.options.fields, function(field) {
-                    sectionEl.append(field.view.render().el);
+                    $sectionEl.append(field.view.render().el);
                 });
 
                 return this;

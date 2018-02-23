@@ -668,6 +668,9 @@ def delete_user_account(user_id):
     except Exception:
         pass
 
+    # Successful user soft delete
+    return True
+
 
 def anonymize_user_discussions(user_id, username, enc_username, **kwargs):
     """
