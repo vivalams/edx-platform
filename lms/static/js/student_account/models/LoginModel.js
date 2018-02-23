@@ -86,7 +86,7 @@
                     error: function(error) {
                         model.trigger('error', error);
                     }
-                })
+                });
             }
         });
     });

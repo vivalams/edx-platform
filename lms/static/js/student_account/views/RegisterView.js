@@ -87,11 +87,9 @@
                         this.renderErrors(formErrorsTitle, [this.errorMessage]);
                     } else if (this.currentProvider) {
                         this.renderAuthWarning();
-                        
                         // Don't allow user to edit email or name
                         this.$form.find('#register-email, #register-name').prop('disabled', true).addClass('disabled');
                     }
-
                     if (this.autoSubmit) {
                         $(this.el).hide();
                         $('#register-honor_code').prop('checked', true);

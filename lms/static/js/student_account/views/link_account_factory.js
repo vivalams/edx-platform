@@ -11,11 +11,11 @@
             platformName,
             userName
         ) {
-            var linkAccountElement, linkAccountSection, linkAccountSectionView;
+            var $linkAccountElement, linkAccountSection, linkAccountSectionView;
 
-            linkAccountElement = $('.wrapper-account-settings');
+            $linkAccountElement = $('.wrapper-account-settings');
             linkAccountSection = {
-                el: linkAccountElement,
+                el: $linkAccountElement,
                 userName: StringUtils.interpolate(
                     gettext('Hello {user_name},'),
                     {user_name: userName}

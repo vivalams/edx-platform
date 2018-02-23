@@ -12,18 +12,18 @@
     ], function(
         gettext, $, _, Backbone,
         FieldViews,
-        field_social_link_template,
+        fieldSocialLinkTemplate,
         StringUtils,
         HtmlUtils
     ) {
         return FieldViews.LinkFieldView.extend({
-            fieldTemplate: field_social_link_template,
+            fieldTemplate: fieldSocialLinkTemplate,
             className: function() {
                 return 'u-field u-field-social' + this.options.valueAttribute;
             },
             initialize: function(options) {
                 this.options = _.extend({}, options);
-                this._super(options);
+                this._super(options);  // eslint-disable-line no-underscore-dangle
                 _.bindAll(this, 'redirect_to', 'inProgressMessage');
             },
             render: function() {
@@ -36,12 +36,12 @@
                         );
 
                 if (this.options.acceptsLogins) {
-                      linkTitle = screenReaderTitle,
-                      linkClass = 'social-field-unlinked';
-                      subTitle = StringUtils.interpolate(
-                          gettext('Link your {accountName} account to your {platformName} account and use {accountName} to sign in to {platformName}.'),  // eslint-disable-line max-len
-                            {accountName: this.options.title, platformName: this.options.platformName}
-                      );
+                    linkTitle = screenReaderTitle;
+                    linkClass = 'social-field-unlinked';
+                    subTitle = StringUtils.interpolate(
+                      gettext('Link your {accountName} account to your {platformName} account and use {accountName} to sign in to {platformName}.'),  // eslint-disable-line max-len
+                      {accountName: this.options.title, platformName: this.options.platformName}
+                    );
                 }
 
                 HtmlUtils.setHtml(this.$el, HtmlUtils.template(this.fieldTemplate)({

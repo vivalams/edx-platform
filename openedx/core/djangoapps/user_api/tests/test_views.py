@@ -851,7 +851,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
                 u"required": True,
                 u"label": u"Public username",
                 u"placeholder": u"JaneDoe",
-                u"instructions": u"The name that will identify you in your courses - <strong>(cannot be changed later)</strong>",  # pylint: disable=line-too-long
+                u"instructions": u"The name that will identify you in your courses - (cannot be changed later)",  # pylint: disable=line-too-long
                 u"restrictions": {
                     "min_length": USERNAME_MIN_LENGTH,
                     "max_length": USERNAME_MAX_LENGTH
@@ -995,7 +995,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
                     u"required": True,
                     u"label": u"Public username",
                     u"placeholder": u"JaneDoe",
-                    u"instructions": u"The name that will identify you in your courses - <strong>(cannot be changed later)</strong>",  # pylint: disable=line-too-long
+                    u"instructions": u"The name that will identify you in your courses - (cannot be changed later)",  # pylint: disable=line-too-long
                     u"restrictions": {
                         "min_length": USERNAME_MIN_LENGTH,
                         "max_length": USERNAME_MAX_LENGTH

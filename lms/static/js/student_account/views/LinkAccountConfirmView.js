@@ -28,26 +28,27 @@
                         window.location.href = '/logout?msa_only=true';
                     },
                     error: function(error) {
-                        console.error('Error Disconnecting User Account', error);
+                        console.error('Error Disconnecting User Account', error);  // eslint-disable-line no-console
                     }
                 });
             },
             confirm: function() {
+                var defaultOptions;
                 if (this.options.userData != null) {
-                    var defaultOptions = {
+                    defaultOptions = {
                         contentType: 'application/merge-patch+json',
                         patch: true,
                         wait: true,
-                        success: function(model, res) {
+                        success: function() {
                             window.location.href = '/dashboard';
                         },
                         error: function(model, xhr) {
-                            console.error('Error with Microsoft Account migration confirmation', model, xhr);
+                            console.error('Error with Microsoft Account migration confirmation', model, xhr);  // eslint-disable-line no-console
                         }
                     };
                     this.model.save(this.options.userData, defaultOptions);
                 } else {
-                    console.error('Error Updating User Account');
+                    console.error('Error Updating User Account');  // eslint-disable-line no-console
                 }
             }
         });

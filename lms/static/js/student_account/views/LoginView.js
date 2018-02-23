@@ -148,37 +148,35 @@
                 saveSuccess: function(data) {
                     switch (data.msa_migration_pipeline_status) {
                     case MSAMigrationStatus.LOGIN_NOT_MIGRATED:
-                        var $passwordField = this.$form.find('.password-password');
+                        var $passwordField = this.$form.find('.password-password');  // eslint-disable-line vars-on-top
                         $passwordField.attr('aria-hidden', 'false').show();
-                        $passwordField.find('#login-password').val("")
+                        $passwordField.find('#login-password').val('');
                         this.toggleDisableButton(false);
                         this.model.msa_migration_pipeline_status = MSAMigrationStatus.LOGIN_NOT_MIGRATED;
                         break;
                     case MSAMigrationStatus.LOGIN_MIGRATED:
-                        var signInMessage = 'Signing you in with your Microsoft Account...';
-                        var signInHTML = HtmlUtils.joinHtml(
+                        var signInMessage = 'Signing you in with your Microsoft Account...';  // eslint-disable-line vars-on-top
+                        var signInHTML = HtmlUtils.joinHtml(  // eslint-disable-line vars-on-top
                             HtmlUtils.HTML('<span class="fa fa-spinner fa-pulse message-in-progress" aria-hidden="true"></span><span class="sr">'),  // eslint-disable-line max-len
                             gettext(signInMessage),
                             HtmlUtils.HTML('</span>'),
                             HtmlUtils.HTML('<span>' + signInMessage + '</span>')
                         );
                         this.$form.find('#login-email-desc').html(signInHTML.text);
-                        var self = this;
+                        var self = this;  // eslint-disable-line vars-on-top
                         setTimeout(function() {
                             self.$form.find('.login-provider').click();
                         }, 1000);
                         break;
                     case MSAMigrationStatus.REGISTER_NEW_USER:
-                        var toggleForm = this.toggleForm;
-
-                        var msg = HtmlUtils.joinHtml(
+                        var msg = HtmlUtils.joinHtml(  // eslint-disable-line vars-on-top
                             _.sprintf(
                                 gettext('This email is not registered with %(platformName)s.' +
                                         ' Please try a different email or '),
                                 {platformName: this.platformName}
                             ),
                             HtmlUtils.HTML(
-                                '<a href="/register" class="form-toggle btn-neutral btn-register" data-type="register">',
+                                '<a href="/register" class="form-toggle btn-neutral btn-register" data-type="register">',  // eslint-disable-line max-len
                                 gettext('register'),
                                 '</a>'
                             ),
