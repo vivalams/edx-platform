@@ -118,7 +118,7 @@
                         msgText = error.responseJSON.email[0].user_message;
                         msg = HtmlUtils.joinHtml(
                             _.sprintf(
-                                gettext(msgText + " If you already have an account, "),
+                                gettext(msgText + ' If you already have an account, '),
                                 {platformName: this.platformName}
                             ),
                             HtmlUtils.HTML(

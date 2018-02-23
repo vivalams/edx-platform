@@ -61,6 +61,7 @@
                 event.preventDefault();
 
                 this.showInProgressMessage();
+                console.log(this.options)
                 // Direct the user to the providers site to start the authentication process.
                 // See python-social-auth docs for more information.
                 this.redirect_to(this.options.connectUrl);
