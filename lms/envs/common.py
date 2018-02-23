@@ -3062,7 +3062,7 @@ ENABLE_MSA_MIGRATION = False
 MSA_ACCOUNT_LINK_URL = '/account/link'
 MSA_ACCOUNT_LINK_CONFIRM_URL = '/account/link/confirm'
 MSA_DEFAULT_ACCOUNT_LINK_REDIRECT_URLS = [
-    r'^courses.*$', r'^dashboard.*$', r'^u/.*$', 
+    r'^courses.*$', r'^dashboard.*$', r'^u/.*$',
     r'^{}*$'.format(MSA_ACCOUNT_LINK_CONFIRM_URL.lstrip('/')),
     r'^account/settings.*$'
 ]

@@ -11,12 +11,14 @@ from django.core.cache import cache
 from django.core.urlresolvers import reverse, NoReverseMatch
 from django.http import HttpResponseBadRequest, HttpResponse
 from mock import patch
+import unittest
 
 from openedx.core.djangolib.testing.utils import CacheIsolationTestCase
 from student.tests.factories import UserFactory, RegistrationFactory, UserProfileFactory
 from openedx.core.djangoapps.user_api.accounts.api import delete_user_account
 
 
+@unittest.skipUnless(settings.FEATURES.get('ENABLE_THIRD_PARTY_AUTH'), 'third party auth not enabled')
 class UserDeleteTest(CacheIsolationTestCase):
     """
     Test student account deletion api

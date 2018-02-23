@@ -298,4 +298,3 @@ def users_delete_user_account(request):
         raise Http404
 
     return HttpResponse(user_id)
-

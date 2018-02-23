@@ -315,9 +315,10 @@ def update_account_settings(requesting_user, update, username=None, force_email_
         except Exception as err:  # pylint: disable=broad-except
             transaction.set_rollback(True)
             raise AccountUpdateError(
-               u"Error saving user confirmation: '{}'".format(err.message),
-               user_message=err.message
+                u"Error saving user confirmation: '{}'".format(err.message),
+                user_message=err.message
             )
+
 
 def _get_user_and_profile(username):
     """

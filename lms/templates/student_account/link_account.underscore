@@ -8,7 +8,7 @@
                     <p class="link-account-header-subtitle"><%- gettext("To comply with the General Data Protection Regulation (GDPR) and to better protect your privacy, you are now required to sign in with a Microsoft account. (If you don’t have one, you’ll be able to create one during the sign-in process.)") %></span>
                     <p class="link-account-header-subtitle"><%- gettext("Your name and email will be updated with the information in your Microsoft account, but your public username will remain the same.") %></span>
                 </div>
-                <div class="account-settings-section-body link-account-social-field-section">
+                <div class="link-account-social-field-section">
                     <div class="ui-loading-error is-hidden">
                         <span class="fa fa-exclamation-triangle message-error" aria-hidden="true"></span>
                         <span class="copy"><%- gettext("An error occurred. Please reload the page.") %></span>

@@ -2678,15 +2678,13 @@ class LogoutView(TemplateView):
 
     def dispatch(self, request, *args, **kwargs):  # pylint: disable=missing-docstring
 
-        # If this is from the MSA migration confirmation page, 
+        # If this is from the MSA migration confirmation page,
         # only log the user out of their Microsoft Account
         is_true = lambda value: bool(value) and value.lower() not in ('false', '0')
         msa_only = is_true(request.GET.get('msa_only'))
         msa_migration_enabled = configuration_helpers.get_value("ENABLE_MSA_MIGRATION")
 
-        if (msa_only and 
-            third_party_auth.is_enabled() and 
-            msa_migration_enabled):
+        if msa_only and third_party_auth.is_enabled() and msa_migration_enabled:
             return self._do_microsoft_account_logout(request, msa_only=True)
 
         # We do not log here, because we have a handler registered to perform logging on successful logouts.
@@ -2734,7 +2732,7 @@ class LogoutView(TemplateView):
 
         Args:
             request: Logout request object
-            msa_only: 
+            msa_only:
                 Whether to only log the user out of their Microsoft Account
                 or to do a full logout
 
