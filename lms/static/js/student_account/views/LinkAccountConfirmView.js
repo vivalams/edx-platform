@@ -20,8 +20,8 @@
             },
             render: function() {
                 HtmlUtils.setHtml(this.$el, HtmlUtils.template(linkAccountConfirmTpl)({
-                    newFullName: this.options.userData.name,
-                    newEmail: this.options.userData.email,
+                    newFullName: this.options.newFullName,
+                    newEmail: this.options.newEmail,
                     message: ''
                 }));
                 return this;

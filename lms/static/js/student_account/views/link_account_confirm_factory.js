@@ -7,13 +7,15 @@
             'js/student_account/models/user_account_model'
         ],
         function($, _, Backbone, LinkAccountConfirmView, UserAccountModel) {
-            return function(disconnectUrl, userAccountsApiUrl, userData) {
+            return function(disconnectUrl, userAccountsApiUrl, userData, newFullName, newEmail) {
                 var view;
                 var userAccountModel = new UserAccountModel({});
                 userAccountModel.url = userAccountsApiUrl;
 
                 view = new LinkAccountConfirmView({
                     userData: userData,
+                    newFullName: newFullName,
+                    newEmail: newEmail,
                     disconnectUrl: disconnectUrl,
                     model: userAccountModel
                 });
