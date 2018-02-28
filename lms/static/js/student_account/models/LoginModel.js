@@ -69,8 +69,8 @@
                     success: function(json) {
                         if (model.msaMigrationEnabled) {
                             if (json.hasOwnProperty('value')) {
-                                // eslint-disable-next-line no-param-reassign
                                 data[MSA_MIGRATION_PIPELINE_STATUS] = json.value;
+                                // eslint-disable-next-line no-param-reassign
                                 model.msa_migration_pipeline_status = json.value;
                             }
 

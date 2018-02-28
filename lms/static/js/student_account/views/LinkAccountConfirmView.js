@@ -16,7 +16,6 @@
             },
             initialize: function(options) {
                 this.options = _.extend({}, options);
-                console.log(this.options);
                 _.bindAll(this, 'redirect_to', 'showError');
             },
             render: function() {
@@ -41,8 +40,7 @@
                         view.redirect_to('/logout?msa_only=true');
                     },
                     error: function(error) {
-                        console.error(error);
-                        view.showError('There was an error disconnecting your account.')
+                        view.showError('There was an error disconnecting your account.');
                     }
                 });
             },
