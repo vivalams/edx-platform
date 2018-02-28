@@ -150,7 +150,9 @@
                     case MSAMigrationStatus.LOGIN_NOT_MIGRATED:
                         var $passwordField = this.$form.find('.password-password');  // eslint-disable-line vars-on-top
                         $passwordField.attr('aria-hidden', 'false').show();
-                        $passwordField.find('#login-password').val('');
+                        $passwordField.find('#login-password')
+                            .val('')
+                            .focus();
                         this.toggleDisableButton(false);
                         this.model.msa_migration_pipeline_status = MSAMigrationStatus.LOGIN_NOT_MIGRATED;
                         break;

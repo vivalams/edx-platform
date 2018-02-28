@@ -7,72 +7,50 @@
         'backbone',
         'js/views/fields',
         'text!templates/fields/field_social_link_account.underscore',
+        'text!templates/student_account/link_account.underscore',
         'edx-ui-toolkit/js/utils/string-utils',
         'edx-ui-toolkit/js/utils/html-utils'
     ], function(
         gettext, $, _, Backbone,
         FieldViews,
         fieldSocialLinkTemplate,
+        linkAccountTpl,
         StringUtils,
         HtmlUtils
     ) {
-        return FieldViews.LinkFieldView.extend({
-            fieldTemplate: fieldSocialLinkTemplate,
-            className: function() {
-                return 'u-field u-field-social' + this.options.valueAttribute;
+        return Backbone.View.extend({
+            el: '#link-account-main',
+            events: {
+                'click .link-account-button': 'linkClicked'
             },
             initialize: function(options) {
                 this.options = _.extend({}, options);
-                this._super(options);  // eslint-disable-line no-underscore-dangle
-                _.bindAll(this, 'redirect_to', 'inProgressMessage');
+                _.bindAll(this, 'redirect_to', 'showError');
             },
             render: function() {
-                var linkTitle = '',
-                    linkClass = '',
-                    subTitle = '',
-                    screenReaderTitle = StringUtils.interpolate(
-                            gettext('Sign in with {accountName}'),
-                            {accountName: this.options.title}
-                        );
-
-                if (this.options.acceptsLogins) {
-                    linkTitle = screenReaderTitle;
-                    linkClass = 'social-field-unlinked';
-                    subTitle = StringUtils.interpolate(
-                      gettext('Link your {accountName} account to your {platformName} account and use {accountName} to sign in to {platformName}.'),  // eslint-disable-line max-len
-                      {accountName: this.options.title, platformName: this.options.platformName}
-                    );
-                }
-
-                HtmlUtils.setHtml(this.$el, HtmlUtils.template(this.fieldTemplate)({
-                    id: this.options.valueAttribute,
-                    title: this.options.title,
-                    screenReaderTitle: screenReaderTitle,
-                    linkTitle: linkTitle,
-                    subTitle: subTitle,
-                    linkClass: linkClass,
-                    linkHref: '#',
-                    message: this.helpMessage
+                var title = StringUtils.interpolate(
+                    gettext('Sign in with {providerName}.'),
+                    {providerName: this.options.providerName}
+                );
+                HtmlUtils.setHtml(this.$el, HtmlUtils.template(linkAccountTpl)({
+                    userName: this.options.userName,
+                    title: title,
+                    message: ''
                 }));
-                this.delegateEvents();
+                if (this.options.duplicateProvider) {
+                    this.showError(this.options.duplicateProvider);
+                }
                 return this;
             },
-            linkClicked: function(event) {
-                event.preventDefault();
-
-                this.showInProgressMessage();
-                console.log(this.options)
-                // Direct the user to the providers site to start the authentication process.
-                // See python-social-auth docs for more information.
+            linkClicked: function() {
                 this.redirect_to(this.options.connectUrl);
             },
             redirect_to: function(url) {
                 window.location.href = url;
             },
-            inProgressMessage: function() {
-                return HtmlUtils.joinHtml(this.indicators.inProgress, (
-                    gettext('Updating')
-                ));
+            showError: function(message) {
+                HtmlUtils.setHtml(this.$('.error-message'), message);
+                this.$('.link-account-error-container').removeClass('is-hidden');
             }
         });
     });

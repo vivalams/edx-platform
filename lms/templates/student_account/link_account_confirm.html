@@ -8,7 +8,7 @@ from openedx.core.djangolib.markup import HTML, Text
 %>
 
 <%block name="pagetitle">${_("Account confirmation")}</%block>
-<%block name="bodyclass">view-dashboard is-authenticated</%block>
+<div id="link-account-confirm-main" class="login-register"></div>
 <%block name="js_extra">
 <%static:require_module module_name="js/student_account/views/link_account_confirm_factory" class_name="LinkAccountConfirmFactory">
     var userData = ${ user_data | n, dump_js_escaped_json };
@@ -17,24 +17,3 @@ from openedx.core.djangolib.markup import HTML, Text
     LinkAccountConfirmFactory(disconnectUrl, userAccountsApiUrl, userData);
 </%static:require_module>
 </%block>
-<main id="main" aria-label="Content" tabindex="-1">
-    <div class="container dashboard" id="link-account-confirm-main">
-      <div class="link-account-header">
-          <h1 class="header-title">${_("Confirm account update")}</h1>
-          <div>
-            <p>${_("Your full name and email will be updated with the following information:")}</p>
-            <p>${_("Full name")}</p>
-            <p class="link-account-confirm-subtitle">${new_full_name}</p>
-            <p>${_("Email (Use this to login)")}</p>
-            <p class="link-account-confirm-subtitle">${new_email}</p>
-            <p>${_("If this is not the account you want, you can ")}
-                <a href="#" class='link-account-disconnect'>${_("sign in with a different Microsoft Account")}</a>
-            </p>
-            <div class="link-account-confirm-section">
-                <button class="link-account-confirm">${_("Confirm")}</button>
-            </div>
-          </div>
-      </div>
-    </div>
-</main>
-

@@ -1,0 +1,23 @@
+<main id="main" aria-label="Content" tabindex="-1">
+    <div class="container dashboard">
+      <div class="link-account-header">
+          <h1 class="header-title"><%- gettext("Confirm account update")%></h1>
+          <div class="link-account-error-container is-hidden submission-error">
+            <p class="error-message"><%- message %></p>
+          </div>
+          <div>
+            <p><%- gettext("Your full name and email will be updated with the following information:")%></p>
+            <p><%- gettext("Full name")%></p>
+            <p class="link-account-confirm-subtitle"><%- newFullName %></p>
+            <p><%- gettext("Email (Use this to login)")%></p>
+            <p class="link-account-confirm-subtitle"><%- newEmail %></p>
+            <p><%- gettext("If this is not the account you want, you can ")%>
+                <a href="#" class='link-account-disconnect'><%- gettext("sign in with a different Microsoft Account")%></a>
+            </p>
+            <div class="link-account-confirm-section">
+                <button class="link-account-button"><%- gettext("Confirm")%></button>
+            </div>
+          </div>
+      </div>
+    </div>
+</main>

@@ -449,19 +449,23 @@ def finish_auth(request):  # pylint: disable=unused-argument
 @login_required
 @ensure_csrf_cookie
 def link_account(request):
+
+    auto_link = request.GET.get('auto', False)
     user = request.user
     _redirect_if_migration_complete(user)
 
     context = {
         'auth': {},
+        'duplicate_provider': None,
         'platform_name': configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME),
         'user_name': user.profile.name or user.username,
-        'enable_account_linking': True,
+        'enable_account_linking': True
     }
 
     if third_party_auth.is_enabled():
-        # If the account on the third party provider is already connected with another edX account,
-        # we display a message to the user.
+        duplicate_provider = [m.message for m in messages.get_messages(request)]
+        if len(duplicate_provider) > 0:
+            context['duplicate_provider'] = 'This Microsoft Account is already in use by a different account'
 
         auth_states = pipeline.get_provider_user_states(user)
         context['auth']['providers'] = [{
@@ -480,6 +484,9 @@ def link_account(request):
             # If the user is connected, sending a POST request to this url removes the connection
             # information for this provider from their edX account.
         } for state in auth_states if state.provider.display_for_login or state.has_account]
+
+        if auto_link:
+            return redirect(context['auth']['providers'][0]['connect_url'])
 
     return render_to_response("student_account/link_account.html", context)
 
@@ -586,8 +593,12 @@ def link_account_confirm(request):
     social_user = UserSocialAuth.objects.get(user=user)
     first_name = social_user.extra_data.get('first_name')
     last_name = social_user.extra_data.get('last_name')
-    email = social_user.extra_data.get('email')
-    new_full_name = ' '.join([first_name, last_name])
+    email = social_user.extra_data.get('email') or social_user.uid
+    if first_name and last_name:
+        new_full_name = ' '.join([first_name, last_name])
+    else:
+        new_full_name = user.profile.name
+
     user_data = {'force_email_update': True}
     if new_full_name != user.profile.name:
         user_data['name'] = new_full_name

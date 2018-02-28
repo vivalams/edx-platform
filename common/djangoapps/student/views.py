@@ -602,8 +602,9 @@ def dashboard(request):
         if is_redirection:
             external_login_api = configuration_helpers.get_value('external_login_api', '')
             lms_root_url = configuration_helpers.get_value('LMS_ROOT_URL', settings.FEATURES.get('LMS_ROOT_URL', ''))
-            external_redirect_url = ''.join([external_login_api, lms_root_url, request.path])
-            return redirect(external_redirect_url)
+            if external_login_api and lms_root_url:
+                external_redirect_url = ''.join([external_login_api, lms_root_url, request.path])
+                return redirect(external_redirect_url)
 
     platform_name = configuration_helpers.get_value("platform_name", settings.PLATFORM_NAME)
     enable_verified_certificates = configuration_helpers.get_value(
@@ -2744,7 +2745,7 @@ class LogoutView(TemplateView):
         lms_root_url = configuration_helpers.get_value('LMS_ROOT_URL')
 
         if msa_only:
-            redirect_url = '{}/account/link'.format(lms_root_url)
+            redirect_url = '{}/account/link?auto=true'.format(lms_root_url)
         else:
             redirect_url = lms_root_url
         return redirect("https://login.live.com/oauth20_logout.srf?client_id={}&redirect_uri={}".format(client_id, redirect_url))
