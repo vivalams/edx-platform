@@ -6,13 +6,13 @@
             <p class="error-message"><%- message %></p>
           </div>
           <div>
-            <p><%- gettext("Your full name and email will be updated with the following information:")%></p>
+            <p><%- gettext("The following information has been updated:")%></p>
             <p><%- gettext("Full name")%></p>
             <p class="link-account-confirm-subtitle"><%- newFullName %></p>
-            <p><%- gettext("Email (Use this to login)")%></p>
+            <p><%- gettext("Microsoft account (email address) you will use to sign in")%></p>
             <p class="link-account-confirm-subtitle"><%- newEmail %></p>
-            <p><%- gettext("If this is not the account you want, you can ")%>
-                <a href="#" class='link-account-disconnect'><%- gettext("sign in with a different Microsoft Account")%></a>
+            <p><%- gettext("If this is not the account you want to use, ")%>
+                <a href="#" class='link-account-disconnect'><%- gettext("sign in with a different account")%></a>
             </p>
             <div class="link-account-confirm-section">
                 <button class="link-account-button"><%- gettext("Confirm")%></button>

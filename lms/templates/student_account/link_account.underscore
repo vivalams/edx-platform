@@ -7,7 +7,7 @@
           </div>
             <div>
                 <p>Hello <%- userName %>,</p>
-                <p style="line-height: 1.4em"><%- gettext("To comply with the General Data Protection Regulation (GDPR) and to better protect your privacy, you are now required to sign in with a Microsoft account. (If you don’t have one, you’ll be able to create one during the sign-in process.)") %></span>
+                <p style="line-height: 1.4em"><%- gettext("To better protect your privacy, you are now required to sign in with a Microsoft account. (If you don’t have one, you’ll be able to create one during the sign-in process.)") %></span>
                 <p><%- gettext("Your name and email will be updated with the information in your Microsoft account, but your public username will remain the same.") %></span>
             </div>
             <div class="link-account-social-field-section">
@@ -15,7 +15,7 @@
                 <button class="link-account-button"><%- title %></button>
             </div>
             <div class="link-account-below-button-link">
-                <a target="_blank" href="https://www.microsoft.com/en-us/TrustCenter/Privacy/gdpr/default.aspx">Read more about GDPR</a>
+                <a target="_blank" href="https://privacy.microsoft.com">Read more about privacy at Microsoft</a>
             </div>
         </div>
     </div>
