@@ -417,7 +417,7 @@ class RegistrationView(APIView):
         if configuration_helpers.get_value('ENABLE_MSA_MIGRATION', False):
             name_instructions = name_instructions + \
                 u" You can update this information from your <br>" + \
-                u"{link_start}Microsoft Account Settings{link_end}.".format(
+                u"{link_start}Microsoft account settings{link_end}.".format(
                     link_start=u'<a href="https://account.microsoft.com">', link_end=u'</a>'
                 ) + \
                 u'<hr/>' + \
