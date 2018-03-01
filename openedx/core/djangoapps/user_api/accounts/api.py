@@ -283,6 +283,8 @@ def update_account_settings(requesting_user, update, username=None, force_email_
                     )
 
                 existing_user.email = new_email
+                # Explicitly activate any non-active user, validated through migration already
+                existing_user.is_active = True
                 existing_user.save()
 
                 # And send it to the new email...

@@ -74,8 +74,18 @@
                 window.location.href = url;
             },
             showError: function(message) {
-                HtmlUtils.setHtml(this.$('.error-message'), message);
-                this.$('.link-account-error-container').removeClass('is-hidden');
+                var errorMsg = HtmlUtils.joinHtml(
+                    gettext(message),
+                    gettext(" Please contact "),
+                    HtmlUtils.HTML('<a href="/faq" target="_blank">'),
+                    gettext("support"),
+                    HtmlUtils.HTML('</a>'),
+                    gettext(".")
+                );
+                HtmlUtils.setHtml(this.$('.error-message'), errorMsg);
+                this.$('.link-account-error-container')
+                    .removeClass('is-hidden')
+                    .focus();
             }
         });
     });
