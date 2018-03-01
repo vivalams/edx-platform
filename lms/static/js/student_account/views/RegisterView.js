@@ -122,9 +122,10 @@
                                 {platformName: this.platformName}
                             ),
                             HtmlUtils.HTML(
-                                '<a href="/logout?next=%2Flogin" class="btn-neutral btn-register" data-type="login">',
-                                'login',
-                                '</a>'),
+                                '<a href="/logout?next=%2Flogin" class="btn-neutral btn-register" data-type="login">'
+                            ),
+                            gettext('login'),
+                            HtmlUtils.HTML('</a>'),
                             gettext(' instead.')
                         );
                         this.errors = ['<li>' + msg + '</li>'];
