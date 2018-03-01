@@ -2744,8 +2744,11 @@ class LogoutView(TemplateView):
         client_id = provider.get_setting("KEY")
         lms_root_url = configuration_helpers.get_value('LMS_ROOT_URL')
 
-        referer = request.META['HTTP_REFERER']
-        referer_path = urlsplit(referer).path
+        referer = request.META.get('HTTP_REFERER', lms_root_url)
+        if referer:
+            referer_path = urlsplit(referer).path
+        else:
+            referer_path = '/'
 
         if msa_only:
             redirect_url = '{}/account/link?auto=true'.format(lms_root_url)
