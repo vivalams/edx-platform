@@ -123,7 +123,7 @@
                             ),
                             HtmlUtils.HTML(
                                 '<a href="/logout?next=%2Flogin" class="btn-neutral btn-register" data-type="login">',
-                                gettext('login'),
+                                'login',
                                 '</a>'),
                             gettext(' instead.')
                         );

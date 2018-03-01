@@ -2744,13 +2744,13 @@ class LogoutView(TemplateView):
         client_id = provider.get_setting("KEY")
         lms_root_url = configuration_helpers.get_value('LMS_ROOT_URL')
 
+        referer = request.META['HTTP_REFERER']
+        referer_path = urlsplit(referer).path
+
         if msa_only:
-            referer = request.META['HTTP_REFERER']
-            referer_path = urlsplit(referer).path
-            if referer_path == '/register':
-                redirect_url = referer
-            else:
-                redirect_url = '{}/account/link?auto=true'.format(lms_root_url)
+            redirect_url = '{}/account/link?auto=true'.format(lms_root_url)
+        elif referer_path == '/register':
+            redirect_url = referer
         else:
             redirect_url = lms_root_url
         return redirect("https://login.live.com/oauth20_logout.srf?client_id={}&redirect_uri={}".format(client_id, redirect_url))
