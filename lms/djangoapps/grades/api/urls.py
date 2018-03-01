@@ -25,7 +25,7 @@ urlpatterns = [
 
 ENABLE_BULK_GRADES_API = configuration_helpers.get_value(
     'ENABLE_BULK_GRADES_API',
-    settings.FEATURES.get('ENABLE_BULK_GRADES_API', True)
+    settings.FEATURES.get('ENABLE_BULK_GRADES_API', False)
 )
 
 # if ENABLE_BULK_GRADES_API:
