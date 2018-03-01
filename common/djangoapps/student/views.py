@@ -2750,7 +2750,10 @@ class LogoutView(TemplateView):
         if msa_only:
             redirect_url = '{}/account/link?auto=true'.format(lms_root_url)
         elif referer_path == '/register':
-            redirect_url = referer
+            if request.GET.get('next', '') != '/login':
+                redirect_url = referer
+            else:
+                redirect_url = '{}/login'.format(lms_root_url)
         else:
             redirect_url = lms_root_url
         return redirect("https://login.live.com/oauth20_logout.srf?client_id={}&redirect_uri={}".format(client_id, redirect_url))
