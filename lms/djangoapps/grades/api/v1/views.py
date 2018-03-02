@@ -101,11 +101,11 @@ class GradeViewMixin(DeveloperErrorViewMixin):
                 error_code='user_does_not_exist'
             )
 
-    def _make_grade_response(self, user, course, course_grade, use_email=None):
+    def _make_grade_response(self, user, course, course_grade, use_email=False):
         """
         Serialize a single grade to dict to use in Repsonses
         """
-        if use_email is not None:
+        if use_email:
             user = user.email
         else:
             user = user.username
@@ -189,7 +189,7 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
         Return:
             A JSON serialized representation of the requesting user's current grade status.
         """
-        use_email = request.GET.get('use_email', None)
+        use_email = request.GET.get('use_email', False)
 
         course = self._get_course(course_id, request.user, 'load')
         if isinstance(course, Response):
@@ -261,7 +261,7 @@ class CourseGradesView(GradeViewMixin, ListAPIView):
         Return:
             A JSON serialized representation of the requesting user's current grade status.
         """
-        use_email = request.GET.get('use_email', None)
+        use_email = request.GET.get('use_email', False)
 
         course = self._get_course(course_id, request.user, 'load')
 
@@ -311,7 +311,6 @@ class CourseGradesView(GradeViewMixin, ListAPIView):
                 course.id, serialize=False
             )
         except Exception as ex:
-            print(ex)
             return self.make_error_response(
                 status_code=status.HTTP_404_NOT_FOUND,
                 developer_message='The course does not have any enrollments.',
