@@ -49,7 +49,7 @@
                     ]
                 },
                 {
-                    title: gettext('Microsoft Account Information'),
+                    title: gettext('Microsoft account Information'),
                     fields: [
                         {
                             view: new AccountSettingsFieldViews.ReadonlyFieldView({
