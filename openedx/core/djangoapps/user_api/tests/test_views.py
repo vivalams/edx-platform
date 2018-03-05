@@ -985,24 +985,6 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
                 }
             )
 
-            # Username should be filled in
-            self._assert_reg_field(
-                no_extra_fields_setting,
-                {
-                    u"name": u"username",
-                    u"defaultValue": u"Bob123",
-                    u"type": u"text",
-                    u"required": True,
-                    u"label": u"Public username",
-                    u"placeholder": u"JaneDoe",
-                    u"instructions": u"The name that will identify you in your courses - (cannot be changed later)",  # pylint: disable=line-too-long
-                    u"restrictions": {
-                        "min_length": USERNAME_MIN_LENGTH,
-                        "max_length": USERNAME_MAX_LENGTH
-                    }
-                }
-            )
-
     def test_register_form_level_of_education(self):
         self._assert_reg_field(
             {"level_of_education": "optional"},

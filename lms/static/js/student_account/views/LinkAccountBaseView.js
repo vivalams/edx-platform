@@ -21,7 +21,7 @@
                 var error = message;
                 var errorMsg;
                 if (!error.endsWith('.')) {
-                    error += '.'
+                    error += '.';
                 }
                 errorMsg = HtmlUtils.joinHtml(
                     gettext(message),
