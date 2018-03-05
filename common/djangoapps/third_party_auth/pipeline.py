@@ -734,6 +734,7 @@ def update_user_profile_if_microsoft_account(auth_entry, backend, details, user,
         if update:
             # If the user's Microsoft account details changed, update their account to reflect those details
             try:
-                user_accounts.api.update_account_settings(user, update, force_email_update=update.has_key('email'))
+                force_email_update = 'email' in update
+                user_accounts.api.update_account_settings(user, update, force_email_update=force_email_update)
             except Exception as ex:
                 logger.error(ex)
