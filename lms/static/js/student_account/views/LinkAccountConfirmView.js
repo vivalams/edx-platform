@@ -4,11 +4,12 @@
         'jquery',
         'underscore',
         'backbone',
+        'js/student_account/views/LinkAccountBaseView',
         'text!templates/student_account/link_account_confirm.underscore',
         'edx-ui-toolkit/js/utils/string-utils',
         'edx-ui-toolkit/js/utils/html-utils'
-    ], function($, _, Backbone, linkAccountConfirmTpl, StringUtils, HtmlUtils) {
-        return Backbone.View.extend({
+    ], function($, _, Backbone, LinkAccountBaseView, linkAccountConfirmTpl, StringUtils, HtmlUtils) {
+        return LinkAccountBaseView.extend({
             el: '#link-account-confirm-main',
             events: {
                 'click .link-account-disconnect': 'disconnect',
@@ -16,7 +17,6 @@
             },
             initialize: function(options) {
                 this.options = _.extend({}, options);
-                _.bindAll(this, 'redirect_to', 'showError');
             },
             render: function() {
                 HtmlUtils.setHtml(this.$el, HtmlUtils.template(linkAccountConfirmTpl)({
@@ -69,23 +69,6 @@
                 } else {
                     view.showError(defaultErrorMessage);
                 }
-            },
-            redirect_to: function(url) {
-                window.location.href = url;
-            },
-            showError: function(message) {
-                var errorMsg = HtmlUtils.joinHtml(
-                    gettext(message),
-                    gettext(" Please contact "),
-                    HtmlUtils.HTML('<a href="/faq" target="_blank">'),
-                    gettext("support"),
-                    HtmlUtils.HTML('</a>'),
-                    gettext(".")
-                );
-                HtmlUtils.setHtml(this.$('.error-message'), errorMsg);
-                this.$('.link-account-error-container')
-                    .removeClass('is-hidden')
-                    .focus();
             }
         });
     });

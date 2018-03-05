@@ -3,7 +3,9 @@
         <div class="section link-account-header">
           <h1 class="header-title"><%- gettext("Account update required") %></h1>
           <div class="link-account-error-container is-hidden submission-error">
-            <p class="error-message"><%- message %></p>
+            <p class="error-message">
+                <%- message %>
+            </p>
           </div>
             <div>
                 <p>Hello <%- userName %>,</p>
