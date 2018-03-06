@@ -83,7 +83,7 @@
                             }
                         }
                         // take user consent for writing non-essential cookies
-                        if (mscc) {
+                        if (typeof(mscc) !== 'undefined') {
                             mscc.setConsent();
                         }
 

@@ -103,7 +103,7 @@
                     var providerUrl = $(event.currentTarget).data('provider-url') || '';
 
                     // take user consent for writing non-essential cookies
-                    if (mscc) {
+                    if (typeof(mscc) !== 'undefined') {
                         mscc.setConsent();
                       }
 
