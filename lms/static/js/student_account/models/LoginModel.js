@@ -84,7 +84,7 @@
                         }
 
                         // take user consent for writing non-essential cookies
-                        if (window.mscc !== 'undefined') {
+                        if (window.mscc) {
                             window.mscc.setConsent();
                         }
 
