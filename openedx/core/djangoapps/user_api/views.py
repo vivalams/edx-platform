@@ -416,10 +416,7 @@ class RegistrationView(APIView):
 
         if configuration_helpers.get_value('ENABLE_MSA_MIGRATION', False):
             name_instructions = name_instructions + \
-                u" You can update this information from your <br>" + \
-                u"{link_start}Microsoft Account Settings{link_end}.".format(
-                    link_start=u'<a href="https://account.microsoft.com">', link_end=u'</a>'
-                ) + \
+                u' You can update this information later from your account settings.' + \
                 u'<hr/>' + \
                 u'<p class="description-text"><strong>Provide additional information</strong></p>' + \
                 u'<p class="description-text-small">Required fields are marked with an asterisk (*).</p>'

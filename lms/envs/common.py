@@ -3066,4 +3066,4 @@ MSA_DEFAULT_ACCOUNT_LINK_REDIRECT_URLS = [
     r'^{}*$'.format(MSA_ACCOUNT_LINK_CONFIRM_URL.lstrip('/')),
     r'^account/settings.*$'
 ]
-MSA_ACCOUNT_MIGRATION_COMPLETED_KEY = 'microsoft_account_migration_confirmed'
+MSA_ACCOUNT_MIGRATION_COMPLETED_KEY = 'microsoft_account_migration_completed'
