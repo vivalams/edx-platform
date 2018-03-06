@@ -4,8 +4,15 @@ Tests for v1 views
 from datetime import datetime
 import ddt
 import json
+import unittest
+try:
+    import urllib.parse as urllib
+except ImportError:
+    import urllib
 
 from django.core.urlresolvers import reverse
+from django.test import TestCase
+from django.conf import settings
 from django.test.utils import override_settings
 from mock import MagicMock, patch
 from opaque_keys import InvalidKeyError
@@ -15,10 +22,10 @@ from rest_framework.test import APITestCase
 
 from capa.tests.response_xml_factory import MultipleChoiceResponseXMLFactory
 from edx_oauth2_provider.tests.factories import AccessTokenFactory, ClientFactory
-from openedx.core.djangoapps.oauth_dispatch.models import RestrictedApplication
-from openedx.core.djangoapps.oauth_dispatch.tests.test_views import _DispatchingViewTestCase
+from edx_oauth2_provider.tests.base import BaseTestCase
 from lms.djangoapps.courseware.tests.factories import GlobalStaffFactory, StaffFactory
 from student.tests.factories import CourseEnrollmentFactory, UserFactory
+from openedx.core.djangoapps.oauth_dispatch.tests import mixins
 from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory
 from xmodule.modulestore.tests.django_utils import SharedModuleStoreTestCase, TEST_DATA_SPLIT_MODULESTORE
@@ -384,6 +391,60 @@ class CourseGradeAllUsersViewTest(GradeViewTestMixin, APITestCase):
 
 
 @ddt.ddt
+class CourseGradeAllUsersClientcredentialTest(BaseTestCase, GradeViewTestMixin, APITestCase):
+
+    def setUp(self):
+        super(CourseGradeAllUsersClientcredentialTest, self).setUp()
+
+    def login_and_authorize(self, scope=None, claims=None, trusted=False, validate_session=True):
+        """ Login into client using OAuth2 authorization flow. """
+
+        self.set_trusted(self.auth_client, trusted)
+        self.client.login(username=self.user.username, password=self.password)
+
+        client_id = self.auth_client.client_id
+        payload = {
+            'client_id': client_id,
+            'redirect_uri': self.auth_client.redirect_uri,
+            'response_type': 'code',
+            'state': 'some_state',
+        }
+        _add_values(payload, 'id_token', scope, claims)
+
+        response = self.client.get(reverse('oauth2:capture'), payload)
+        self.assertEqual(302, response.status_code)
+
+        response = self.client.get(reverse('oauth2:authorize'), payload)
+
+        if validate_session:
+            self.assertListEqual(self.client.session[AUTHORIZED_CLIENTS_SESSION_KEY], [client_id])
+
+        return response
+
+    def get_access_token_response(self, scope=None, claims=None):
+        """ Get a new access token using the OAuth2 authorization flow. """
+        response = self.login_and_authorize(scope, claims, trusted=True)
+        self.assertEqual(302, response.status_code)
+        self.assertEqual(reverse('oauth2:redirect'), normpath(response['Location']))
+
+        response = self.client.get(reverse('oauth2:redirect'))
+        self.assertEqual(302, response.status_code)
+
+        query = QueryDict(urlparse(response['Location']).query)
+
+        payload = {
+            'grant_type': 'client_credentials',
+            'client_id': self.auth_client.client_id,
+            'client_secret': self.client_secret,
+            'code': query['code'],
+        }
+        _add_values(payload, 'id_token', scope, claims)
+
+        response = self.client.post(reverse('oauth2:access_token'), payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+@ddt.ddt
 class GradingPolicyTestMixin(object):
     """
     Mixin class for Grading Policy tests
@@ -623,231 +684,3 @@ class CourseGradingPolicyMissingFieldsTests(GradingPolicyTestMixin, SharedModule
             }
         ]
         self.assertListEqual(response.data, expected)
-
-
-class OAuth2RestrictedAppMixin(_DispatchingViewTestCase, SharedModuleStoreTestCase):
-    """
-    Tests specifically around RestrictedApplications for OAuth2 clients
-    We separated this out from other OAuth tests above, because those
-    tests use the deprecated DOP framework (as opposed to DOT)
-    """
-
-    def setUp(self):
-        super(OAuth2RestrictedAppMixin, self).setUp()
-        self.url = reverse('access_token')
-        self.course = CourseFactory.create()
-        self.second_org_course = CourseFactory.create(
-            org='SecondOrg'
-        )
-        self.not_associated_course = CourseFactory.create(
-            org='NotAssociated'
-        )
-
-        # enroll user associated with OAuth2 Client Application
-        # in all courses
-        CourseEnrollmentFactory(
-            course_id=self.course.id,
-            user=self.restricted_dot_app.user
-        )
-        CourseEnrollmentFactory(
-            course_id=self.second_org_course.id,
-            user=self.restricted_dot_app.user
-        )
-        CourseEnrollmentFactory(
-            course_id=self.not_associated_course.id,
-            user=self.restricted_dot_app.user
-        )
-
-    def _post_body(self, user, client, token_type=None, scopes=None):
-        """
-        Return a dictionary to be used as the body of the POST request
-        """
-        body = {
-            'client_id': client.client_id,
-            'grant_type': 'password',
-            'username': user.username,
-            'password': 'test',
-        }
-
-        if token_type:
-            body['token_type'] = token_type
-
-        if scopes:
-            body['scope'] = scopes
-
-        return body
-
-    def _get_api_url(self, course_key=None, username=None):
-        """
-        Helper method to get the current API url
-        """
-        namespaced_url = 'grades_api:v1:user_grade_detail'
-        if not username:
-            namespaced_url = 'grades_api:v1:course_grades_all'
-
-        url = reverse(
-            namespaced_url,
-            kwargs={
-                'course_id': course_key if course_key else self.course.id,
-            }
-        )
-        if username is not None:
-            url = '{}?username={}'.format(url, username)
-
-        return url
-
-    def _do_grades_call(self, dot_application, scopes, course_key=None, username=None):
-        """
-        Helper method to consolidate code
-        """
-        response = self._post_request(
-            self.user,
-            dot_application,
-            scopes=scopes,
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = json.loads(response.content)
-
-        self.assertIn('access_token', data)
-
-        # call into Grades API endpoint
-        response = self.client.get(
-            self._get_api_url(course_key, username),
-            HTTP_AUTHORIZATION="Bearer {0}".format(data['access_token'])
-        )
-        return response
-
-
-class OAuth2RestrictedAppCurrentCourseTests(OAuth2RestrictedAppMixin):
-    """
-    OAuth2 Restricted App tests for a single user in a course
-    """
-    def test_wrong_scope(self):
-        """
-        assert that a RestrictedApplication client which DOES NOT have the
-        grades:read scope CANNOT access the Grade API
-        """
-
-        # call into Grades API endpoint with a 'profile' scoped access_token
-        response = self._do_grades_call(
-            self.restricted_dot_app_limited_scopes,
-            'profile',
-            username=self.restricted_dot_app.user
-        )
-
-        # this should NOT have permission to access this API
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_correct_scope_with_correct_org(self):
-        """
-        assert that a RestrictedApplication client which DOES have the
-        grade:read scope as well as being associated with the org CAN access the Grade API
-        """
-
-        restricted_application = RestrictedApplication.objects.get(application=self.restricted_dot_app)
-        restricted_application.org_associations = [self.course.id.org]
-        restricted_application.save()
-
-        # call into Grades API endpoint with a 'grades:read' scoped access_token
-        response = self._do_grades_call(
-            self.restricted_dot_app,
-            'grades:read',
-            username=self.restricted_dot_app.user
-        )
-
-        # this should have permission to access this API endpoint
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_correct_scope_with_wrong_org(self):
-        """
-        assert that a RestrictedApplication client which
-             - DOES have the grade:read scope as well
-             - IS NOT associated with requested org
-        CANNOT access the Grade API
-        """
-
-        restricted_application = RestrictedApplication.objects.get(application=self.restricted_dot_app)
-        restricted_application.org_associations = ['badorg']
-        restricted_application.save()
-
-        # call into Enrollments API endpoint with a 'enrollments:read' scoped access_token
-        response = self._do_grades_call(
-            self.restricted_dot_app,
-            'grades:read',
-            username=self.restricted_dot_app.user
-        )
-
-        # this should have permission to access this API endpoint
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        data = json.loads(response.content)
-        self.assertEqual(data['error_code'], 'course_org_not_associated_with_calling_application')
-
-
-class OAuth2RestrictedAppCourseAllUsersTests(OAuth2RestrictedAppMixin):
-    """
-    OAuth2 Restricted App tests for grades of all users in a course
-    """
-    def test_wrong_scope(self):
-        """
-        assert that a RestrictedApplication client which DOES NOT have the
-        grades:read scope CANNOT access the Grade API
-        """
-
-        # call into Grades API endpoint with a 'profile' scoped access_token
-        response = self._do_grades_call(
-            self.restricted_dot_app_limited_scopes,
-            'profile'
-        )
-
-        # this should NOT have permission to access this API
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_correct_scope_with_correct_org(self):
-        """
-        assert that a RestrictedApplication client which DOES have the
-        grade:read scope as well as being associated with the org CAN access the Grade API
-        """
-
-        restricted_application = RestrictedApplication.objects.get(application=self.restricted_dot_app)
-        restricted_application.org_associations = [self.course.id.org]
-        restricted_application.save()
-
-        # call into Grades API endpoint with a 'grades:statistics' scoped access_token
-        response = self._do_grades_call(
-            self.restricted_dot_app,
-            'grades:statistics'
-        )
-
-        # this should have permission to access this API endpoint
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        expected_data = [{
-            'user': self.restricted_dot_app.user.username,
-            'course_key': str(self.course.id),
-            'passed': False,
-            'percent': 0.0,
-            'letter_grade': None
-        }]
-
-        self.assertEqual(response.data, expected_data)
-
-    def test_correct_scope_with_wrong_org(self):
-        """
-        assert that a RestrictedApplication client which
-             - DOES have the grade:read scope as well
-             - IS NOT associated with requested org
-        CANNOT access the Grade API
-        """
-        restricted_application = RestrictedApplication.objects.get(application=self.restricted_dot_app)
-        restricted_application.org_associations = ['badorg']
-        restricted_application.save()
-
-        # call into Grades API endpoint with a 'grades:statistics' scoped access_token
-        response = self._do_grades_call(
-            self.restricted_dot_app,
-            'grades:statistics'
-        )
-
-        # this should have permission to access this API endpoint
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        data = json.loads(response.content)
-        self.assertEqual(data['error_code'], 'course_org_not_associated_with_calling_application')

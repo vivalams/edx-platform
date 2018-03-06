@@ -15,7 +15,6 @@ class Redirect(Exception):
 class CourseAccessRedirect(Redirect):
     """
     Redirect raised when user does not have access to a course.
-
     Arguments:
         url (string): The redirect url.
         access_error (AccessErro): The AccessError that caused the redirect.

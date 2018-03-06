@@ -465,11 +465,6 @@ OAUTH2_PROVIDER = {
         # conform profile scope message that is presented to end-user
         # to lms/templates/provider/authorize.html. This may be revised later.
         'profile': 'Read your user profile',
-        # scopes to call into various APIs as read-only
-        'enrollments:read': 'Retrieve a list of your course enrollments',
-        'grades:read': 'Retrieve your grades for your enrolled courses',
-        'grades:statistics': 'Retrieve grades for all students in a course',
-        'certificates:read': 'Retrieve your course certificates',
     },
 }
 # This is required for the migrations in oauth_dispatch.models
@@ -1193,6 +1188,8 @@ MIDDLEWARE_CLASSES = (
     'openedx.core.djangoapps.theming.middleware.CurrentSiteThemeMiddleware',
 
     'openedx.core.djangoapps.site_configuration.middleware.LoginRequiredMiddleware',
+
+    'openedx.core.djangoapps.site_configuration.middleware.AccountLinkingMiddleware',
 
     # This must be last
     'openedx.core.djangoapps.site_configuration.middleware.SessionCookieDomainOverrideMiddleware',
@@ -3058,3 +3055,15 @@ ENTERPRISE_ENROLLMENT_API_URL = LMS_ROOT_URL + "/api/enrollment/v1/"
 #To prevent the browser from guessing the content type and force it to always use the type provided in the Content-Type header,
 #we need this to be enabled as True. (Security fix)
 SECURE_CONTENT_TYPE_NOSNIFF = True
+
+############# Settings for MSA account linking ###########################
+
+ENABLE_MSA_MIGRATION = False
+MSA_ACCOUNT_LINK_URL = '/account/link'
+MSA_ACCOUNT_LINK_CONFIRM_URL = '/account/link/confirm'
+MSA_DEFAULT_ACCOUNT_LINK_REDIRECT_URLS = [
+    r'^courses.*$', r'^dashboard.*$', r'^u/.*$',
+    r'^{}*$'.format(MSA_ACCOUNT_LINK_CONFIRM_URL.lstrip('/')),
+    r'^account/settings.*$'
+]
+MSA_ACCOUNT_MIGRATION_COMPLETED_KEY = 'microsoft_account_migration_completed'

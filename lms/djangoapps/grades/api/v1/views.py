@@ -8,10 +8,10 @@ from django.http import Http404
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import status
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
-
+from oauth2_provider import models as dot_models
 from courseware.access import has_access
 from lms.djangoapps.ccx.utils import prep_course_for_grading
 from lms.djangoapps.courseware import courses
@@ -20,7 +20,7 @@ from lms.djangoapps.grades.api.serializers import GradingPolicySerializer
 from lms.djangoapps.grades.new.course_grade import CourseGrade, CourseGradeFactory
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.lib.api.paginators import NamespacedPageNumberPagination
-from openedx.core.lib.api.permissions import IsStaffOrOwner, OAuth2RestrictedApplicatonPermission
+from openedx.core.lib.api.permissions import IsStaffOrOwner
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, view_auth_classes
 from enrollment import data as enrollment_data
 from student.roles import CourseStaffRole
@@ -51,19 +51,7 @@ class GradeViewMixin(DeveloperErrorViewMixin):
                 error_code='invalid_course_key'
             )
 
-        org_filter = self._get_org_filter(request)
-        if org_filter:
-            if course_key.org not in org_filter:
-                return self.make_error_response(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    developer_message='The OAuth2 RestrictedApplication is not associated with org.',
-                    error_code='course_org_not_associated_with_calling_application'
-                )
-
         try:
-            course_org_filter = configuration_helpers.get_value('course_org_filter')
-            if course_org_filter and course_key.org not in course_org_filter:
-                raise Http404
             return courses.get_course_with_access(
                 user,
                 access_action,
@@ -130,9 +118,8 @@ class GradeViewMixin(DeveloperErrorViewMixin):
         try:
             course = courses[0]
 
-            org_filter = self._get_org_filter(request)
             return enrollment_data.get_user_enrollments(
-                course.id, org_filter=org_filter, serialize=False
+                course.id, serialize=False
             )
         except:
             return self.make_error_response(
@@ -170,27 +157,6 @@ class GradeViewMixin(DeveloperErrorViewMixin):
             'percent': course_grade.percent,
             'letter_grade': course_grade.letter_grade,
         }
-
-    def _get_org_filter(self, request):
-        """
-        See if the request has an explicit ORG filter on the request
-        which limits which OAuth2 clients can see what courses
-        based on the association with a RestrictedApplication
-
-        For more information on RestrictedApplications and the
-        permissions model, see openedx/core/lib/api/permissions.py
-        """
-        if hasattr(request, 'auth') and hasattr(request.auth, 'org_associations'):
-            return request.auth.org_associations
-
-    def _elevate_access_if_restricted_application(self, request):
-        # We are authenticating through a restricted application so we
-        # grant the request user global staff access for the duration of
-        # this request.
-        # We DO NOT save this access. This allows us to use existing
-        # logic for permissions checks but still be secure.
-        if hasattr(request, 'auth') and hasattr(request.auth, 'org_associations'):
-            request.user.is_staff = True
 
     def perform_authentication(self, request):
         """
@@ -252,12 +218,6 @@ class CourseGradeView(GradeViewMixin, GenericAPIView):
 
     """
 
-    # needed for passing OAuth2RestrictedApplicatonPermission checks
-    # for RestrictedApplications (only). A RestrictedApplication can
-    # only call this method if it is allowed to receive a 'grades:read'
-    # scope
-    required_scopes = ['grades:read']
-
     def get(self, request, course_id):
         """
         Gets a course progress status.
@@ -297,9 +257,9 @@ class CourseGradeAllUsersView(GradeViewMixin, GenericAPIView):
     """
     **Use Case**
 
-        * Get course grades if all user who are enrolled in a course.
+        * Get course grades of all users who are enrolled in a course.
 
-        The currently logged-in user may request all enrolled user's grades information.
+        Any user with Client credentilas token may request all enrolled user's grades information.
 
     **Example Request**
 
@@ -354,13 +314,6 @@ class CourseGradeAllUsersView(GradeViewMixin, GenericAPIView):
         }]
     """
 
-    # needed for passing OAuth2RestrictedApplicatonPermission checks
-    # for RestrictedApplications (only). A RestrictedApplication can
-    # only call this method if it is allowed to receive a 'grades:read'
-    # scope
-    required_scopes = ['grades:statistics']
-    restricted_oauth_required = True
-
     def get(self, request, course_id):
         """
             Gets a course progress status.
@@ -372,9 +325,17 @@ class CourseGradeAllUsersView(GradeViewMixin, GenericAPIView):
             Return:
                 A JSON serialized representation of the requesting user's current grade status.
         """
+        required_token = request.META.get('HTTP_AUTHORIZATION')
+        if required_token:
+            applicationid = dot_models.AccessToken.objects.get(token=required_token.split()[1]).application
+            if applicationid.get_authorization_grant_type_display() != 'Client credentials':
+                raise PermissionDenied
+        else:
+                raise PermissionDenied
+
         should_calculate_grade = request.GET.get('calculate')
         use_email = request.GET.get('use_email', None)
-
+        request.user.is_staff = True
         course = self._get_course(request, course_id, request.user, 'load')
 
         if isinstance(course, Response):
