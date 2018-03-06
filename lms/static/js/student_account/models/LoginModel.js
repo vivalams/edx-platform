@@ -82,9 +82,10 @@
                                 }
                             }
                         }
+
                         // take user consent for writing non-essential cookies
-                        if (typeof(mscc) !== 'undefined') {
-                            mscc.setConsent();
+                        if (typeof(window['mscc']) !== 'undefined') {
+                            window['mscc'].setConsent();
                         }
 
                         model.trigger('sync', data);

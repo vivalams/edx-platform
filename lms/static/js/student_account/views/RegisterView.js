@@ -103,9 +103,9 @@
                     var providerUrl = $(event.currentTarget).data('provider-url') || '';
 
                     // take user consent for writing non-essential cookies
-                    if (typeof(mscc) !== 'undefined') {
-                        mscc.setConsent();
-                      }
+                    if (typeof(window['mscc']) !== 'undefined') {
+                        window['mscc'].setConsent();
+                    }
 
                     if (providerUrl) {
                         window.location.href = providerUrl;
