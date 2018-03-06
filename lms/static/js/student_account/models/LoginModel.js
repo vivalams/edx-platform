@@ -84,8 +84,8 @@
                         }
 
                         // take user consent for writing non-essential cookies
-                        if (typeof(window['mscc']) !== 'undefined') {
-                            window['mscc'].setConsent();
+                        if (window.mscc !== 'undefined') {
+                            window.mscc.setConsent();
                         }
 
                         model.trigger('sync', data);
