@@ -631,8 +631,12 @@
             font-weight: 700;
             margin-top:5px !important;
         }
-    }
 
+        p {
+            line-height: 1.4em;
+        }
+    }
+    
     .link-account-confirm-section, .link-account-social-field-section {
         padding: ($baseline*2) 0;
 
