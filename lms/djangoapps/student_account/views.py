@@ -484,7 +484,7 @@ def link_account(request):
             # If the user is connected, sending a POST request to this url removes the connection
             # information for this provider from their edX account.
         } for state in auth_states if state.provider.display_for_login or state.has_account]
-        
+
         _update_microsoft_account_migration_status(user, settings.MSA_MIGRATION_STATUS_NOT_MIGRATED)
         if auto_link:
             return redirect(context['auth']['providers'][0]['connect_url'])
@@ -662,4 +662,3 @@ def _update_microsoft_account_migration_status(user, migration_status):
     except Exception:  # pylint: disable=broad-except
         log.exception("UserProfile creation failed for user {id}.".format(id=user.id))
         raise
-
