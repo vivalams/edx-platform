@@ -124,25 +124,20 @@ class AccountLinkingMiddleware(object):
         If the site is configured to restrict not logged in users to the DEFAULT_ACCOUNT_LINK_EXEMPT_URLS
         from accessing pages, wrap the next view with the django login_required middleware
         """
-        print("path--  {}".format(request.path_info))
-        enable_msa_migration = configuration_helpers.get_value(
-            "ENABLE_MSA_MIGRATION",
-            settings.ENABLE_MSA_MIGRATION
-        )
-        if request.user.is_authenticated() and enable_msa_migration:
+        if request.user.is_authenticated() and configuration_helpers.get_value("ENABLE_MSA_MIGRATION"):
+            # Check if user has associated a Microsoft account
             try:
                 UserSocialAuth.objects.get(user=request.user, provider="live")
             except UserSocialAuth.DoesNotExist:
                 # Redirect users to account link page if they don't have a live account linked already
                 return self._redirect_if_not_allowed_url(request, settings.MSA_ACCOUNT_LINK_URL)
 
-            try:
-                user_profile = UserProfile.objects.get(user=request.user)
-                meta = user_profile.get_meta()
-                if meta[settings.MSA_ACCOUNT_MIGRATION_STATUS_KEY] == settings.MSA_MIGRATION_STATUS_MIGRATED_NOT_CONFIRMED:
-                    self._redirect_if_not_allowed_url(request, settings.MSA_ACCOUNT_LINK_CONFIRM_URL)    
-            except KeyError:
-                return self._redirect_if_not_allowed_url(request, settings.MSA_ACCOUNT_LINK_URL)
+            # Check if user has already associated a Microsoft account but not confirmed account update
+            user_profile = UserProfile.objects.get(user=request.user)
+            meta = user_profile.get_meta()
+
+            if meta.get(settings.MSA_ACCOUNT_MIGRATION_STATUS_KEY) != settings.MSA_MIGRATION_STATUS_MIGRATED:
+                self._redirect_if_not_allowed_url(request, settings.MSA_ACCOUNT_LINK_CONFIRM_URL)
 
     def _redirect_if_not_allowed_url(self, request, redirect_to):
         """
