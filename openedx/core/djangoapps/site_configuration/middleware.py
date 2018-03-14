@@ -136,7 +136,7 @@ class AccountLinkingMiddleware(object):
             user_profile = UserProfile.objects.get(user=request.user)
             meta = user_profile.get_meta()
             migration_status = meta.get(settings.MSA_ACCOUNT_MIGRATION_STATUS_KEY)
-            if migration_status == settings.MSA_MIGRATION_STATUS_MIGRATED_NOT_CONFIRMED:
+            if migration_status == settings.MSA_MIGRATION_STATUS_STARTED_NOT_CONFIRMED:
                 self._redirect_if_not_allowed_url(request, settings.MSA_ACCOUNT_LINK_CONFIRM_URL)
 
     def _redirect_if_not_allowed_url(self, request, redirect_to):

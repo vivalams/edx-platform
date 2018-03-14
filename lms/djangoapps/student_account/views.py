@@ -485,7 +485,7 @@ def link_account(request):
             # information for this provider from their edX account.
         } for state in auth_states if state.provider.display_for_login or state.has_account]
 
-        _update_microsoft_account_migration_status(user, settings.MSA_MIGRATION_STATUS_NOT_MIGRATED)
+        _update_microsoft_account_migration_status(user, settings.MSA_MIGRATION_STATUS_NOT_STARTED)
         if auto_link:
             return redirect(context['auth']['providers'][0]['connect_url'])
 
@@ -614,7 +614,7 @@ def link_account_confirm(request):
         'user_accounts_api_url': reverse("accounts_api", kwargs={'username': user.username}),
         'enable_account_linking': True
     }
-    _update_microsoft_account_migration_status(user, settings.MSA_MIGRATION_STATUS_MIGRATED_NOT_CONFIRMED)
+    _update_microsoft_account_migration_status(user, settings.MSA_MIGRATION_STATUS_STARTED_NOT_CONFIRMED)
     return render_to_response("student_account/link_account_confirm.html", context)
 
 
@@ -644,7 +644,7 @@ def _redirect_if_migration_complete(user):
         to view the account migration pages anymore, redirect to dashboard
     """
     meta = user.profile.get_meta()
-    if meta.get(settings.MSA_ACCOUNT_MIGRATION_STATUS_KEY) == settings.MSA_MIGRATION_STATUS_MIGRATED:
+    if meta.get(settings.MSA_ACCOUNT_MIGRATION_STATUS_KEY) == settings.MSA_MIGRATION_STATUS_STARTED_NOT_CONFIRMED:
         return redirect(reverse('dashboard'))
 
 
