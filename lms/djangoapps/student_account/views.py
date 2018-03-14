@@ -484,7 +484,8 @@ def link_account(request):
             # If the user is connected, sending a POST request to this url removes the connection
             # information for this provider from their edX account.
         } for state in auth_states if state.provider.display_for_login or state.has_account]
-
+        
+        _update_user_profile_meta(user, settings.MSA_MIGRATION_STATUS_NOT_MIGRATED)
         if auto_link:
             return redirect(context['auth']['providers'][0]['connect_url'])
 
@@ -577,6 +578,7 @@ def account_settings_context(request):
 @ensure_csrf_cookie
 def link_account_confirm(request):
     user = request.user
+    print("enter into link_account_confirm")
     _redirect_if_migration_complete(user)
 
     auth_states = pipeline.get_provider_user_states(user)
@@ -613,7 +615,7 @@ def link_account_confirm(request):
         'user_accounts_api_url': reverse("accounts_api", kwargs={'username': user.username}),
         'enable_account_linking': True
     }
-
+    _update_user_profile_meta(user, settings.MSA_MIGRATION_STATUS_MIGRATED_NOT_CONFIRMED)
     return render_to_response("student_account/link_account_confirm.html", context)
 
 
@@ -643,5 +645,20 @@ def _redirect_if_migration_complete(user):
         to view the account migration pages anymore, redirect to dashboard
     """
     meta = user.profile.get_meta()
-    if meta.get(settings.MSA_ACCOUNT_MIGRATION_COMPLETED_KEY):
+    if  meta.get(settings.MSA_ACCOUNT_MIGRATION_STATUS_KEY) >= settings.MSA_MIGRATION_STATUS_MIGRATED:
+        print("entered into redirect")
         return redirect(reverse('dashboard'))
+
+
+def _update_user_profile_meta(user, migration_status):
+    profile = user.profile;
+    if configuration_helpers.get_value("ENABLE_MSA_MIGRATION"):
+        meta = profile.get_meta()
+        meta[settings.MSA_ACCOUNT_MIGRATION_STATUS_KEY] =  migration_status
+        profile.set_meta(meta)
+    try:
+        profile.save()
+    except Exception:  # pylint: disable=broad-except
+        log.exception("UserProfile creation failed for user {id}.".format(id=user.id))
+        raise
+
