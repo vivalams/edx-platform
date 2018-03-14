@@ -124,7 +124,7 @@ class AccountLinkingMiddleware(object):
         If the site is configured to restrict not logged in users to the DEFAULT_ACCOUNT_LINK_EXEMPT_URLS
         from accessing pages, wrap the next view with the django login_required middleware
         """
-
+        print("path--  {}".format(request.path_info))
         enable_msa_migration = configuration_helpers.get_value(
             "ENABLE_MSA_MIGRATION",
             settings.ENABLE_MSA_MIGRATION
@@ -139,9 +139,10 @@ class AccountLinkingMiddleware(object):
             try:
                 user_profile = UserProfile.objects.get(user=request.user)
                 meta = user_profile.get_meta()
-                _ = meta[settings.MSA_ACCOUNT_MIGRATION_COMPLETED_KEY]
+                if meta[settings.MSA_ACCOUNT_MIGRATION_STATUS_KEY] == settings.MSA_MIGRATION_STATUS_MIGRATED_NOT_CONFIRMED:
+                    self._redirect_if_not_allowed_url(request, settings.MSA_ACCOUNT_LINK_CONFIRM_URL)    
             except KeyError:
-                return self._redirect_if_not_allowed_url(request, settings.MSA_ACCOUNT_LINK_CONFIRM_URL)
+                return self._redirect_if_not_allowed_url(request, settings.MSA_ACCOUNT_LINK_URL)
 
     def _redirect_if_not_allowed_url(self, request, redirect_to):
         """
@@ -153,6 +154,6 @@ class AccountLinkingMiddleware(object):
         )
         REDIRECT_URLS = [compile(expr) for expr in account_linking_redirect_urls]
         path = request.path_info.lstrip('/')
-
         if any(m.match(path) for m in REDIRECT_URLS) and path != redirect_to.lstrip('/'):
+            print("entered into redirection {}".format(redirect_to))
             return redirect(redirect_to)

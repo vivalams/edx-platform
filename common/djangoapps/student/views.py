@@ -1297,7 +1297,7 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
                 # User has already migrated to Microsoft account (MSA),
                 # redirect them through that flow.
                 meta = user_found_by_email_lookup.profile.get_meta()
-                if meta.get(settings.MSA_ACCOUNT_MIGRATION_COMPLETED_KEY):
+                if meta.get(settings.MSA_ACCOUNT_MIGRATION_STATUS_KEY) >= settings.MSA_MIGRATION_STATUS_MIGRATED:
                     msa_migration_pipeline_status = 'LOGIN_MIGRATED'
                 else:
                     # User has not migrated to Microsoft account,
@@ -1657,7 +1657,7 @@ def _do_create_account(form, custom_form=None):
         profile.meta = json.dumps(extended_profile)
     if configuration_helpers.get_value("ENABLE_MSA_MIGRATION"):
         meta = profile.get_meta()
-        meta[settings.MSA_ACCOUNT_MIGRATION_COMPLETED_KEY] = True
+        meta[settings.MSA_ACCOUNT_MIGRATION_STATUS_KEY] = settings.MSA_MIGRATION_STATUS_NEW_USER
         profile.set_meta(meta)
     try:
         profile.save()
