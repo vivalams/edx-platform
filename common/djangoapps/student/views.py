@@ -1200,10 +1200,7 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
     user = None
     platform_name = configuration_helpers.get_value("platform_name", settings.PLATFORM_NAME)
 
-    msa_migration_enabled = configuration_helpers.get_value(
-        "ENABLE_MSA_MIGRATION",
-        settings.FEATURES.get("ENABLE_MSA_MIGRATION", False)
-    )
+    msa_migration_enabled = configuration_helpers.get_value("ENABLE_MSA_MIGRATION")
 
     if third_party_auth_requested and not trumped_by_first_party_auth:
         # The user has already authenticated via third-party auth and has not
@@ -2683,16 +2680,24 @@ class LogoutView(TemplateView):
         # only log the user out of their Microsoft account
         is_true = lambda value: bool(value) and value.lower() not in ('false', '0')
         msa_only = is_true(request.GET.get('msa_only'))
+        auto_link = is_true(request.GET.get('auto_link'))
         msa_migration_enabled = configuration_helpers.get_value("ENABLE_MSA_MIGRATION")
 
         if msa_only and third_party_auth.is_enabled() and msa_migration_enabled:
-            return self._do_microsoft_account_logout(request, msa_only=True)
+            return self._do_microsoft_account_logout(request, msa_only=msa_only, auto_link=auto_link)
 
         # We do not log here, because we have a handler registered to perform logging on successful logouts.
         request.is_from_logout = True
 
         # Get the list of authorized clients before we clear the session.
         self.oauth_client_ids = request.session.get(edx_oauth2_provider.constants.AUTHORIZED_CLIENTS_SESSION_KEY, [])
+
+        try:
+            requesting_user = User.objects.get(username=request.user.username)
+            meta = requesting_user.profile.get_meta()
+            user_has_started_migration = msa_migration_enabled and meta.get(settings.MSA_ACCOUNT_MIGRATION_STATUS_KEY)
+        except User.DoesNotExist:
+            user_has_started_migration = False
 
         logout(request)
 
@@ -2705,7 +2710,7 @@ class LogoutView(TemplateView):
         # Clear the cookie used by the edx.org marketing site
         delete_logged_in_cookies(response)
 
-        if third_party_auth.is_enabled() and msa_migration_enabled:
+        if third_party_auth.is_enabled() and msa_migration_enabled and user_has_started_migration:
             # If this was a normal logout request, also log the user out of their Microsoft Account
             return self._do_microsoft_account_logout(request)
 
@@ -2727,7 +2732,7 @@ class LogoutView(TemplateView):
         new_query_string = urlencode(query_params, doseq=True)
         return urlunsplit((scheme, netloc, path, new_query_string, fragment))
 
-    def _do_microsoft_account_logout(self, request, msa_only=False):
+    def _do_microsoft_account_logout(self, request, msa_only=False, auto_link=False):
         """
         Log the user out of Microsoft Account. Only applicable during MSA_MIGRATION
 
@@ -2745,7 +2750,9 @@ class LogoutView(TemplateView):
         lms_root_url = configuration_helpers.get_value('LMS_ROOT_URL')
 
         if msa_only:
-            redirect_url = '{}/account/link?auto=true'.format(lms_root_url)
+            redirect_url = '{}/account/link'.format(lms_root_url)
+            if auto_link:
+                redirect_url += '?{}'.format(urlencode({'auto': True}))
         else:
             redirect_url = lms_root_url
             next_url = request.GET.get('next')

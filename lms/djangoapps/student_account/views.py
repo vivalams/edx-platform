@@ -114,10 +114,7 @@ def login_and_registration_form(request, initial_mode="login"):
     if isinstance(third_party_auth_context, HttpResponse):
         return third_party_auth_context
 
-    enable_msa_migration = configuration_helpers.get_value(
-        "ENABLE_MSA_MIGRATION",
-        settings.FEATURES.get("ENABLE_MSA_MIGRATION", False)
-    )
+    enable_msa_migration = configuration_helpers.get_value("ENABLE_MSA_MIGRATION")
 
     # Otherwise, render the combined login/registration page
     context = {
@@ -452,7 +449,9 @@ def link_account(request):
 
     auto_link = request.GET.get('auto', False)
     user = request.user
-    _redirect_if_migration_complete(user)
+    redirect_response = _redirect_if_migration_complete(user)
+    if redirect_response:
+        return redirect_response
 
     context = {
         'auth': {},
@@ -578,7 +577,9 @@ def account_settings_context(request):
 @ensure_csrf_cookie
 def link_account_confirm(request):
     user = request.user
-    _redirect_if_migration_complete(user)
+    redirect_response = _redirect_if_migration_complete(user)
+    if redirect_response:
+        return redirect_response
 
     auth_states = pipeline.get_provider_user_states(user)
     live_auth_state = [{
@@ -644,7 +645,7 @@ def _redirect_if_migration_complete(user):
         to view the account migration pages anymore, redirect to dashboard
     """
     meta = user.profile.get_meta()
-    if meta.get(settings.MSA_ACCOUNT_MIGRATION_STATUS_KEY) == settings.MSA_MIGRATION_STATUS_STARTED_NOT_CONFIRMED:
+    if meta.get(settings.MSA_ACCOUNT_MIGRATION_STATUS_KEY) == settings.MSA_MIGRATION_STATUS_COMPLETED:
         return redirect(reverse('dashboard'))
 
 
