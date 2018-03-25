@@ -82,7 +82,7 @@
                     }
                 ];
             } else {
-                    aboutSectionsData = [
+                aboutSectionsData = [
                     {
                         title: gettext('Basic Account Information'),
                         subtitle: gettext('These settings include basic information about your account. You can also specify additional information and see your linked social accounts on this page.'),  // eslint-disable-line max-len
