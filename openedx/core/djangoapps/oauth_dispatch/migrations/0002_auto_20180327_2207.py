@@ -8,6 +8,7 @@ from django.conf import settings
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('organizations', '0006_auto_20171207_0259'),
         ('oauth_dispatch', '0001_initial'),
     ]
 
@@ -20,7 +21,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='restrictedapplication',
             name='_org_associations',
-            field=models.TextField(null=True),
+            field=models.ForeignKey(default=b'', to='organizations.Organization'),
         ),
         migrations.AlterField(
             model_name='restrictedapplication',

@@ -11,6 +11,9 @@ from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.permissions import IsAuthenticated
+from edx_rest_framework_extensions.authentication import JwtAuthentication
 
 from courseware.access import has_access
 from lms.djangoapps.courseware import courses
@@ -20,6 +23,8 @@ from lms.djangoapps.grades.course_grade import CourseGrade
 from lms.djangoapps.grades.course_grade_factory import CourseGradeFactory
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.lib.api.paginators import NamespacedPageNumberPagination
+from openedx.core.lib.api.authentication import OAuth2AuthenticationAllowInactiveUser
+from openedx.core.lib.api.permissions import OAuth2RestrictedApplicatonPermission
 from openedx.core.lib.api.permissions import IsStaffOrOwner, OAuth2RestrictedApplicatonPermission
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, view_auth_classes
 from enrollment import data as enrollment_data
@@ -36,6 +41,12 @@ class GradeViewMixin(DeveloperErrorViewMixin):
     """
 
     pagination_class = NamespacedPageNumberPagination
+    authentication_classes = (
+        OAuth2AuthenticationAllowInactiveUser,
+        SessionAuthentication,
+        JwtAuthentication,
+    )
+    permission_classes = (IsAuthenticated, OAuth2RestrictedApplicatonPermission,)
 
     def _get_course(self, request, course_key_string, user, access_action):
         """

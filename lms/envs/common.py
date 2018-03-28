@@ -292,7 +292,7 @@ FEATURES = {
     'MILESTONES_APP': False,
 
     # Organizations application flag
-    'ORGANIZATIONS_APP': False,
+    'ORGANIZATIONS_APP': True,
 
     # Prerequisite courses feature flag
     'ENABLE_PREREQUISITE_COURSES': False,
@@ -2459,7 +2459,7 @@ SOCIAL_MEDIA_FOOTER_NAMES = [
 # JWT Settings
 JWT_AUTH = {
     # TODO Set JWT_SECRET_KEY to a secure value. By default, SECRET_KEY will be used.
-    # 'JWT_SECRET_KEY': '',
+    'JWT_SECRET_KEY': '12345',
     'JWT_ALGORITHM': 'HS256',
     'JWT_VERIFY_EXPIRATION': True,
     # TODO Set JWT_ISSUER and JWT_AUDIENCE to values specific to your service/organization.
@@ -2471,7 +2471,20 @@ JWT_AUTH = {
     # Number of seconds before JWT tokens expire
     'JWT_EXPIRATION': 30,
 }
-
+JWT_AUTH_NEW = {
+    # TODO Set JWT_SECRET_KEY to a secure value. By default, SECRET_KEY will be used.
+    'JWT_SECRET_KEY': '12345',
+    'JWT_ALGORITHM': 'HS256',
+    'JWT_VERIFY_EXPIRATION': True,
+    # TODO Set JWT_ISSUER and JWT_AUDIENCE to values specific to your service/organization.
+    'JWT_ISSUER': 'change-me',
+    'JWT_AUDIENCE': None,
+    'JWT_PAYLOAD_GET_USERNAME_HANDLER': lambda d: d.get('username'),
+    'JWT_LEEWAY': 1,
+    'JWT_DECODE_HANDLER': 'edx_rest_framework_extensions.utils.jwt_decode_handler',
+    # Number of seconds before JWT tokens expire
+    'JWT_EXPIRATION': 30,
+}
 # The footer URLs dictionary maps social footer names
 # to URLs defined in configuration.
 SOCIAL_MEDIA_FOOTER_URLS = {}

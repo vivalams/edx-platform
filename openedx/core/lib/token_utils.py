@@ -29,11 +29,13 @@ class JwtBuilder(object):
         secret (string): Overrides configured JWT secret (signing) key. Unused if an asymmetric signature is requested.
     """
 
-    def __init__(self, user, asymmetric=False, secret=None):
+    def __init__(self, user, asymmetric=False, secret=None, auth_type=None):
         self.user = user
         self.asymmetric = asymmetric
         self.secret = secret
         self.jwt_auth = configuration_helpers.get_value('JWT_AUTH', settings.JWT_AUTH)
+        if auth_type == 'oauth2':
+            self.jwt_auth = configuration_helpers.get_value('JWT_AUTH_NEW', settings.JWT_AUTH_NEW)
 
     def build_token(self, scopes, expires_in=None, aud=None, additional_claims=None):
         """Returns a JWT access token.
@@ -49,6 +51,10 @@ class JwtBuilder(object):
         Returns:
             str: Encoded JWT
         """
+
+        #if auth_type == 'oauth2':
+        #    self.jwt_auth = configuration_helpers.get_value('JWT_AUTH_NEW', settings.JWT_AUTH_NEW)
+
         now = int(time())
         expires_in = expires_in or self.jwt_auth['JWT_EXPIRATION']
         payload = {

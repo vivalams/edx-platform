@@ -14,12 +14,12 @@ from rest_framework.response import Response
 
 from courseware.access import has_access
 from lms.djangoapps.courseware import courses
-from lms.djangoapps.courseware.exceptions import CourseAccessRedirect
 from lms.djangoapps.grades.api.serializers import GradingPolicySerializer
 from lms.djangoapps.grades.course_grade_factory import CourseGradeFactory
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, view_auth_classes
 from student.roles import CourseStaffRole
 from openedx.core.lib.api.authentication import OAuth2AuthenticationAllowInactiveUser
+from edx_rest_framework_extensions.authentication import JwtAuthentication
 from openedx.core.lib.api.permissions import OAuth2RestrictedApplicatonPermission
 
 
@@ -33,8 +33,7 @@ class GradeViewMixin(DeveloperErrorViewMixin):
     Mixin class for Grades related views.
     """
     authentication_classes = (
-        OAuth2AuthenticationAllowInactiveUser,
-        SessionAuthentication,
+        JwtAuthentication,
     )
     permission_classes = (IsAuthenticated, OAuth2RestrictedApplicatonPermission,)
 
