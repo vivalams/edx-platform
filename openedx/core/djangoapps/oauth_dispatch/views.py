@@ -89,10 +89,28 @@ class _DispatchingView(View):
         Returns the appropriate adapter based on the OAuth client linked to the request.
         """
         dot_id = dot_models.Application.objects.get(client_id=self._get_client_id(request)).id
+        #dot_models.Application.objects.filter(client_id__contains=self._get_client_id(request))
         if RestrictedApplication.objects.filter(application_id=dot_id).exists():
             return 'oauth2'
         else:
             return 'jwt'
+
+    def get_associated_org(self, request):
+        """
+        Returns the appropriate adapter based on the OAuth client linked to the request.
+        """
+        dot_id = dot_models.Application.objects.get(client_id=self._get_client_id(request)).id
+        if RestrictedApplication.objects.filter(application_id=dot_id).exists():
+            return RestrictedApplication.objects.get(application_id=dot_id).org_associations
+        else:
+            return None
+
+    def get_grant_type(self, request):
+        """
+        Returns grant type of the application
+        """
+        return dot_models.Application.objects.get(client_id=self._get_client_id(request)).authorization_grant_type
+
 
 class AccessTokenView(RatelimitMixin, _DispatchingView):
     """
@@ -107,13 +125,14 @@ class AccessTokenView(RatelimitMixin, _DispatchingView):
 
     def dispatch(self, request, *args, **kwargs):
         response = super(AccessTokenView, self).dispatch(request, *args, **kwargs)
-        auth_type = self.get_auth_type(request)
-        #pdb.set_trace()
+
         if response.status_code == 200 and request.POST.get('token_type', '').lower() == 'jwt':
             expires_in, scopes, user = self._decompose_access_token_response(request, response)
-            print(auth_type)
+            auth_type = self.get_auth_type(request)
+            orgs = self.get_associated_org(request)
+            grant_type = self.get_grant_type(request)
             content = {
-                'access_token': JwtBuilder(user, auth_type=auth_type).build_token(scopes, expires_in),
+                'access_token': JwtBuilder(user, auth_type=auth_type).build_token(scopes, expires_in, org=orgs, grant_type=grant_type),
                 'expires_in': expires_in,
                 'token_type': 'JWT',
                 'scope': ' '.join(scopes),

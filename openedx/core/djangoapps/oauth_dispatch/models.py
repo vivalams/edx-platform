@@ -118,7 +118,7 @@ class RestrictedApplication(models.Model):
         Translate space delimited string to a list
         """
 
-        org_id = self._org_associations
+        org_id = self._org_associations.id
 
         return Organization.objects.get(id=org_id).name
 

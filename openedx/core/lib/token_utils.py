@@ -37,7 +37,7 @@ class JwtBuilder(object):
         if auth_type == 'oauth2':
             self.jwt_auth = configuration_helpers.get_value('JWT_AUTH_NEW', settings.JWT_AUTH_NEW)
 
-    def build_token(self, scopes, expires_in=None, aud=None, additional_claims=None):
+    def build_token(self, scopes, expires_in=None, aud=None, additional_claims=None, org=None, grant_type=None):
         """Returns a JWT access token.
 
         Arguments:
@@ -57,11 +57,19 @@ class JwtBuilder(object):
 
         now = int(time())
         expires_in = expires_in or self.jwt_auth['JWT_EXPIRATION']
+        if grant_type == 'Client credentials':
+            application_grant_type = ''
+        else:
+            application_grant_type = ';me'
+        if org:
+            org = 'content_org:' + org + application_grant_type
+
         payload = {
             # TODO Consider getting rid of this claim since we don't use it.
             'aud': aud if aud else self.jwt_auth['JWT_AUDIENCE'],
             'exp': now + expires_in,
             'iat': now,
+            'filters': org,
             'iss': self.jwt_auth['JWT_ISSUER'],
             'preferred_username': self.user.username,
             'version': '1.0',
