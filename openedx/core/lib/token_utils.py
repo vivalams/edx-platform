@@ -64,6 +64,7 @@ class JwtBuilder(object):
             'iat': now,
             'iss': self.jwt_auth['JWT_ISSUER'],
             'preferred_username': self.user.username,
+            'version': '1.0',
             'scopes': scopes,
             'sub': anonymous_id_for_user(self.user, None),
         }
