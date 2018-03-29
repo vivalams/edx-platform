@@ -34,7 +34,7 @@ class JwtBuilder(object):
         self.asymmetric = asymmetric
         self.secret = secret
         self.jwt_auth = configuration_helpers.get_value('JWT_AUTH', settings.JWT_AUTH)
-        if auth_type == 'oauth2':
+        if auth_type:
             self.jwt_auth = configuration_helpers.get_value('JWT_AUTH_NEW', settings.JWT_AUTH_NEW)
 
     def build_token(self, scopes, expires_in=None, aud=None, additional_claims=None, org=None, grant_type=None):
@@ -57,19 +57,22 @@ class JwtBuilder(object):
 
         now = int(time())
         expires_in = expires_in or self.jwt_auth['JWT_EXPIRATION']
-        if grant_type == 'Client credentials':
-            application_grant_type = ''
+        if grant_type == u'client-credentials':
+            application_grant_type = None
         else:
-            application_grant_type = ';me'
+            application_grant_type = 'user:me'
+        content_org = []
         if org:
-            org = 'content_org:' + org + application_grant_type
+            content_org.append('content_org:' + org)
+        if application_grant_type:
+             content_org.append('user:me')
 
         payload = {
             # TODO Consider getting rid of this claim since we don't use it.
             'aud': aud if aud else self.jwt_auth['JWT_AUDIENCE'],
             'exp': now + expires_in,
             'iat': now,
-            'filters': org,
+            'filters': content_org,
             'iss': self.jwt_auth['JWT_ISSUER'],
             'preferred_username': self.user.username,
             'version': '1.0',

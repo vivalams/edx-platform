@@ -5,6 +5,7 @@ Specialized models for oauth_dispatch djangoapp
 from datetime import datetime
 
 from django.db import models
+from django.conf import settings
 from oauth2_provider.settings import oauth2_settings
 from pytz import utc
 from oauth2_provider.models import AccessToken
@@ -31,7 +32,7 @@ class RestrictedApplication(models.Model):
     )
 
     # a space separated list of scopes that this application can request
-    _allowed_scopes = models.TextField(null=True)
+    _allowed_scopes = models.TextField(null=True, default=' '.join(settings.OAUTH2_PROVIDER['SCOPES'].keys()))
 
     # a space separated list of ORGs that this application is associated with
     # this field will be used to implement appropriate data filtering
@@ -83,6 +84,12 @@ class RestrictedApplication(models.Model):
             application = token.application
 
         return cls.get_restricted_application(application)
+
+    def _get_delemitered_string_from_list(self, scopes_list, seperator=_DEFAULT_SEPARATOR):
+        """
+        Helper to return a list from a delimited string
+        """
+        return _DEFAULT_SEPARATOR.join(scopes_list)
 
     def _get_list_from_delimited_string(self, delimited_string, separator=_DEFAULT_SEPARATOR):
         """
