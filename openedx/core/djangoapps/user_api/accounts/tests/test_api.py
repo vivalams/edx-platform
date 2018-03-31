@@ -453,7 +453,6 @@ class UserDeleteTest(TestCase):
         """
         Test if a user is deleted and all values are after creation
         """
-
         user = UserFactory.create(username='test', email='test@edx.org')
         user.set_password('test_password')
         user.save()
@@ -463,16 +462,10 @@ class UserDeleteTest(TestCase):
 
         user_id = user.id
         username = user.username
-        print('USERNAME: ', username)
 
         response = delete_user_account(username)
 
         deleted_user = User.objects.get(id=user_id)
-        print('============================')
-        print('============================')
-        print(response)
-        print('============================')
-        print('============================')
         with self.assertRaises(exceptions.ObjectDoesNotExist):
             _ = deleted_user.profile
 
