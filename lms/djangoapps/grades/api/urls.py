@@ -21,14 +21,5 @@ urlpatterns = [
         ),
         views.CourseGradingPolicy.as_view(), name='course_grading_policy'
     ),
-]
-
-ENABLE_BULK_GRADES_API = configuration_helpers.get_value(
-    'ENABLE_BULK_GRADES_API',
-    settings.FEATURES.get('ENABLE_BULK_GRADES_API', False)
-)
-
-# if ENABLE_BULK_GRADES_API:
-urlpatterns += [
     url(r'^v1/', include('grades.api.v1.urls', namespace='v1'))
 ]

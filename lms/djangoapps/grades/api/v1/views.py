@@ -3,6 +3,7 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.http import Http404
+from django.utils import simplejson
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import status
@@ -18,6 +19,7 @@ from lms.djangoapps.grades.api.serializers import GradingPolicySerializer
 from lms.djangoapps.grades.course_grade_factory import CourseGradeFactory
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, view_auth_classes
 from student.roles import CourseStaffRole
+from util.string_utils import str_to_bool
 
 log = logging.getLogger(__name__)
 USER_MODEL = get_user_model()
@@ -118,6 +120,19 @@ class GradeViewMixin(DeveloperErrorViewMixin):
             'letter_grade': course_grade.letter_grade,
         }
 
+    def _get_single_grade_response(self, request, username, course, use_email=False):
+        grade_user = self._get_effective_user(request, course)
+        if isinstance(grade_user, Response):
+            # Returns a 403 if the request.user can't access grades for the requested user,
+            # or a 404 if the requested user does not exist.
+            return grade_user
+
+        course_grade = CourseGradeFactory().read(grade_user, course)
+
+        return Response([
+            self._make_grade_response(grade_user, course, course_grade, use_email)
+        ])
+
     def perform_authentication(self, request):
         """
         Ensures that the user is authenticated (e.g. not an AnonymousUser), unless DEBUG mode is enabled.
@@ -196,17 +211,7 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
             # Returns a 404 if course_id is invalid, or request.user is not enrolled in the course
             return course
 
-        grade_user = self._get_effective_user(request, course)
-        if isinstance(grade_user, Response):
-            # Returns a 403 if the request.user can't access grades for the requested user,
-            # or a 404 if the requested user does not exist.
-            return grade_user
-
-        course_grade = CourseGradeFactory().read(grade_user, course)
-
-        return Response([
-            self._make_grade_response(grade_user, course, course_grade, use_email)
-        ])
+        return self._get_single_grade_response(request, username, course, use_email)
 
 
 class CourseGradesView(GradeViewMixin, ListAPIView):
@@ -215,7 +220,7 @@ class CourseGradesView(GradeViewMixin, ListAPIView):
         * Get course grades if all user who are enrolled in a course.
         The currently logged-in user may request all enrolled user's grades information.
     **Example Request**
-        GET /api/grades/v1/course_grade/{course_id}/all_users   - Get grades for all users in course
+        GET /api/grades/v1/courses/{course_id}/   - Get grades for all users in course
     **GET Parameters**
         A GET request may include the following parameters.
         * course_id: (required) A string representation of a Course ID.
@@ -261,44 +266,42 @@ class CourseGradesView(GradeViewMixin, ListAPIView):
         Return:
             A JSON serialized representation of the requesting user's current grade status.
         """
-        use_email = request.GET.get('use_email', False)
+        use_email = str_to_bool(request.GET.get('use_email'))        
+        username = request.GET.get('username')
 
-        course = self._get_course(course_id, request.user, 'load')
+        if not course_id:
+            course_id = request.GET.get('course_id')
 
+        if username:
+            access_action = 'load'
+        else:
+            access_action = 'staff'
+
+        course = self._get_course(course_id, request.user, access_action)
         if isinstance(course, Response):
             # Returns a 404 if course_id is invalid, or request.user is not enrolled in the course
             return course
 
-        # Only a user with staff access may request grades for a user other than herself.
-        if not has_access(request.user, CourseStaffRole.ROLE, course):
-            log.info(
-                'User %s tried to access all grades for course %s',
-                request.user.username,
-                course.id
+        if username:
+            return self._get_single_grade_response(request, username, course, use_email)
+        else:
+            enrollments_in_course = self._get_all_user_enrollments_in_course(request, course)
+            if isinstance(enrollments_in_course, Response):
+                # Return a 404 if the course has no enrollments.
+                return enrollments_in_course
+
+            paged_enrollments = self.paginator.paginate_queryset(
+                enrollments_in_course, self.request, view=self
             )
-            return self.make_error_response(
-                status_code=status.HTTP_403_FORBIDDEN,
-                developer_message='The requesting user does not have access to pull grades for this course',
-                error_code='user_no_access'
-            )
+            users = (enrollment.user for enrollment in paged_enrollments)
+            grades = CourseGradeFactory().iter(users, course)
 
-        enrollments_in_course = self._get_all_user_enrollments_in_course(request, course)
-        if isinstance(enrollments_in_course, Response):
-            # Return a 404 if the course has no enrollments.
-            return enrollments_in_course
+            response = []
+            for user, course_grade, __ in grades:
+                course_grade_res = self._make_grade_response(user, course, course_grade, use_email)
+                response.append(course_grade_res)
 
-        paged_enrollments = self.paginator.paginate_queryset(
-            enrollments_in_course, self.request, view=self
-        )
-        users = (enrollment.user for enrollment in paged_enrollments)
-        grades = CourseGradeFactory().iter(users, course)
-
-        response = []
-        for user, course_grade, __ in grades:
-            course_grade_res = self._make_grade_response(user, course, course_grade, use_email)
-            response.append(course_grade_res)
-
-        return Response(response)
+            return Response(response)
 
 
     def _get_all_user_enrollments_in_course(self, request, course):
@@ -316,36 +319,3 @@ class CourseGradesView(GradeViewMixin, ListAPIView):
                 developer_message='The course does not have any enrollments.',
                 error_code='no_course_enrollments'
             )
-
-
-class CourseGradingPolicy(GradeViewMixin, ListAPIView):
-    """
-    **Use Case**
-
-        Get the course grading policy.
-
-    **Example requests**:
-
-        GET /api/grades/v0/policy/{course_id}/
-
-    **Response Values**
-
-        * assignment_type: The type of the assignment, as configured by course
-          staff. For example, course staff might make the assignment types Homework,
-          Quiz, and Exam.
-
-        * count: The number of assignments of the type.
-
-        * dropped: Number of assignments of the type that are dropped.
-
-        * weight: The weight, or effect, of the assignment type on the learner's
-          final grade.
-    """
-
-    allow_empty = False
-
-    def get(self, request, course_id, **kwargs):
-        course = self._get_course(course_id, request.user, 'staff')
-        if isinstance(course, Response):
-            return course
-        return Response(GradingPolicySerializer(course.raw_grader, many=True).data)

@@ -8,21 +8,23 @@ from lms.djangoapps.grades.api.views import CourseGradingPolicy
 urlpatterns = patterns(
     '',
     url(
-        r'^course_grade/{course_id}/users/$'.format(
-            course_id=settings.COURSE_ID_PATTERN,
-        ),
-        views.UserGradeView.as_view(), name='user_grade_detail'
+        r'^courses/$',
+        views.CourseGradesView.as_view(), name='course_grades'
     ),
     url(
-        r'^course_grade/{course_id}/all_users/$'.format(
+        r'^courses/{course_id}/$'.format(
             course_id=settings.COURSE_ID_PATTERN,
         ),
-        views.CourseGradesView.as_view(), name='course_grades_all'
+        views.CourseGradesView.as_view(), name='course_grades'
     ),
     url(
-        r'^courses/{course_id}/policy/$'.format(
+        r'^policy/courses/$',
+        views.CourseGradingPolicy.as_view(), name='course_grading_policy'
+    ),
+    url(
+        r'^policy/courses/{course_id}/$'.format(
             course_id=settings.COURSE_ID_PATTERN,
         ),
-        CourseGradingPolicy.as_view(), name='course_grading_policy'
+        views.CourseGradingPolicy.as_view(), name='course_grading_policy'
     ),
 )
