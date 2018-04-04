@@ -3,7 +3,6 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.http import Http404
-from django.utils import simplejson
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import status
@@ -120,19 +119,6 @@ class GradeViewMixin(DeveloperErrorViewMixin):
             'letter_grade': course_grade.letter_grade,
         }
 
-    def _get_single_grade_response(self, request, username, course, use_email=False):
-        grade_user = self._get_effective_user(request, course)
-        if isinstance(grade_user, Response):
-            # Returns a 403 if the request.user can't access grades for the requested user,
-            # or a 404 if the requested user does not exist.
-            return grade_user
-
-        course_grade = CourseGradeFactory().read(grade_user, course)
-
-        return Response([
-            self._make_grade_response(grade_user, course, course_grade, use_email)
-        ])
-
     def perform_authentication(self, request):
         """
         Ensures that the user is authenticated (e.g. not an AnonymousUser), unless DEBUG mode is enabled.
@@ -140,78 +126,6 @@ class GradeViewMixin(DeveloperErrorViewMixin):
         super(GradeViewMixin, self).perform_authentication(request)
         if request.user.is_anonymous():
             raise AuthenticationFailed
-
-
-class UserGradeView(GradeViewMixin, GenericAPIView):
-    """
-    **Use Case**
-
-        * Get the current course grades for a user in a course.
-
-        The currently logged-in user may request her own grades, or a user with staff access to the course may request
-        any enrolled user's grades.
-
-    **Example Request**
-
-        GET /api/grades/v0/course_grade/{course_id}/users/?username={username}
-
-    **GET Parameters**
-
-        A GET request may include the following parameters.
-
-        * course_id: (required) A string representation of a Course ID.
-        * username: (optional) A string representation of a user's username.
-          Defaults to the currently logged-in user's username.
-
-    **GET Response Values**
-
-        If the request for information about the course grade
-        is successful, an HTTP 200 "OK" response is returned.
-
-        The HTTP 200 response has the following values.
-
-        * username: A string representation of a user's username passed in the request.
-
-        * course_id: A string representation of a Course ID.
-
-        * passed: Boolean representing whether the course has been
-                  passed according the course's grading policy.
-
-        * percent: A float representing the overall grade for the course
-
-        * letter_grade: A letter grade as defined in grading_policy (e.g. 'A' 'B' 'C' for 6.002x) or None
-
-
-    **Example GET Response**
-
-        [{
-            "username": "bob",
-            "course_key": "edX/DemoX/Demo_Course",
-            "passed": false,
-            "percent": 0.03,
-            "letter_grade": None,
-        }]
-
-    """
-    def get(self, request, course_id):
-        """
-        Gets a course progress status.
-
-        Args:
-            request (Request): Django request object.
-            course_id (string): URI element specifying the course location.
-
-        Return:
-            A JSON serialized representation of the requesting user's current grade status.
-        """
-        use_email = request.GET.get('use_email', False)
-
-        course = self._get_course(course_id, request.user, 'load')
-        if isinstance(course, Response):
-            # Returns a 404 if course_id is invalid, or request.user is not enrolled in the course
-            return course
-
-        return self._get_single_grade_response(request, username, course, use_email)
 
 
 class CourseGradesView(GradeViewMixin, ListAPIView):
@@ -257,7 +171,7 @@ class CourseGradesView(GradeViewMixin, ListAPIView):
             "letter_grade": null,
         }]
     """
-    def get(self, request, course_id):
+    def get(self, request, course_id=None):
         """
         Gets a course progress status.
         Args:
@@ -266,7 +180,7 @@ class CourseGradesView(GradeViewMixin, ListAPIView):
         Return:
             A JSON serialized representation of the requesting user's current grade status.
         """
-        use_email = str_to_bool(request.GET.get('use_email'))        
+        use_email = str_to_bool(request.GET.get('use_email'))
         username = request.GET.get('username')
 
         if not course_id:
@@ -283,12 +197,28 @@ class CourseGradesView(GradeViewMixin, ListAPIView):
             return course
 
         if username:
-            return self._get_single_grade_response(request, username, course, use_email)
+            grade_user = self._get_effective_user(request, course)
+            if isinstance(grade_user, Response):
+                # Returns a 403 if the request.user can't access grades for the requested user,
+                # or a 404 if the requested user does not exist.
+                return grade_user
+
+            course_grade = CourseGradeFactory().read(grade_user, course)
+
+            return Response([
+                self._make_grade_response(grade_user, course, course_grade, use_email)
+            ])
         else:
-            enrollments_in_course = self._get_all_user_enrollments_in_course(request, course)
-            if isinstance(enrollments_in_course, Response):
-                # Return a 404 if the course has no enrollments.
-                return enrollments_in_course
+            enrollments_in_course = enrollment_data.get_user_enrollments(
+                course.id, serialize=False
+            )
+
+            if not enrollments_in_course:
+                return self.make_error_response(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    developer_message='The course has no enrollments',
+                    error_code='course_no_enrollments',
+                )      
 
             paged_enrollments = self.paginator.paginate_queryset(
                 enrollments_in_course, self.request, view=self
@@ -302,20 +232,3 @@ class CourseGradesView(GradeViewMixin, ListAPIView):
                 response.append(course_grade_res)
 
             return Response(response)
-
-
-    def _get_all_user_enrollments_in_course(self, request, course):
-        """
-        Validates course enrollments and returns all enrollments in the course
-        Returns a 404 error response if the course has no enrollments does not exist.
-        """
-        try:
-            return enrollment_data.get_user_enrollments(
-                course.id, serialize=False
-            )
-        except Exception as ex:
-            return self.make_error_response(
-                status_code=status.HTTP_404_NOT_FOUND,
-                developer_message='The course does not have any enrollments.',
-                error_code='no_course_enrollments'
-            )

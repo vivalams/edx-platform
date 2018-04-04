@@ -103,19 +103,18 @@ def get_user_enrollments(course_id, serialize=True):
     Raises:
         CourseEnrollment.DoesNotExist
     """
-    if isinstance(course_id, unicode):
+    if isinstance(course_id, unicode) or isinstance(course_id, str):
         course_id = CourseKey.from_string(course_id)
-    try:
-        qset = CourseEnrollment.objects.filter(
-            course_id=course_id, is_active=True
-        ).order_by('created')
 
-        if serialize:
-            return CourseEnrollmentSerializer(qset, many=True).data
-        else:
-            return qset
-    except CourseEnrollment.DoesNotExist:
-        return None
+    qset = CourseEnrollment.objects.filter(
+        course_id=course_id,
+        is_active=True
+    ).order_by('created')
+
+    if serialize:
+        return CourseEnrollmentSerializer(qset, many=True).data
+    else:
+        return qset
 
 
 def create_course_enrollment(username, course_id, mode, is_active):
