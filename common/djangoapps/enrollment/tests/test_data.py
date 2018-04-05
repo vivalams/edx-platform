@@ -20,8 +20,6 @@ from enrollment.errors import (
     CourseEnrollmentFullError,
     UserNotFoundError
 )
-from enrollment.serializers import CourseEnrollmentSerializer
-
 from openedx.core.lib.exceptions import CourseNotFoundError
 from student.models import AlreadyEnrolledError, CourseEnrollment, CourseFullError, EnrollmentClosedError
 from student.tests.factories import UserFactory
@@ -109,7 +107,7 @@ class EnrollmentDataTest(ModuleStoreTestCase):
             self.assertIn(course_mode, result_slugs)
 
     @ddt.data(
-        # No course modes, no course enrollments, no org filter
+        # No course modes, no course enrollments.
         ([], []),
 
         # Audit / Verified / Honor course modes, with three course enrollments.
@@ -137,11 +135,6 @@ class EnrollmentDataTest(ModuleStoreTestCase):
         # from the get enrollments request.
         results = data.get_course_enrollments(self.user.username)
         self.assertEqual(results, created_enrollments)
-
-        # If the enrollment is in a course that doesn't have the org_filter,
-        # should return empty list
-        other_org_results = data.get_course_enrollments(self.user.username, org_filter=['other_org'])
-        self.assertEqual(other_org_results, [])
 
         # Now create a course enrollment with some invalid course (does
         # not exist in database) for the user and check that the method
@@ -208,7 +201,9 @@ class EnrollmentDataTest(ModuleStoreTestCase):
         users = []
         for i in xrange(10):
             users.append(UserFactory.create(
-                username=self.USERNAME + str(i), email=self.EMAIL + str(i), password=self.PASSWORD + str(i)
+                username=self.USERNAME + str(i),
+                email=self.EMAIL + str(i),
+                password=self.PASSWORD + str(i)
             ))
 
         # Create the original enrollments.
@@ -224,16 +219,9 @@ class EnrollmentDataTest(ModuleStoreTestCase):
         # Compare the created enrollments with the results
         # from the get user enrollments request.
         results = data.get_user_enrollments(
-            unicode(self.course.id), org_filter=[self.course.org], serialize=True
+            unicode(self.course.id), serialize=True
         )
         self.assertEqual(results, created_enrollments)
-
-        # If course.org not in org_filter
-        # should return an empty list
-        other_org_results = data.get_user_enrollments(
-            unicode(self.course.id), org_filter=['other_org'], serialize=True
-        )
-        self.assertEqual(other_org_results, [])
 
     @ddt.data(
         # Default (no course modes in the database)
