@@ -218,7 +218,7 @@ class CourseGradesView(GradeViewMixin, ListAPIView):
                     status_code=status.HTTP_404_NOT_FOUND,
                     developer_message='The course has no enrollments',
                     error_code='course_no_enrollments',
-                )      
+                )
 
             paged_enrollments = self.paginator.paginate_queryset(
                 enrollments_in_course, self.request, view=self

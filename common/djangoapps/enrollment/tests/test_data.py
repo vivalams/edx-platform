@@ -179,7 +179,6 @@ class EnrollmentDataTest(ModuleStoreTestCase):
         self.assertEqual(self.user.username, result['user'])
         self.assertEqual(enrollment, result)
 
-
     @ddt.data(
         # Default (no course modes in the database)
         # Expect that users are automatically enrolled as "honor".
@@ -202,8 +201,8 @@ class EnrollmentDataTest(ModuleStoreTestCase):
         users = []
         for i in xrange(10):
             users.append(UserFactory.create(
-                username=self.USERNAME + str(i), 
-                email=self.EMAIL + str(i), 
+                username=self.USERNAME + str(i),
+                email=self.EMAIL + str(i),
                 password=self.PASSWORD + str(i)
             ))
 
@@ -223,7 +222,6 @@ class EnrollmentDataTest(ModuleStoreTestCase):
             unicode(self.course.id), serialize=True
         )
         self.assertEqual(results, created_enrollments)
-
 
     @ddt.data(
         # Default (no course modes in the database)
