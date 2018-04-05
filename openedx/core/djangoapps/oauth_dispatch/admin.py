@@ -80,7 +80,6 @@ class RestrictedApplicationAdmin(ModelAdmin):
     ModelAdmin for the Restricted Application
     """
     list_display = [u'application']
-    filter_horizontal = ('_org_associations',)
 
 
 site.register(RestrictedApplication, RestrictedApplicationAdmin)

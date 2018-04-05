@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 
 import hashlib
 import json
-
+import pdb
 from Cryptodome.PublicKey import RSA
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -22,7 +22,7 @@ from ratelimit.mixins import RatelimitMixin
 
 from openedx.core.djangoapps.auth_exchange import views as auth_exchange_views
 from openedx.core.lib.token_utils import JwtBuilder
-
+from openedx.core.djangoapps.oauth_dispatch.models import RestrictedApplication 
 from . import adapters
 
 
@@ -84,6 +84,15 @@ class _DispatchingView(View):
         else:
             return request.POST.get('client_id')
 
+    def get_auth_type(self, request):
+        """
+        Returns the appropriate adapter based on the OAuth client linked to the request.
+        """
+        dot_id = dot_models.Application.objects.get(client_id=self._get_client_id(request)).id
+        if RestrictedApplication.objects.filter(application_id=dot_id).exists():
+            return 'oauth2'
+        else:
+            return 'jwt'
 
 class AccessTokenView(RatelimitMixin, _DispatchingView):
     """
@@ -98,12 +107,13 @@ class AccessTokenView(RatelimitMixin, _DispatchingView):
 
     def dispatch(self, request, *args, **kwargs):
         response = super(AccessTokenView, self).dispatch(request, *args, **kwargs)
-
+        auth_type = self.get_auth_type(request)
+        #pdb.set_trace()
         if response.status_code == 200 and request.POST.get('token_type', '').lower() == 'jwt':
             expires_in, scopes, user = self._decompose_access_token_response(request, response)
-
+            print(auth_type) 
             content = {
-                'access_token': JwtBuilder(user).build_token(scopes, expires_in),
+                'access_token': JwtBuilder(user, auth_type=auth_type).build_token(scopes, expires_in),
                 'expires_in': expires_in,
                 'token_type': 'JWT',
                 'scope': ' '.join(scopes),
@@ -115,6 +125,7 @@ class AccessTokenView(RatelimitMixin, _DispatchingView):
     def _decompose_access_token_response(self, request, response):
         """ Decomposes the access token in the request to an expiration date, scopes, and User. """
         content = json.loads(response.content)
+        print(content)
         access_token = content['access_token']
         scope = content['scope']
         access_token_obj = self.get_adapter(request).get_access_token(access_token)
