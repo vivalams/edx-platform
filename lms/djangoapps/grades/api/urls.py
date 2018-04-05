@@ -3,13 +3,10 @@ Grades API URLs.
 """
 
 from django.conf import settings
-from django.conf.urls import (
-    include,
-    patterns,
-    url,
-)
+from django.conf.urls import include, url
 
 from lms.djangoapps.grades.api import views
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 urlpatterns = [
     url(
