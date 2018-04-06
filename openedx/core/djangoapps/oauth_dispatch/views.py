@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 
 import hashlib
 import json
-
 from Cryptodome.PublicKey import RSA
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -22,9 +21,8 @@ from ratelimit.mixins import RatelimitMixin
 
 from openedx.core.djangoapps.auth_exchange import views as auth_exchange_views
 from openedx.core.lib.token_utils import JwtBuilder
-
+from openedx.core.djangoapps.oauth_dispatch.models import RestrictedApplication
 from . import adapters
-from .dot_overrides import views as dot_overrides_views
 
 
 class _DispatchingView(View):
@@ -85,6 +83,39 @@ class _DispatchingView(View):
         else:
             return request.POST.get('client_id')
 
+    def _get_application_id(self, request):
+        """
+        Return application id from provided request
+        """
+        return dot_models.Application.objects.get(client_id=self._get_client_id(request)).id
+
+    def get_auth_type(self, request):
+        """
+        Returns the appropriate adapter based on the OAuth client linked to the request.
+        """
+        dot_id = self._get_application_id(request)
+        #dot_models.Application.objects.filter(client_id__contains=self._get_client_id(request))
+        if RestrictedApplication.objects.filter(application_id=dot_id).exists():
+            return True
+        else:
+            return False
+
+    def get_associated_org(self, request):
+        """
+        Returns the appropriate adapter based on the OAuth client linked to the request.
+        """
+        dot_id = self._get_application_id(request)
+        if RestrictedApplication.objects.filter(application_id=dot_id).exists():
+            return RestrictedApplication.objects.get(application_id=dot_id).org_associations
+        else:
+            return None
+
+    def get_grant_type(self, request):
+        """
+        Returns grant type of the application
+        """
+        return dot_models.Application.objects.get(client_id=self._get_client_id(request)).authorization_grant_type
+
 
 class AccessTokenView(RatelimitMixin, _DispatchingView):
     """
@@ -102,9 +133,14 @@ class AccessTokenView(RatelimitMixin, _DispatchingView):
 
         if response.status_code == 200 and request.POST.get('token_type', '').lower() == 'jwt':
             expires_in, scopes, user = self._decompose_access_token_response(request, response)
-
+            auth_type = self.get_auth_type(request)
+            if auth_type:
+                org = self.get_associated_org(request)
+            else:
+                org = None
+            grant_type = self.get_grant_type(request)
             content = {
-                'access_token': JwtBuilder(user).build_token(scopes, expires_in),
+                'access_token': JwtBuilder(user, auth_type=auth_type).build_token(scopes, expires_in, org=org, grant_type=grant_type),
                 'expires_in': expires_in,
                 'token_type': 'JWT',
                 'scope': ' '.join(scopes),
@@ -130,7 +166,7 @@ class AuthorizationView(_DispatchingView):
     Part of the authorization flow.
     """
     dop_view = dop_views.Capture
-    dot_view = dot_overrides_views.EdxOAuth2AuthorizationView
+    dot_view = dot_views.AuthorizationView
 
 
 class AccessTokenExchangeView(_DispatchingView):

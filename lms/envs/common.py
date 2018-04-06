@@ -533,6 +533,9 @@ OAUTH2_PROVIDER = {
         # conform profile scope message that is presented to end-user
         # to lms/templates/provider/authorize.html. This may be revised later.
         'profile': 'Know your name and username',
+        'enrollments:read': 'Retrieve a list of your course enrollments',
+        'grades:read': 'Retrieve your grades for your enrolled courses',
+        'certificates:read': 'Retrieve your course certificates',
     },
     'REQUEST_APPROVAL_PROMPT': 'auto_even_if_expired',
 }
