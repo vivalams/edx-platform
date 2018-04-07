@@ -11,6 +11,7 @@ from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from edx_rest_framework_extensions.authentication import JwtAuthentication
 
 from courseware.access import has_access
 from enrollment import data as enrollment_data
@@ -35,8 +36,9 @@ class GradeViewMixin(DeveloperErrorViewMixin):
     """
 
     authentication_classes = (
-	    OAuth2AuthenticationAllowInactiveUser,
-		SessionAuthentication,
+        OAuth2AuthenticationAllowInactiveUser,
+        SessionAuthentication,
+        JwtAuthentication,
     )
     permission_classes = (IsAuthenticated, OAuth2RestrictedApplicatonPermission,)
 
