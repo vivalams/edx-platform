@@ -30,7 +30,7 @@ from student.models import (
 log = logging.getLogger(__name__)
 
 
-def get_course_enrollments(user_id):
+def get_course_enrollments(user_id, org_filter=None):
     """Retrieve a list representing all aggregated data for a user's course enrollments.
 
     Construct a representation of all course enrollment data for a specific user.
@@ -42,10 +42,20 @@ def get_course_enrollments(user_id):
         A serializable list of dictionaries of all aggregated enrollment data for a user.
 
     """
-    qset = CourseEnrollment.objects.filter(
+    enrollments_filter = dict(
         user__username=user_id,
         is_active=True
-    ).order_by('created')
+    )
+
+    # apply ORG filter, if specified
+    # NOTE, do not do a Falsy type check here because an empty list
+    # and None do not have the same semantic meaning. None means no filtering.
+    # Empty list means 'filter everything out'
+
+    if org_filter is not None:
+        enrollments_filter['course__org__in'] = [ org_filter ]
+
+    qset = CourseEnrollment.objects.filter(**enrollments_filter)
 
     enrollments = CourseEnrollmentSerializer(qset, many=True).data
 
@@ -92,7 +102,7 @@ def get_course_enrollment(username, course_id):
         return None
 
 
-def get_user_enrollments(course_id, serialize=True):
+def get_user_enrollments(course_id, org_filter=None, serialize=True):
     """Based on the course id, return all user enrollments in the course
     Args:
         course_id (str): The course to retrieve enrollment information for.
@@ -103,19 +113,31 @@ def get_user_enrollments(course_id, serialize=True):
     Raises:
         CourseEnrollment.DoesNotExist
     """
-    if isinstance(course_id, unicode) or isinstance(course_id, str):
+    if isinstance(course_id, unicode):
+
         course_id = CourseKey.from_string(course_id)
 
-    qset = CourseEnrollment.objects.filter(
-        course_id=course_id,
-        is_active=True
-    ).order_by('created')
+    try:
+        enrollments_filter = dict(
+            course_id = course_id
+        )
 
-    if serialize:
-        return CourseEnrollmentSerializer(qset, many=True).data
-    else:
-        return qset
+        # apply ORG filter, if specified
+        # NOTE, do not do a Falsy type check here because an empty list
+        # and None do not have the same semantic meaning. None means no filtering.
+        # Empty list means 'filter everything out'
 
+        if org_filter is not None:
+            enrollments_filter['course__org__in'] = [ org_filter ]
+
+        qset = CourseEnrollment.objects.filter(**enrollments_filter)
+
+        if serialize:
+            return CourseEnrollmentSerializer(qset, many=True).data
+        else:
+            return qset
+    except CourseEnrollment.DoesNotExist:
+        return None
 
 def create_course_enrollment(username, course_id, mode, is_active):
     """Create a new course enrollment for the given user.
