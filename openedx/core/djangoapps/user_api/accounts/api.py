@@ -701,3 +701,31 @@ def anonymize_user_discussions(user, old_username):
             entity['anonymous_to_peers'] = True
             entity['author_username'] = user.username
             th.save(entity)
+@intercept_errors(UserAPIInternalError, ignore_errors=[UserAPIRequestError])
+def update_user_account(old_email, new_email, provider,uid, puid):
+
+    check_account_exists(email=old_email)
+
+    if not 'email' in check_account_exists(email=old_email):
+        raise UserNotFound()
+
+    existing_user = User.objects.get(email=old_email)
+    existing_user.email = new_email
+    existing_user.save()
+
+    social_auth_records = UserSocialAuth.objects.filter(user=existing_user)
+    for each in social_auth_records:
+        if each.provider == provider:
+            each.update(uid=uid)
+
+    try:
+        social_auth_mapping = UserSocialAuthMapping.objects.get(user=existing_user)
+        social_auth_mapping.uid = uid
+        social_auth_mapping.puid = puid
+        social_auth_mapping.save()
+    except Exception:
+	# This error is most likely a *.DoesNotExist,
+	# meaning the user does not have a social auth record
+	# We don't need to do anything special here and
+	# should NOT raise an exception
+	pass

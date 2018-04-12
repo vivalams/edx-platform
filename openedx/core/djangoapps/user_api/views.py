@@ -15,9 +15,12 @@ from rest_framework import authentication
 from rest_framework import filters
 from rest_framework import generics
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.exceptions import ParseError
+from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
 from django_countries import countries
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
 
@@ -30,6 +33,7 @@ from student.views import create_account_with_params
 from student.cookies import set_logged_in_cookies
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.lib.api.authentication import SessionAuthenticationAllowInactiveUser
+from openedx.core.lib.api.authentication import OAuth2AuthenticationAllowInactiveUser
 from util.json_request import JsonResponse
 from util.enterprise_helpers import insert_enterprise_fields
 from .preferences.api import get_country_time_zones, update_email_opt_in
@@ -40,8 +44,11 @@ from .accounts import (
     USERNAME_MIN_LENGTH, USERNAME_MAX_LENGTH
 )
 from .accounts.api import check_account_exists
-from .serializers import CountryTimeZoneSerializer, UserSerializer, UserPreferenceSerializer
-
+from .serializers import CountryTimeZoneSerializer, UserSerializer, UserPreferenceSerializer, UpdateEmailAPISerializer
+from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin
+from .accounts.api import update_user_account
+from rest_framework.response import Response
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 class LoginSessionView(APIView):
     """HTTP end-points for logging in users. """
@@ -1129,3 +1136,37 @@ class CountryTimeZoneListView(generics.ListAPIView):
     def get_queryset(self):
         country_code = self.request.GET.get('country_code', None)
         return get_country_time_zones(country_code)
+
+
+
+class UpdateAccountViewMixin(DeveloperErrorViewMixin):
+    """
+    Mixin class for Grades related views.
+    """
+    authentication_classes = (
+        OAuth2AuthenticationAllowInactiveUser,
+        SessionAuthentication,
+    )
+    permission_classes = (IsAuthenticated,)
+
+
+    def perform_authentication(self, request):
+        """
+        Ensures that the user is authenticated (e.g. not an AnonymousUser), unless DEBUG mode is enabled.
+        """
+        super(UpdateAccountViewMixin, self).perform_authentication(request)
+        if request.user.is_anonymous():
+            raise AuthenticationFailed
+
+
+@ensure_csrf_cookie
+@api_view(['PUT'])
+def email_update_api(request):
+    if request.method == 'PUT':
+        serializer = UpdateEmailAPISerializer(data=request.data)
+        if serializer.is_valid():
+            update_user_account(request.data['old_email'],request.data['new_email'],request.data['uid'],request.data['puid'],request.data['provider'])
+            msg = []
+            return Response(msg, status=200)
+        else:
+            return Response(serializer.errors, status=200)

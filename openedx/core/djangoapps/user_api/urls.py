@@ -9,6 +9,7 @@ from ..profile_images.views import ProfileImageView
 from .accounts.views import AccountViewSet
 from .preferences.views import PreferencesView, PreferencesDetailView
 from .verification_api.views import PhotoVerificationStatusView
+from .views import email_update_api 
 
 ME = AccountViewSet.as_view({
     'get': 'get',
@@ -48,4 +49,6 @@ urlpatterns = patterns(
         PreferencesDetailView.as_view(),
         name='preferences_detail_api'
     ),
+    url(
+        r'email_update_api$',email_update_api, name='UpdateemailView'),
 )

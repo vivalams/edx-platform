@@ -109,3 +109,12 @@ class SoftwareSecurePhotoVerificationSerializer(serializers.ModelSerializer):
     class Meta(object):
         fields = ('status', 'expiration_datetime', 'is_verified')
         model = SoftwareSecurePhotoVerification
+
+class UpdateEmailAPISerializer(serializers.Serializer):
+
+
+    old_email = serializers.CharField()
+    new_email = serializers.CharField()
+    uid = serializers.CharField()
+    puid = serializers.CharField()
+    provider = serializers.CharField()
