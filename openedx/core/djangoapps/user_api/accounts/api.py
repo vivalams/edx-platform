@@ -717,7 +717,7 @@ def update_user_account(old_email, new_email, provider,uid, puid):
     for each in social_auth_records:
         if each.provider == provider:
             each.uid=uid
-
+    social_auth_records.save()
     try:
         social_auth_mapping = UserSocialAuthMapping.objects.get(user=existing_user)
         social_auth_mapping.uid = uid
