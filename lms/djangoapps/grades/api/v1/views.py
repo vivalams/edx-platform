@@ -17,12 +17,12 @@ from courseware.access import has_access
 from enrollment import data as enrollment_data
 from lms.djangoapps.courseware import courses
 from lms.djangoapps.courseware.exceptions import CourseAccessRedirect
-from lms.djangoapps.grades.api.serit CourseStaffRole
-from util.string_utils import str_to_bool
-from openedx.core.lib.aalizers import GradingPolicySerializer
+from lms.djangoapps.grades.api.serializers import GradingPolicySerializer
 from lms.djangoapps.grades.course_grade_factory import CourseGradeFactory
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, view_auth_classes
-from student.roles imporpi.authentication import OAuth2AuthenticationAllowInactiveUser
+from student.roles import CourseStaffRole
+from util.string_utils import str_to_bool
+from openedx.core.lib.api.authentication import OAuth2AuthenticationAllowInactiveUser
 from openedx.core.lib.api.permissions import OAuth2RestrictedApplicatonPermission
 
 log = logging.getLogger(__name__)
