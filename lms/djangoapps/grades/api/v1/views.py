@@ -17,12 +17,12 @@ from courseware.access import has_access
 from enrollment import data as enrollment_data
 from lms.djangoapps.courseware import courses
 from lms.djangoapps.courseware.exceptions import CourseAccessRedirect
-from lms.djangoapps.grades.api.serializers import GradingPolicySerializer
+from lms.djangoapps.grades.api.serit CourseStaffRole
+from util.string_utils import str_to_bool
+from openedx.core.lib.aalizers import GradingPolicySerializer
 from lms.djangoapps.grades.course_grade_factory import CourseGradeFactory
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, view_auth_classes
-from student.roles import CourseStaffRole
-from util.string_utils import str_to_bool
-from openedx.core.lib.api.authentication import OAuth2AuthenticationAllowInactiveUser
+from student.roles imporpi.authentication import OAuth2AuthenticationAllowInactiveUser
 from openedx.core.lib.api.permissions import OAuth2RestrictedApplicatonPermission
 
 log = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ class GradeViewMixin(DeveloperErrorViewMixin):
     # scope
     required_scopes = ['grades:read']
 
-    def _get_course(self, course_key_string, user, access_action):
+    def _get_course(self, course_key_string, user, access_action = 'load'):
         """
         Returns the course for the given course_key_string after
         verifying the requested access to the course by the given user.
@@ -138,6 +138,15 @@ class GradeViewMixin(DeveloperErrorViewMixin):
             'letter_grade': course_grade.letter_grade,
         }
 
+    def _get_auth_type(self, request):
+        """
+        Returns value based on request auth type
+        """
+        if request.auth.application.authorization_grant_type == u'authorization-code' or request.auth.application.authorization_grant_type == u'password':
+            return True
+        else:
+            return None
+
     def perform_authentication(self, request):
         """
         Ensures that the user is authenticated (e.g. not an AnonymousUser), unless DEBUG mode is enabled.
@@ -213,12 +222,13 @@ class CourseGradesView(GradeViewMixin, ListAPIView):
         if not course_id:
             course_id = request.GET.get('course_id')
 
-        if username:
-            access_action = 'load'
+        if self._get_auth_type(request):
+            username = request.user.username
         else:
-            access_action = 'staff'
+            if username:
+                request.user.username = username
 
-        course = self._get_course(course_id, request.user, access_action)
+        course = self._get_course(course_id, request.user)
         if isinstance(course, Response):
             # Returns a 404 if course_id is invalid, or request.user is not enrolled in the course
             return course
