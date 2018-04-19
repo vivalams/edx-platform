@@ -14,8 +14,12 @@ from search.tests.utils import SearcherMixin
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase, SharedModuleStoreTestCase
 
 from ..views import CourseDetailView
+from openedx.core.djangoapps.site_configuration.tests.test_util import with_site_configuration
 from .mixins import TEST_PASSWORD, CourseApiFactoryMixin
 
+TEST_SITE_CONFIGURATION = {
+    'RESTRICT_COURSES_API': True
+}
 
 class CourseApiTestViewMixin(CourseApiFactoryMixin):
     """
@@ -99,6 +103,16 @@ class CourseListViewTestCase(CourseApiTestViewMixin, SharedModuleStoreTestCase):
     def test_not_logged_in(self):
         self.client.logout()
         self.verify_response()
+
+    @with_site_configuration(configuration=TEST_SITE_CONFIGURATION)
+    def test_as_honor_with_site_configuration(self):
+        self.setup_user(self.honor_user)
+        self.verify_response(expected_status_code=403, params={'username': self.honor_user.username})
+
+    @with_site_configuration(configuration=TEST_SITE_CONFIGURATION)
+    def test_as_honor_with_site_configuration(self):
+        self.setup_user(self.staff_user)
+        self.verify_response(params=('username': self.staff_user.username})
 
 
 class CourseListViewTestCaseMultipleCourses(CourseApiTestViewMixin, ModuleStoreTestCase):
