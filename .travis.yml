@@ -24,6 +24,7 @@ branches:
   - oxa/master.fic
   - oxa/release.fic
   - oxa/dev.fic
+  - oxa/ms.fic
   - oxa/ci
 
 before_install:
