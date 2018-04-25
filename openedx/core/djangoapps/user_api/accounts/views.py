@@ -23,6 +23,7 @@ from openedx.core.lib.api.authentication import (
     SessionAuthenticationAllowInactiveUser,
     OAuth2AuthenticationAllowInactiveUser,
 )
+from openedx.core.lib.api.permissions import OAuth2RestrictedApplicatonPermission
 from openedx.core.lib.api.parsers import MergePatchParser
 from student.models import (
     User,
@@ -179,7 +180,10 @@ class AccountViewSet(ViewSet):
     authentication_classes = (
         OAuth2AuthenticationAllowInactiveUser, SessionAuthenticationAllowInactiveUser, JwtAuthentication
     )
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (
+	    permissions.IsAuthenticated,
+		OAuth2RestrictedApplicatonPermission
+	)
     parser_classes = (MergePatchParser,)
 
     def get(self, request):

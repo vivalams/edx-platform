@@ -29,13 +29,15 @@ class JwtBuilder(object):
         secret (string): Overrides configured JWT secret (signing) key. Unused if an asymmetric signature is requested.
     """
 
-    def __init__(self, user, asymmetric=False, secret=None):
+    def __init__(self, user, asymmetric=False, secret=None, auth_type=None):
         self.user = user
         self.asymmetric = asymmetric
         self.secret = secret
         self.jwt_auth = configuration_helpers.get_value('JWT_AUTH', settings.JWT_AUTH)
+        if auth_type:
+            self.jwt_auth = configuration_helpers.get_value('JWT_AUTH_NEW', settings.JWT_AUTH_NEW)
 
-    def build_token(self, scopes, expires_in=None, aud=None, additional_claims=None):
+    def build_token(self, scopes, expires_in=None, aud=None, additional_claims=None, org=None, grant_type=None):
         """Returns a JWT access token.
 
         Arguments:
@@ -49,15 +51,28 @@ class JwtBuilder(object):
         Returns:
             str: Encoded JWT
         """
+
         now = int(time())
         expires_in = expires_in or self.jwt_auth['JWT_EXPIRATION']
+        if grant_type == u'client-credentials':
+            application_grant_type = None
+        else:
+            application_grant_type = 'user:me'
+        content_org = []
+        if org:
+            content_org.append('content_org:' + org)
+        if application_grant_type:
+             content_org.append('user:me')
+
         payload = {
             # TODO Consider getting rid of this claim since we don't use it.
             'aud': aud if aud else self.jwt_auth['JWT_AUDIENCE'],
             'exp': now + expires_in,
             'iat': now,
+            'filters': content_org,
             'iss': self.jwt_auth['JWT_ISSUER'],
             'preferred_username': self.user.username,
+            'version': '1.0',
             'scopes': scopes,
             'sub': anonymous_id_for_user(self.user, None),
         }
