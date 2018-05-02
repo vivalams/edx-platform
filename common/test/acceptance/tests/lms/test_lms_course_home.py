@@ -2,14 +2,16 @@
 """
 End-to-end tests for the LMS that utilize the course home page and course outline.
 """
-from contextlib import contextmanager
+
 from nose.plugins.attrib import attr
 
-from ..helpers import auto_auth, load_data_str, UniqueCourseTest
+from common.test.acceptance.pages.lms.create_mode import ModeCreationPage
+
 from ...fixtures.course import CourseFixture, XBlockFixtureDesc
 from ...pages.lms.bookmarks import BookmarksPage
 from ...pages.lms.course_home import CourseHomePage
 from ...pages.lms.courseware import CoursewarePage
+from ..helpers import UniqueCourseTest, auto_auth, load_data_str
 
 
 class CourseHomeBaseTest(UniqueCourseTest):
@@ -61,24 +63,36 @@ class CourseHomeTest(CourseHomeBaseTest):
     """
     Tests the course home page with course outline.
     """
-
     def test_course_home(self):
         """
-        Smoke test of course outline, breadcrumbs to and from course outline, and bookmarks.
+        Smoke test of course goals, course outline, breadcrumbs to and from course outline, and bookmarks.
         """
+        ModeCreationPage(
+            self.browser, self.course_id, mode_slug=u'verified',
+            mode_display_name='verified', min_price=10
+        ).visit()
         self.course_home_page.visit()
 
-        # TODO: TNL-6546: Remove unified_course_view.
-        self.course_home_page.unified_course_view = True
-        self.courseware_page.nav.unified_course_view = True
+        # TODO: TNL-6546: Remove course_outline_page.
+        self.course_home_page.course_outline_page = True
+        self.courseware_page.nav.course_outline_page = True
 
         # Check that the tab lands on the course home page.
         self.assertTrue(self.course_home_page.is_browser_on_page())
 
+        # Check that a success message and update course field are shown when selecting a course goal
+        # TODO: LEARNER-2522: Ensure the correct message shows up for a particular goal choice
+        self.assertFalse(self.course_home_page.is_course_goal_success_message_shown())
+        self.assertFalse(self.course_home_page.is_course_goal_update_field_shown())
+        self.course_home_page.select_course_goal()
+        self.course_home_page.wait_for_ajax()
+        self.assertTrue(self.course_home_page.is_course_goal_success_message_shown())
+        self.assertTrue(self.course_home_page.is_course_goal_update_field_shown())
+
         # Check that the course navigation appears correctly
         EXPECTED_SECTIONS = {
-            'Test Section': ['Test Subsection'],
-            'Test Section 2': ['Test Subsection 2', 'Test Subsection 3']
+            u'Test Section': [u'Test Subsection'],
+            u'Test Section 2': [u'Test Subsection 2', u'Test Subsection 3']
         }
 
         actual_sections = self.course_home_page.outline.sections
@@ -87,7 +101,7 @@ class CourseHomeTest(CourseHomeBaseTest):
             self.assertEqual(actual_sections[section], EXPECTED_SECTIONS[section])
 
         # Navigate to a particular section
-        self.course_home_page.outline.go_to_section('Test Section', 'Test Subsection')
+        self.course_home_page.outline.go_to_section(u'Test Section', u'Test Subsection')
 
         # Check the sequence items on the courseware page
         EXPECTED_ITEMS = ['Test Problem 1', 'Test Problem 2', 'Test HTML']
@@ -110,21 +124,11 @@ class CourseHomeTest(CourseHomeBaseTest):
         bookmarks_page = BookmarksPage(self.browser, self.course_id)
         self.assertTrue(bookmarks_page.is_browser_on_page())
 
-        # Test "Resume Course" button from header
-        self.course_home_page.visit()
-        self.course_home_page.resume_course_from_header()
-        self.assertTrue(self.courseware_page.nav.is_on_section('Test Section 2', 'Test Subsection 3'))
-
-        # Test "Resume Course" button from within outline
-        self.course_home_page.visit()
-        self.course_home_page.outline.resume_course_from_outline()
-        self.assertTrue(self.courseware_page.nav.is_on_section('Test Section 2', 'Test Subsection 3'))
-
 
 @attr('a11y')
 class CourseHomeA11yTest(CourseHomeBaseTest):
     """
-    Tests the accessibility of the course home page with course outline.
+    Tests the accessibility of the course home page
     """
 
     def test_course_home_a11y(self):
@@ -134,3 +138,12 @@ class CourseHomeA11yTest(CourseHomeBaseTest):
         course_home_page = CourseHomePage(self.browser, self.course_id)
         course_home_page.visit()
         course_home_page.a11y_audit.check_for_accessibility_errors()
+
+    def test_course_search_a11y(self):
+        """
+        Test the accessibility of the search results page.
+        """
+        course_home_page = CourseHomePage(self.browser, self.course_id)
+        course_home_page.visit()
+        course_search_results_page = course_home_page.search_for_term("Test Search")
+        course_search_results_page.a11y_audit.check_for_accessibility_errors()

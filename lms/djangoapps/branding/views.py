@@ -6,33 +6,33 @@ from django.conf import settings
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, Http404
+from django.db import transaction
+from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
 from django.utils import translation
 from django.utils.translation.trans_real import get_supported_language_variant
 from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from edxmako.shortcuts import render_to_response
-import student.views
-import courseware.views.views
-from edxmako.shortcuts import marketing_link
-from util.cache import cache_if_anonymous
-from util.json_request import JsonResponse
 import branding.api as branding_api
+import courseware.views.views
+import student.views
+from edxmako.shortcuts import marketing_link, render_to_response
 from openedx.core.djangoapps.lang_pref.api import released_languages
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
+from util.cache import cache_if_anonymous
+from util.json_request import JsonResponse
 
 log = logging.getLogger(__name__)
 
 
 @ensure_csrf_cookie
+@transaction.non_atomic_requests
 @cache_if_anonymous()
 def index(request):
-    '''
+    """
     Redirects to main page -- info page if user authenticated, or marketing if not
-    '''
-
+    """
     if request.user.is_authenticated():
         # Only redirect to dashboard if user has
         # courses in his/her dashboard. Otherwise UX is a bit cryptic.
@@ -216,8 +216,7 @@ def footer(request):
                 "image": "http://example.com/openedx.png"
             },
             "logo_image": "http://example.com/static/images/logo.png",
-            "copyright": "EdX, Open edX, and the edX and Open edX logos are \
-                registered trademarks or trademarks of edX Inc."
+            "copyright": "EdX, Open edX and their respective logos are trademarks or registered trademarks of edX Inc."
         }
 
 
@@ -227,7 +226,7 @@ def footer(request):
         Accepts: text/html
 
 
-    Example: Including the footer with the "Powered by OpenEdX" logo
+    Example: Including the footer with the "Powered by Open edX" logo
 
         GET /api/branding/v1/footer?show-openedx-logo=1
         Accepts: text/html

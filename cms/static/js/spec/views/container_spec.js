@@ -54,7 +54,7 @@ define(['jquery', 'edx-ui-toolkit/js/utils/spec-helpers/ajax-helpers', 'js/spec_
 
                     AjaxHelpers.respondWithJson(requests, {
                         html: mockContainerHTML,
-                        'resources': []
+                        resources: []
                     });
 
                     $('body').append(containerView.$el);
@@ -123,13 +123,6 @@ define(['jquery', 'edx-ui-toolkit/js/utils/spec-helpers/ajax-helpers', 'js/spec_
                     expect(requests.length).toBeGreaterThan(actualIndex);
                     requests[actualIndex].respond(status);
                 };
-
-                it('does nothing if item not moved far enough', function() {
-                    var requests = init(this);
-                    // Drag the first component in Group A down very slightly but not enough to move it.
-                    dragComponentVertically(groupAComponent1, 5);
-                    verifyNumReorderCalls(requests, 0);
-                });
 
                 it('can reorder within a group', function() {
                     var requests = init(this);

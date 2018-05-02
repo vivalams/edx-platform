@@ -7,20 +7,21 @@ import re
 from urlparse import urljoin
 from uuid import uuid4
 
+import mock
 from bs4 import BeautifulSoup
 from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, reverse_lazy
 from django.test import override_settings
-import mock
+from waffle.testutils import override_switch
 
-from openedx.core.djangoapps.catalog.tests.factories import ProgramFactory, CourseFactory, CourseRunFactory
+from lms.envs.test import CREDENTIALS_PUBLIC_SERVICE_URL
+from openedx.core.djangoapps.catalog.tests.factories import CourseFactory, CourseRunFactory, ProgramFactory
 from openedx.core.djangoapps.catalog.tests.mixins import CatalogIntegrationMixin
 from openedx.core.djangoapps.programs.tests.mixins import ProgramsApiConfigMixin
 from openedx.core.djangolib.testing.utils import skip_unless_lms
-from student.tests.factories import UserFactory, CourseEnrollmentFactory
+from student.tests.factories import CourseEnrollmentFactory, UserFactory
 from xmodule.modulestore.tests.django_utils import SharedModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory as ModuleStoreCourseFactory
-
 
 PROGRAMS_UTILS_MODULE = 'openedx.core.djangoapps.programs.utils'
 
@@ -32,7 +33,7 @@ class TestProgramListing(ProgramsApiConfigMixin, SharedModuleStoreTestCase):
     """Unit tests for the program listing page."""
     maxDiff = None
     password = 'test'
-    url = reverse('program_listing_view')
+    url = reverse_lazy('program_listing_view')
 
     @classmethod
     def setUpClass(cls):
@@ -173,11 +174,12 @@ class TestProgramListing(ProgramsApiConfigMixin, SharedModuleStoreTestCase):
 
 @skip_unless_lms
 @mock.patch(PROGRAMS_UTILS_MODULE + '.get_programs')
+@override_switch('student_records', True)
 class TestProgramDetails(ProgramsApiConfigMixin, CatalogIntegrationMixin, SharedModuleStoreTestCase):
     """Unit tests for the program details page."""
     program_uuid = str(uuid4())
     password = 'test'
-    url = reverse('program_details_view', kwargs={'program_uuid': program_uuid})
+    url = reverse_lazy('program_details_view', kwargs={'program_uuid': program_uuid})
 
     @classmethod
     def setUpClass(cls):
@@ -199,6 +201,8 @@ class TestProgramDetails(ProgramsApiConfigMixin, CatalogIntegrationMixin, Shared
         """Verify that program data is present."""
         self.assertContains(response, 'programData')
         self.assertContains(response, 'urls')
+        self.assertContains(response,
+                            '"program_record_url": "{}/records/programs/'.format(CREDENTIALS_PUBLIC_SERVICE_URL))
         self.assertContains(response, 'program_listing_url')
         self.assertContains(response, self.data['title'])
         self.assert_programs_tab_present(response)
@@ -231,7 +235,10 @@ class TestProgramDetails(ProgramsApiConfigMixin, CatalogIntegrationMixin, Shared
 
         self.client.login(username=self.user.username, password=self.password)
 
-        response = self.client.get(self.url)
+        with mock.patch('lms.djangoapps.learner_dashboard.programs.get_certificates') as certs:
+            certs.return_value = [{'type': 'program', 'url': '/'}]
+            response = self.client.get(self.url)
+
         self.assert_program_data_present(response)
 
     def test_404_if_disabled(self, _mock_get_programs):

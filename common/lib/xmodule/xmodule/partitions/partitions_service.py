@@ -7,17 +7,17 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 import logging
 
+from openedx.core.djangoapps.request_cache.middleware import request_cached
 from xmodule.partitions.partitions import UserPartition, UserPartitionError, ENROLLMENT_TRACK_PARTITION_ID
 from xmodule.modulestore.django import modulestore
 
 
 log = logging.getLogger(__name__)
 
-
-# settings will not be available when running nosetests.
 FEATURES = getattr(settings, 'FEATURES', {})
 
 
+@request_cached
 def get_all_partitions_for_course(course, active_only=False):
     """
     A method that returns all `UserPartitions` associated with a course, as a List.
@@ -62,7 +62,6 @@ def _create_enrollment_track_partition(course):
 
     used_ids = set(p.id for p in course.user_partitions)
     if ENROLLMENT_TRACK_PARTITION_ID in used_ids:
-        # TODO: change to Exception after this has been in production for awhile, see TNL-6796.
         log.warning(
             "Can't add 'enrollment_track' partition, as ID {id} is assigned to {partition} in course {course}.".format(
                 id=ENROLLMENT_TRACK_PARTITION_ID,
@@ -87,9 +86,8 @@ class PartitionService(object):
     with a given course.
     """
 
-    def __init__(self, course_id, track_function=None, cache=None):
+    def __init__(self, course_id, cache=None):
         self._course_id = course_id
-        self._track_function = track_function
         self._cache = cache
 
     def get_course(self):
@@ -133,7 +131,7 @@ class PartitionService(object):
         if self._cache and (cache_key in self._cache):
             return self._cache[cache_key]
 
-        user_partition = self._get_user_partition(user_partition_id)
+        user_partition = self.get_user_partition(user_partition_id)
         if user_partition is None:
             raise ValueError(
                 "Configuration problem!  No user_partition with id {0} "
@@ -148,7 +146,7 @@ class PartitionService(object):
 
         return group_id
 
-    def _get_user_partition(self, user_partition_id):
+    def get_user_partition(self, user_partition_id):
         """
         Look for a user partition with a matching id in the course's partitions.
         Note that this method can return an inactive user partition.
@@ -165,7 +163,7 @@ class PartitionService(object):
         the partition's scheme.
         """
         return user_partition.scheme.get_group_for_user(
-            self._course_id, user, user_partition, assign=assign, track_function=self._track_function
+            self._course_id, user, user_partition, assign=assign,
         )
 
 

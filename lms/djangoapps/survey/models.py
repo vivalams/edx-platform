@@ -3,17 +3,16 @@ Models to support Course Surveys feature
 """
 
 import logging
-from lxml import etree
 from collections import OrderedDict
-from django.db import models
-from student.models import User
+
 from django.core.exceptions import ValidationError
-
+from django.db import models
+from lxml import etree
 from model_utils.models import TimeStampedModel
+from opaque_keys.edx.django.models import CourseKeyField
 
+from student.models import User
 from survey.exceptions import SurveyFormNameAlreadyExists, SurveyFormNotFound
-
-from openedx.core.djangoapps.xmodule_django.models import CourseKeyField
 
 log = logging.getLogger("edx.survey")
 
@@ -27,6 +26,9 @@ class SurveyForm(TimeStampedModel):
     """
     name = models.CharField(max_length=255, db_index=True, unique=True)
     form = models.TextField()
+
+    class Meta(object):
+        app_label = 'survey'
 
     def __unicode__(self):
         return self.name
@@ -171,6 +173,9 @@ class SurveyAnswer(TimeStampedModel):
     # since it didn't exist in the beginning, it is nullable
     course_key = CourseKeyField(max_length=255, db_index=True, null=True)
 
+    class Meta(object):
+        app_label = 'survey'
+
     @classmethod
     def do_survey_answers_exist(cls, form, user):
         """
@@ -234,8 +239,6 @@ class SurveyAnswer(TimeStampedModel):
         supplied to this method is presumed to be previously validated
         """
         for name in answers.keys():
-            value = answers[name]
-
             # See if there is an answer stored for this user, form, field_name pair or not
             # this will allow for update cases. This does include an additional lookup,
             # but write operations will be relatively infrequent
@@ -256,3 +259,19 @@ class SurveyAnswer(TimeStampedModel):
                 answer.field_value = value
                 answer.course_key = course_key
                 answer.save()
+
+    @classmethod
+    def retire_user(cls, user_id):
+        """
+        With the parameter user_id, blank out the survey answer values for all survey questions
+        This is to fulfill our GDPR obligations
+
+        Return True if there are data to be blanked
+        Return False if there are no matching data
+        """
+        answers = cls.objects.filter(user=user_id)
+        if not answers:
+            return False
+
+        answers.update(field_value='')
+        return True

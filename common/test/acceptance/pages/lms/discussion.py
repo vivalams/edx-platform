@@ -2,12 +2,11 @@ from contextlib import contextmanager
 
 from bok_choy.javascript import wait_for_js
 from bok_choy.page_object import PageObject
-from bok_choy.promise import EmptyPromise, Promise
+from bok_choy.promise import EmptyPromise
 
-from common.test.acceptance.tests.helpers import is_focused_on_element
 from common.test.acceptance.pages.common.utils import hover
-
 from common.test.acceptance.pages.lms.course_page import CoursePage
+from common.test.acceptance.tests.helpers import is_focused_on_element
 
 
 class DiscussionPageMixin(object):
@@ -582,6 +581,7 @@ class InlineDiscussionPage(PageObject, DiscussionPageMixin):
         """
         Clicks the link for the specified thread to show the detailed view.
         """
+        self.wait_for_element_presence('.forum-nav-thread-link', 'Thread list has loaded')
         thread_selector = ".forum-nav-thread[data-id='{thread_id}'] .forum-nav-thread-link".format(thread_id=thread_id)
         self._find_within(thread_selector).first.click()
         self.thread_page = InlineDiscussionThreadPage(self.browser, thread_id)  # pylint: disable=attribute-defined-outside-init
