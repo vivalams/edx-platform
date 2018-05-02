@@ -29,7 +29,7 @@ class JwtBuilder(object):
         secret (string): Overrides configured JWT secret (signing) key. Unused if an asymmetric signature is requested.
     """
 
-    def __init__(self, user, asymmetric=False, secret=None):
+    def __init__(self, user, asymmetric=False, secret=None, is_application_restricted=None, org=org, application_grant_type=None):
         self.user = user
         self.asymmetric = asymmetric
         self.secret = secret
@@ -51,6 +51,12 @@ class JwtBuilder(object):
         """
         now = int(time())
         expires_in = expires_in or self.jwt_auth['JWT_EXPIRATION']
+        filters = {}
+        if org:
+            filters['content_org'] = org
+        if application_grant_type != u'client-credentials':
+             filters['user'] = 'me' 
+
         payload = {
             # TODO Consider getting rid of this claim since we don't use it.
             'aud': aud if aud else self.jwt_auth['JWT_AUDIENCE'],
@@ -59,6 +65,8 @@ class JwtBuilder(object):
             'iss': self.jwt_auth['JWT_ISSUER'],
             'preferred_username': self.user.username,
             'scopes': scopes,
+            'filters': content_org,
+            'version': '1.0',
             'sub': anonymous_id_for_user(self.user, None),
         }
 
