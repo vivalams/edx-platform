@@ -29,7 +29,7 @@ class JwtBuilder(object):
         secret (string): Overrides configured JWT secret (signing) key. Unused if an asymmetric signature is requested.
     """
 
-    def __init__(self, user, asymmetric=False, secret=None, is_application_restricted=None, org=org, application_grant_type=None):
+    def __init__(self, user, asymmetric=False, secret=None, is_application_restricted=None, org=None, application_grant_type=None):
         self.user = user
         self.asymmetric = asymmetric
         self.secret = secret
