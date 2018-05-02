@@ -5,7 +5,7 @@ from django.core.exceptions import NON_FIELD_ERRORS, ObjectDoesNotExist, Validat
 from django.http import Http404
 from django.utils.translation import ugettext as _
 from edx_rest_framework_extensions.authentication import JwtAuthentication
-from edx_rest_framework_extensions.permission import JWTRestrictedApplicationPermission
+from edx_rest_framework_extensions.permissions import JWTRestrictedApplicationPermission
 from rest_framework import status
 from rest_framework.exceptions import APIException
 from rest_framework.generics import GenericAPIView
