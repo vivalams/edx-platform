@@ -22,7 +22,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
-
+from edx_rest_framework_extensions.authentication import JwtAuthentication
 from course_modes.models import CourseMode
 from enrollment import api
 from enrollment.errors import CourseEnrollmentError, CourseEnrollmentExistsError, CourseModeNotFoundError
@@ -161,7 +161,7 @@ class EnrollmentView(APIView, ApiKeyPermissionMixIn):
             * user: The ID of the user.
    """
 
-    authentication_classes = OAuth2AuthenticationAllowInactiveUser, SessionAuthenticationAllowInactiveUser
+    authentication_classes = JwtAuthentication, OAuth2AuthenticationAllowInactiveUser, SessionAuthenticationAllowInactiveUser
     permission_classes = (ApiKeyHeaderPermissionIsAuthenticated, OAuth2RestrictedApplicatonPermission, )
     throttle_classes = EnrollmentUserThrottle,
 

@@ -8,6 +8,7 @@ from django.http import Http404
 from oauth2_provider.ext.rest_framework.permissions import TokenHasScope
 from rest_framework import permissions
 
+from edx_rest_framework_extensions.utils import jwt_decode_handler
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from provider.oauth2.models import AccessToken as DOPAccessToken
@@ -16,7 +17,9 @@ from openedx.core.lib.log_utils import audit_log
 from openedx.core.djangoapps.oauth_dispatch.models import RestrictedApplication
 
 
-class OAuth2RestrictedApplicatonPermission(TokenHasScope):
+#class OAuth2RestrictedApplicatonPermission(TokenHasScope):
+class OAuth2RestrictedApplicatonPermission():
+    pass
     """
     This permission class will inspect a request which contains an
     OAuth2 access_token. The following business logic is applied:
@@ -34,18 +37,17 @@ class OAuth2RestrictedApplicatonPermission(TokenHasScope):
             sure that the access_token has that scope on it
         2e) If access_token does not contain the 'required_scopes' then fail the request
         2f) If all above checks succees, pass the permissions check
-    """
+    
 
     def has_permission(self, request, view):
-        """
-        Implement the business logic discussed above
-        """
         restricted_oauth_required = False
         if hasattr(view, 'restricted_oauth_required'):
             restricted_oauth_required = True
 
         token = request.auth
-
+        print(dir(request))
+        print(request.auth)
+        print(dir(token))
         if not token:
             if not restricted_oauth_required:
                 # If we are not an OAuth2 request - some APIs in Open edX allow for Django Session
@@ -61,18 +63,20 @@ class OAuth2RestrictedApplicatonPermission(TokenHasScope):
         if isinstance(token, DOPAccessToken):
             return True
 
-        restrictied_application = RestrictedApplication.get_restricted_application_from_token(token.token)
-        if not restrictied_application:
+        #restrictied_application = RestrictedApplication.get_restricted_application_from_token(token.token)
+        #if not restrictied_application:
             # Application is not a restricted application, therefore it is trusted and can pass
             # this specific check, although the API endpoint might declare other permission
             # checks
-            return True
+        #    return True
 
         # now call into DOT permissions check which will inspect the view for a
         # 'required_scopes' attribute and continue with the any additional
         # permissions listed on the API endpoint
-        has_permission = super(OAuth2RestrictedApplicatonPermission, self).has_permission(request, view)
-        if has_permission:
+        #has_permission = super(OAuth2RestrictedApplicatonPermission, self).has_permission(request, view)
+        #org_association = jwt_decode_handler(token)['filters']['content_org']
+        #if has_permission:
+       
             # Add a new attribute to the Django request which sets an 'org_filter'
             # which will be used by the view handlers for course filtering
             # based on the rights declared on the RestrictedApplication
@@ -80,14 +84,15 @@ class OAuth2RestrictedApplicatonPermission(TokenHasScope):
             # NOTE: To avoid semantic ambiguity on None values, here we convert a
             # RestrictedApplication's org_association to an empty set if
             # it is None
-            request.auth.org_associations = (
-                restrictied_application.org_associations if
-                restrictied_application.org_associations else []
-            )
+        setattr(request,'allowed_organization',[jwt_decode_handler(token)['filters']['content_org']])
+        #request.auth.org_associations = [jwt_decode_handler(token)['filters']['content_org']]
+        #request.auth.user_association = [jwt_decode_handler(token)['filters']['user']]
+        setattr(request,'allowed_user',[jwt_decode_handler(token)['filters']['user']])
 
-        return has_permission
+        #return has_permission
+        return True
 
-
+    """
 class ApiKeyHeaderPermission(permissions.BasePermission):
     """
     Django REST Framework permissions class used to manage API Key integrations

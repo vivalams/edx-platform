@@ -12,6 +12,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
 
+from edx_rest_framework_extensions.permissions import JWTRestrictedApplicationPermission
 from courseware.access import has_access
 from lms.djangoapps.courseware import courses
 from lms.djangoapps.grades.api.serializers import GradingPolicySerializer
@@ -21,7 +22,7 @@ from student.roles import CourseStaffRole
 from openedx.core.lib.api.authentication import OAuth2AuthenticationAllowInactiveUser
 from edx_rest_framework_extensions.authentication import JwtAuthentication
 from openedx.core.lib.api.permissions import OAuth2RestrictedApplicatonPermission
-
+from rest_framework_oauth.authentication import OAuth2Authentication
 
 log = logging.getLogger(__name__)
 USER_MODEL = get_user_model()
@@ -32,16 +33,17 @@ class GradeViewMixin(DeveloperErrorViewMixin):
     """
     Mixin class for Grades related views.
     """
-    authentication_classes = (
-        JwtAuthentication,
-    )
-    permission_classes = (IsAuthenticated, OAuth2RestrictedApplicatonPermission,)
+    #authentication_classes = (
+    #    JwtAuthentication,
+    #    OAuth2AuthenticationAllowInactiveUser,
+    #)
+    #permission_classes = (IsAuthenticated, JWTRestrictedApplicationPermission,)
 
     # needed for passing OAuth2RestrictedApplicatonPermission checks
     # for RestrictedApplications (only). A RestrictedApplication can
     # only call this method if it is allowed to receive a 'grades:read'
     # scope
-    required_scopes = ['grades:read']
+    #required_scopes = ['grades:read']
 
     def _get_course(self, course_key_string, user, access_action):
         """
@@ -176,6 +178,22 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
         }]
 
     """
+    authentication_classes = (
+        JwtAuthentication,
+        OAuth2AuthenticationAllowInactiveUser,
+    )
+    permission_classes = (IsAuthenticated, JWTRestrictedApplicationPermission,)
+
+    #authentication_classes = (
+    #     JwtAuthentication,
+    #)
+    #permission_classes = (IsAuthenticated, OAuth2RestrictedApplicatonPermission,)
+
+    # needed for passing OAuth2RestrictedApplicatonPermission checks
+    # for RestrictedApplications (only). A RestrictedApplication can
+    # only call this method if it is allowed to receive a 'grades:read'
+    # scope
+    required_scopes = ['grades:read']
     def get(self, request, course_id):
         """
         Gets a course progress status.
@@ -194,9 +212,9 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
         #
         # For more information on RestrictedApplications and the
         # permissions model, see openedx/core/lib/api/permissions.py
-        if hasattr(request, 'auth') and hasattr(request.auth, 'org_associations'):
+        if hasattr(request, 'auth') and hasattr(request, 'allowed_organizations'):
             course_key = CourseKey.from_string(course_id)
-            if course_key.org not in request.auth.org_associations:
+            if course_key.org not in request.allowed_organizations:
                 return self.make_error_response(
                     status_code=status.HTTP_403_FORBIDDEN,
                     developer_message='The OAuth2 RestrictedApplication is not associated with org.',

@@ -2456,10 +2456,13 @@ SOCIAL_MEDIA_FOOTER_NAMES = [
     "reddit",
 ]
 
+DEFAULT_JWT_ISSUER = 'test-issuer-1',
+DEFAULT_RESTRICTED_JWT_ISSUER = 'test-issuer-2'
+
 # JWT Settings
 JWT_AUTH = {
     # TODO Set JWT_SECRET_KEY to a secure value. By default, SECRET_KEY will be used.
-    'JWT_SECRET_KEY': '12345',
+    #'JWT_SECRET_KEY': '12345',
     'JWT_ALGORITHM': 'HS256',
     'JWT_VERIFY_EXPIRATION': True,
     # TODO Set JWT_ISSUER and JWT_AUDIENCE to values specific to your service/organization.
@@ -2470,20 +2473,19 @@ JWT_AUTH = {
     'JWT_DECODE_HANDLER': 'edx_rest_framework_extensions.utils.jwt_decode_handler',
     # Number of seconds before JWT tokens expire
     'JWT_EXPIRATION': 30,
-}
-JWT_AUTH_NEW = {
-    # TODO Set JWT_SECRET_KEY to a secure value. By default, SECRET_KEY will be used.
-    'JWT_SECRET_KEY': '12345',
-    'JWT_ALGORITHM': 'HS256',
-    'JWT_VERIFY_EXPIRATION': True,
-    # TODO Set JWT_ISSUER and JWT_AUDIENCE to values specific to your service/organization.
-    'JWT_ISSUER': 'change-me',
-    'JWT_AUDIENCE': None,
-    'JWT_PAYLOAD_GET_USERNAME_HANDLER': lambda d: d.get('username'),
-    'JWT_LEEWAY': 1,
-    'JWT_DECODE_HANDLER': 'edx_rest_framework_extensions.utils.jwt_decode_handler',
-    # Number of seconds before JWT tokens expire
-    'JWT_EXPIRATION': 30,
+    # JWT_ISSUERS enables token decoding for multiple issuers (Note: This is not a native DRF-JWT field)
+    'JWT_ISSUERS': [
+        {
+            'ISSUER':'test-issuer-1',
+            'SECRET_KEY':'test-secret-key-1',
+            'AUDIENCE':'test-audience-1',
+        },
+        {
+            'ISSUER':'test-issuer-2',
+            'SECRET_KEY':'test-secret-key-2',
+            'AUDIENCE':'test-audience-2',
+        }  
+    ]
 }
 # The footer URLs dictionary maps social footer names
 # to URLs defined in configuration.

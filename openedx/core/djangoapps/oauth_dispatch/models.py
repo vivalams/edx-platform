@@ -25,14 +25,14 @@ class RestrictedApplication(models.Model):
     so that they cannot be used to call into APIs.
     """
 
-    application = models.ForeignKey(
+    application = models.OneToOneField(
         oauth2_settings.APPLICATION_MODEL,
         null=False,
         related_name='restricted_application'
     )
 
     # a space separated list of scopes that this application can request
-    _allowed_scopes = models.TextField(null=True, default=' '.join(settings.OAUTH2_PROVIDER['SCOPES'].keys()))
+    _allowed_scopes = models.TextField(null=True)
 
     # a space separated list of ORGs that this application is associated with
     # this field will be used to implement appropriate data filtering
