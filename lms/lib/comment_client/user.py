@@ -202,8 +202,10 @@ def _url_for_user_active_threads(user_id):
 def _url_for_user_subscribed_threads(user_id):
     return "{prefix}/users/{user_id}/subscribed_threads".format(prefix=settings.PREFIX, user_id=user_id)
 
+
 def _url_for_user_retire_threads(user_id):
     return "{prefix}/users/{user_id}/retire".format(prefix=settings.PREFIX, user_id=user_id)
+
 
 def _url_for_read(user_id):
     """
