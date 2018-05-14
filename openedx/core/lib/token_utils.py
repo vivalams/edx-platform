@@ -29,13 +29,13 @@ class JwtBuilder(object):
         secret (string): Overrides configured JWT secret (signing) key. Unused if an asymmetric signature is requested.
     """
 
-    def __init__(self, user, asymmetric=False, secret=None, is_application_restricted=None, org=None, application_grant_type=None):
+    def __init__(self, user, asymmetric=False, secret=None):
         self.user = user
         self.asymmetric = asymmetric
         self.secret = secret
         self.jwt_auth = configuration_helpers.get_value('JWT_AUTH', settings.JWT_AUTH)
 
-    def build_token(self, scopes, expires_in=None, aud=None, additional_claims=None):
+    def build_token(self, scopes, expires_in=None, aud=None, additional_claims=None, org=None,application_grant_type=None,is_application_restricted=None):
         """Returns a JWT access token.
 
         Arguments:
@@ -65,7 +65,7 @@ class JwtBuilder(object):
             'iss': self.jwt_auth['JWT_ISSUER'],
             'preferred_username': self.user.username,
             'scopes': scopes,
-            'filters': content_org,
+            'filters': filters,
             'version': '1.0',
             'sub': anonymous_id_for_user(self.user, None),
         }

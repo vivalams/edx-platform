@@ -134,13 +134,13 @@ class EdxOAuth2Validator(OAuth2Validator):
         # Restore the original request attributes
         request.grant_type = grant_type
         request.user = user
-
+"""
     def validate_scopes(self, client_id, scopes, client, request, *args, **kwargs):
-        """
+        
         Override the DOT implementation to add checks to make sure that a
         RestrictedApplication is not granted scopes that it has not been
         permitted to do
-        """
+        
 
         restricted_application = RestrictedApplication.get_restricted_application(client)
         if restricted_application:
@@ -151,3 +151,4 @@ class EdxOAuth2Validator(OAuth2Validator):
         # which - basically - pulls the list of scopes from configuration settings as a global
         # definition
         return super(EdxOAuth2Validator, self).validate_scopes(client_id, scopes, client, request, *args, **kwargs)
+"""

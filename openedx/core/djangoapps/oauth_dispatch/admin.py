@@ -2,10 +2,10 @@
 Override admin configuration for django-oauth-toolkit
 """
 
-from django.contrib.admin import ModelAdmin, site
+from django.contrib.admin import ModelAdmin, site, register
 from oauth2_provider import models
 
-from .models import RestrictedApplication
+from .models import RestrictedApplication, RestrictedApplication_2, RestrictedApplication_33
 
 
 def reregister(model_class):
@@ -51,17 +51,15 @@ class DOTRefreshTokenAdmin(ModelAdmin):
     raw_id_fields = [u'user', u'access_token']
     search_fields = [u'token', u'user__username', u'access_token__token']
 
-
+"""
 @reregister(models.Application)
 class DOTApplicationAdmin(ModelAdmin):
-    """
-    Custom Application Admin
-    """
+    #Custom Application Admin
     list_display = [u'name', u'user', u'client_type', u'authorization_grant_type', u'client_id']
     list_filter = [u'client_type', u'authorization_grant_type']
     raw_id_fields = [u'user']
     search_fields = [u'name', u'user__username', u'client_id']
-
+"""
 
 @reregister(models.Grant)
 class DOTGrantAdmin(ModelAdmin):
@@ -79,7 +77,23 @@ class RestrictedApplicationAdmin(ModelAdmin):
     """
     ModelAdmin for the Restricted Application
     """
-    list_display = [u'application', u'_org_associations']
+    list_display = [u'application']
 
 
 site.register(RestrictedApplication, RestrictedApplicationAdmin)
+#@reregister(RestrictedApplication_2.Application)
+class RestrictedApplication_2Admin(ModelAdmin):
+    """
+    ModelAdmin for the Restricted Application
+    """
+    list_display = [u'name', u'user', u'client_type', u'authorization_grant_type', u'client_id']
+    list_filter = [u'client_type', u'authorization_grant_type']
+    raw_id_fields = [u'user']
+    search_fields = [u'name', u'user__username', u'client_id']
+class RestrictedApplication_33Admin(ModelAdmin):
+    """
+    ModelAdmin for the Restricted Application
+    """
+    list_display = [u'application']
+    filter_horizontal = ('_org_associations',)
+site.register(RestrictedApplication_33, RestrictedApplication_33Admin)
