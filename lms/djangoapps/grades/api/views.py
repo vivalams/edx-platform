@@ -9,7 +9,6 @@ from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from edx_rest_framework_extensions.permissions import JWTRestrictedApplicationPermission
 from edx_rest_framework_extensions.authentication import JwtAuthentication
@@ -166,7 +165,6 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
     """
     authentication_classes = (
         JwtAuthentication,
-        SessionAuthentication,
         OAuth2AuthenticationAllowInactiveUser,
     )
     permission_classes = (IsAuthenticated, JWTRestrictedApplicationPermission,)
