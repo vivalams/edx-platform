@@ -96,6 +96,7 @@ class _DispatchingView(View):
         Returns the appropriate adapter based on the OAuth client linked to the request.
         """
         dot_id = self._get_application_id(request)
+
         if OauthRestrictedApplication.objects.filter(id=dot_id).exists():
             return True
         else:
@@ -106,6 +107,7 @@ class _DispatchingView(View):
         Returns the appropriate adapter based on the OAuth client linked to the request.
         """
         dot_id = self._get_application_id(request)
+        
         if OauthRestrictOrganization.objects.filter(application_id=dot_id).exists():
             return OauthRestrictOrganization.objects.get(application_id=dot_id).org_associations
         else:
@@ -117,6 +119,7 @@ class _DispatchingView(View):
         """
         return dot_models.get_application_model().objects.get(client_id=self._get_client_id(request)).authorization_grant_type
 
+      
 class AccessTokenView(RatelimitMixin, _DispatchingView):
     """
     Handle access token requests.

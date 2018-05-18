@@ -30,6 +30,7 @@ class JwtBuilder(object):
     """
 
     def __init__(self, user, asymmetric=False, secret=None,is_application_scopes_restricted=None):
+
         self.user = user
         self.asymmetric = asymmetric
         self.secret = secret
