@@ -1,4 +1,4 @@
-
+"""Utilities to assist with oauth scopes enforcement"""
 from waffle import switch_is_active
 
 

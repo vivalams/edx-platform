@@ -189,7 +189,6 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
         Return:
             A JSON serialized representation of the requesting user's current grade status.
         """
-        print("Here is the org filters")
         # See if the request has an explicit sattr(request, 'allowed_organizations'))
         # which limits which OAuth2 clients can see the courses
         # based on the association with a RestrictedApplication

@@ -51,17 +51,6 @@ class DOTRefreshTokenAdmin(ModelAdmin):
     raw_id_fields = [u'user', u'access_token']
     search_fields = [u'token', u'user__username', u'access_token__token']
 
-"""
-@reregister(models.Application)
-class DOTApplicationAdmin(ModelAdmin):
-   
-    Custom Application Admin
-    
-    list_display = [u'name', u'user', u'client_type', u'authorization_grant_type', u'client_id']
-    list_filter = [u'client_type', u'authorization_grant_type']
-    raw_id_fields = [u'user']
-    search_fields = [u'name', u'user__username', u'client_id']
-"""
 
 @reregister(models.Grant)
 class DOTGrantAdmin(ModelAdmin):
@@ -81,9 +70,10 @@ class RestrictedApplicationAdmin(ModelAdmin):
     """
     list_display = [u'application']
 
-
 site.register(RestrictedApplication, RestrictedApplicationAdmin)
 
+
+@reregister(OauthRestrictedApplication)
 class OauthRestrictedApplicationAdmin(ModelAdmin):
     """
     ModelAdmin for the Restricted Application
@@ -92,11 +82,14 @@ class OauthRestrictedApplicationAdmin(ModelAdmin):
     list_filter = [u'client_type', u'authorization_grant_type']
     raw_id_fields = [u'user']
     search_fields = [u'name', u'user__username', u'client_id']
+
+
 class OauthRestrictOrganizationAdmin(ModelAdmin):
     """
     ModelAdmin for the Restricted Application
     """
     list_display = [u'application','organization_type']
     filter_horizontal = ('_org_associations',)
+
 site.register(OauthRestrictOrganization, OauthRestrictOrganizationAdmin)
 

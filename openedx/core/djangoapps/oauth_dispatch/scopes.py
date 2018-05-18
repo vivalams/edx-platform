@@ -7,8 +7,6 @@ from django.utils import module_loading
 
 from oauth2_provider.scopes import SettingsScopes
 
-from .models import OauthRestrictedApplication
-
 
 class DynamicScopes(SettingsScopes):
     """
@@ -20,5 +18,3 @@ class DynamicScopes(SettingsScopes):
     def get_available_scopes(self, application = None, request = None, *args, **kwargs):
         return list(self.get_all_scopes().keys())
 
-    #def get_default_scopes(self, application = None, request = None, *args, **kwargs):
-    #    return [scope.name for scope in RestrictedApplication_2.objects.filter(is_default = True)]
