@@ -96,7 +96,7 @@ class OauthRestrictOrganizationAdmin(ModelAdmin):
     """
     ModelAdmin for the Restricted Application
     """
-    list_display = [u'application']
+    list_display = [u'application','organization_type']
     filter_horizontal = ('_org_associations',)
 site.register(OauthRestrictOrganization, OauthRestrictOrganizationAdmin)
 
