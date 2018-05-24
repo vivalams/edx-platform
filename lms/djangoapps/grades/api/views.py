@@ -173,7 +173,6 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
     # for RestrictedApplications (only). A RestrictedApplication can
     # only call this method if it is allowed to receive a 'grades:read'
     # scope
-    restricted_oauth_required = True
     required_scopes = ['grades:read']
 
     def get(self, request, course_id):
@@ -190,10 +189,10 @@ class UserGradeView(GradeViewMixin, GenericAPIView):
         # See if the request has an explicit sattr(request, 'allowed_organizations'))
         # which limits which OAuth2 clients can see the courses
         # based on the association with a RestrictedApplication
-        if hasattr(request, 'auth') and hasattr(request, 'oauth_dispatch.filters'):
+        if hasattr(request, 'auth') and hasattr(request, 'oauth_scopes_filters'):
             course_key = CourseKey.from_string(course_id)
-            if 'content_org' in request.oauth_dispatch.filters.keys():
-                if course_key.org not in request.oauth_dispatch.filters['content_org']:
+            if 'content_org' in request.oauth_scopes_filters.keys():
+                if course_key.org not in request.oauth_scopes_filters['content_org']:
                     return self.make_error_response(
                         status_code=status.HTTP_403_FORBIDDEN,
                         developer_message='The OAuth2 RestrictedApplication is not associated with org.',
