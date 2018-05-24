@@ -26,7 +26,7 @@ def on_access_token_presave(sender, instance, *args, **kwargs):  # pylint: disab
     We do this as a pre-save hook on the ORM
     """
     if not is_oauth_scope_enforcement_enabled():
-        OauthRestrictedApplication.set_access_token_as_expired(instance)
+        RestrictedApplication.set_access_token_as_expired(instance)
 
 # TODO: Remove Django 1.11 upgrade shim
 # SHIM: Allow users that are inactive to still authenticate while keeping rate-limiting functionality.
