@@ -500,6 +500,7 @@ OAUTH_EXPIRE_PUBLIC_CLIENT_DAYS = 30
 OAUTH2_PROVIDER = {
     'OAUTH2_VALIDATOR_CLASS': 'openedx.core.djangoapps.oauth_dispatch.dot_overrides.validators.EdxOAuth2Validator',
     'REFRESH_TOKEN_EXPIRE_SECONDS': 20160,
+    'SCOPES_BACKEND_CLASS':'openedx.core.djangoapps.oauth_dispatch.scopes.DynamicScopes',
     'SCOPES': {
         'read': 'Read access',
         'write': 'Write access',
@@ -507,13 +508,15 @@ OAUTH2_PROVIDER = {
         # conform profile scope message that is presented to end-user
         # to lms/templates/provider/authorize.html. This may be revised later.
         'profile': 'Know your name and username',
+        'grades:read': 'Retrieve your grades for your enrolled courses',
+        'certificates:read': 'Retrieve your course certificates'
     },
     'REQUEST_APPROVAL_PROMPT': 'auto_even_if_expired',
 }
 # This is required for the migrations in oauth_dispatch.models
 # otherwise it fails saying this attribute is not present in Settings
-OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
-
+OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth_dispatch.ScopedApplication'
+#OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
 ################################## TEMPLATE CONFIGURATION #####################################
 # Mako templating
 import tempfile
@@ -2404,6 +2407,8 @@ SOCIAL_MEDIA_FOOTER_NAMES = [
     "reddit",
 ]
 
+DEFAULT_JWT_ISSUER = 'test-issuer-1',
+DEFAULT_RESTRICTED_JWT_ISSUER = 'test-issuer-2'
 # JWT Settings
 JWT_AUTH = {
     # TODO Set JWT_SECRET_KEY to a secure value. By default, SECRET_KEY will be used.
@@ -2418,6 +2423,18 @@ JWT_AUTH = {
     'JWT_DECODE_HANDLER': 'edx_rest_framework_extensions.utils.jwt_decode_handler',
     # Number of seconds before JWT tokens expire
     'JWT_EXPIRATION': 30,
+    'JWT_ISSUERS': [
+        {
+            'ISSUER':'test-issuer-1',
+            'SECRET_KEY':'test-secret-key-1',
+            'AUDIENCE':'test-audience-1',
+        },
+        {
+            'ISSUER':'test-issuer-2',
+            'SECRET_KEY':'test-secret-key-2',
+            'AUDIENCE':'test-audience-2',
+        }
+    ]
 }
 
 # The footer URLs dictionary maps social footer names
