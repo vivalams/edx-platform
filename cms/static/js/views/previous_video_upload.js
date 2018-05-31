@@ -38,7 +38,8 @@ define(
                     transcriptionStatus: this.model.get('transcription_status'),
                     transcriptAvailableLanguages: options.transcriptAvailableLanguages,
                     videoSupportedFileFormats: options.videoSupportedFileFormats,
-                    videoTranscriptSettings: options.videoTranscriptSettings
+                    videoTranscriptSettings: options.videoTranscriptSettings,
+                    availableStorageService: options.availableStorageService
                 });
             },
 
@@ -92,6 +93,7 @@ define(
                                     url: videoView.videoHandlerUrl + '/' + videoView.model.get('edx_video_id'),
                                     type: 'DELETE'
                                 }).done(function() {
+                                    clearInterval(videoView.intervalID);
                                     videoView.remove();
                                 });
                             }
@@ -147,10 +149,9 @@ define(
 
             checkStatusVideo: function() {
                 var view = this,
-                    video,
-                    intervalID;
+                    video;
 
-                intervalID = setInterval(function() {
+                view.intervalID = setInterval(function() {
                     $.ajax({
                         url: view.videoHandlerUrl + '/' + view.model.get('edx_video_id'),
                         contentType: 'application/json',
@@ -162,12 +163,12 @@ define(
                         });
 
                         if (video && video.status_value !== view.model.get('status_value')) {
-                            clearInterval(intervalID);
+                            clearInterval(view.intervalID);
                             view.model.set(video);
                             view.render();
                         }
                     }).fail(function() {
-                        clearInterval(intervalID);
+                        clearInterval(view.intervalID);
                     });
                 }, 20000);
             }

@@ -2,6 +2,7 @@
 import json
 from django.core.exceptions import ImproperlyConfigured
 from django.test import override_settings, SimpleTestCase
+from requests import HTTPError
 
 from azure_video_pipeline.media_service import (
     ContentKeyType, KeyDeliveryType, AssetDeliveryProtocol, AssetDeliveryPolicyType,
@@ -12,7 +13,8 @@ from azure_video_pipeline.utils import (
     remove_encryption, encrypt_file, remove_access_policies_and_locators,
     create_content_key_and_associate_with_encoded_asset, create_authorization_policy_and_associate_with_content_key,
     create_delivery_policy_and_associate_with_encoded_asset, create_access_policies_and_locators,
-    remove_delivery_policy_link_from_asset_and_delivery_policy)
+    remove_delivery_policy_link_from_asset_and_delivery_policy,
+    get_video_info, get_captions_info)
 import mock
 
 
@@ -77,7 +79,7 @@ class UtilsTests(SimpleTestCase):
                        AZURE_REST_API_ENDPOINT=None,
                        AZURE_STORAGE_ACCOUNT_NAME=None,
                        AZURE_STORAGE_KEY=None)
-    def test_when_not_set_azure_config(self):
+    def test_azure_config_not_set(self):
         with mock.patch('azure_video_pipeline.models.AzureOrgProfile.objects.filter',
                         return_value=mock.Mock(first=mock.Mock(return_value=None))):
             with self.assertRaises(ImproperlyConfigured):
@@ -191,6 +193,20 @@ class UtilsTests(SimpleTestCase):
         )
         self.assertEqual(status, 'file_encrypted')
 
+    @mock.patch('azure_video_pipeline.utils.remove_access_policies_and_locators')
+    @mock.patch('azure_video_pipeline.utils.get_media_service_client', return_value=mock.Mock(
+        get_input_asset_by_video_id=mock.Mock(return_value={'Id': 'asset_id'}),
+        get_asset_content_keys=mock.Mock(return_value={'Id': 'content_key_id'}),
+    ))
+    def test_encrypt_file_http_error(self, get_media_service_client_mock,
+                                     remove_access_policies_and_locators_mock):
+        # arrange
+        remove_access_policies_and_locators_mock.side_effect = HTTPError
+        # act
+        status = encrypt_file('video_id', 'org_name')
+        # assert
+        self.assertEqual(status, 'encryption_error')
+
     @mock.patch('azure_video_pipeline.utils.get_media_service_client', return_value=mock.Mock(
         get_input_asset_by_video_id=mock.Mock(return_value=[])
     ))
@@ -234,6 +250,20 @@ class UtilsTests(SimpleTestCase):
             {'Id': 'asset_id'}
         )
         self.assertEqual(status, 'file_complete')
+
+    @mock.patch('azure_video_pipeline.utils.remove_access_policies_and_locators')
+    @mock.patch('azure_video_pipeline.utils.get_media_service_client', return_value=mock.Mock(
+        get_input_asset_by_video_id=mock.Mock(return_value={'Id': 'asset_id'}),
+        get_asset_content_keys=mock.Mock(return_value={'Id': 'content_key_id'}),
+    ))
+    def test_remove_encryption_http_error(self, get_media_service_client_mock,
+                                          remove_access_policies_and_locators_mock):
+        # arrange
+        remove_access_policies_and_locators_mock.side_effect = HTTPError
+        # act
+        status = remove_encryption('video_id', 'org_name')
+        # assert
+        self.assertEqual(status, 'decryption_error')
 
     def test_remove_access_policies_and_locators(self):
         # arrange
@@ -410,3 +440,102 @@ class UtilsTests(SimpleTestCase):
         media_service.delete_delivery_policy.assert_called_once_with(
             'delivery_policy_id'
         )
+
+    def test_get_video_info(self):
+        # arrange
+        video = mock.Mock(client_video_id='video_name.mp4', status='file_complete')
+        path_locator_on_demand = '//ma.streaming.mediaservices.windows.net/locator_id/'
+        path_locator_sas = '//sa.blob.core.windows.net/asset-locator_id?sv=2012-02-12&sr=c'
+        asset_files = [
+            {
+                "Name": "fileNameIsm.ism",
+                "MimeType": "application/octet-stream",
+                "ContentFileSize": 10
+            },
+            {
+                "Name": "fileName_1.mp4",
+                "MimeType": "video/mp4",
+                "ContentFileSize": 10
+            },
+            {
+                "Name": "fileName_2.mp4",
+                "MimeType": "video/mp4",
+                "ContentFileSize": 20
+            }
+        ]
+        # act
+        video_info = get_video_info(video, path_locator_on_demand, path_locator_sas, asset_files)
+
+        # assert
+        expected_video_info = {
+            'smooth_streaming_url': '//ma.streaming.mediaservices.windows.net/locator_id/video_name.ism/manifest',
+            'download_video_url': '//sa.blob.core.windows.net/asset-locator_id/fileName_2.mp4?sv=2012-02-12&sr=c'
+        }
+
+        self.assertEqual(video_info, expected_video_info)
+
+    def test_get_video_info_if_path_locator_on_demand_is_not_defined(self):
+        # arrange
+        video = mock.Mock(client_video_id='video_name.mp4', status='file_complete')
+        path_locator_on_demand = ''
+        path_locator_sas = '//sa.blob.core.windows.net/asset-locator_id?sv=2012-02-12&sr=c'
+        asset_files = [
+            {
+                "Name": "fileNameIsm.ism",
+                "MimeType": "application/octet-stream",
+                "ContentFileSize": 10
+            },
+            {
+                "Name": "fileName_1.mp4",
+                "MimeType": "video/mp4",
+                "ContentFileSize": 10
+            },
+            {
+                "Name": "fileName_2.mp4",
+                "MimeType": "video/mp4",
+                "ContentFileSize": 20
+            }
+        ]
+        # act
+        video_info = get_video_info(video, path_locator_on_demand, path_locator_sas, asset_files)
+
+        # assert
+        expected_video_info = {
+            'smooth_streaming_url': '',
+            'download_video_url': '//sa.blob.core.windows.net/asset-locator_id/fileName_2.mp4?sv=2012-02-12&sr=c'
+        }
+        self.assertEqual(video_info, expected_video_info)
+
+    def test_get_video_info_if_path_locator_sas_is_not_defined(self):
+        # arrange
+        video = mock.Mock(client_video_id='video_name.mp4')
+        path_locator_on_demand = '//ma.streaming.mediaservices.windows.net/locator_id/'
+        path_locator_sas = ''
+        asset_files = [
+            {
+                "Name": "fileNameIsm.ism",
+                "MimeType": "application/octet-stream",
+                "ContentFileSize": 10
+            },
+            {
+                "Name": "fileName_1.mp4",
+                "MimeType": "video/mp4",
+                "ContentFileSize": 10
+            },
+            {
+                "Name": "fileName_2.mp4",
+                "MimeType": "video/mp4",
+                "ContentFileSize": 20
+            }
+        ]
+        # act
+        video_info = get_video_info(video, path_locator_on_demand, path_locator_sas, asset_files)
+        captions_info = get_captions_info(video, path_locator_sas)
+
+        # assert
+        expected_video_info = {
+            'smooth_streaming_url': '//ma.streaming.mediaservices.windows.net/locator_id/video_name.ism/manifest',
+            'download_video_url': ''
+        }
+        self.assertEqual(video_info, expected_video_info)
+        self.assertEqual(captions_info, [])

@@ -106,11 +106,11 @@ class MediaServiceClientTests(unittest.TestCase):
     @mock.patch('azure_video_pipeline.media_service.requests.get',
                 return_value=mock.Mock(status_code=200,
                                        json=mock.Mock(return_value={'value': ['locator']})))
-    def test_get_asset_locators(self, requests_get, headers):
+    def test_get_asset_locators(self, requests_get_mock, get_headers_mock):
         media_services = self.make_one()
         asset_id = 'asset_id'
         locator = media_services.get_asset_locators(asset_id, LocatorTypes.SAS)
-        requests_get.assert_called_once_with(
+        requests_get_mock.assert_called_once_with(
             "https://rest_api_endpoint/api/Assets('{}')/Locators".format(asset_id),
             headers={},
             params={'$filter': 'Type eq {}'.format(LocatorTypes.SAS)}
@@ -565,3 +565,21 @@ class MediaServiceClientTests(unittest.TestCase):
             params={'$filter': 'ContentKeyType eq {}'.format(content_key_type)}
         )
         self.assertEqual(response, 'content_key')
+
+    @mock.patch('azure_video_pipeline.media_service.MediaServiceClient.get_headers',
+                return_value={})
+    @mock.patch('azure_video_pipeline.media_service.requests.get',
+                return_value=mock.Mock(status_code=200,
+                                       json=mock.Mock(return_value={'value': ['file1', 'file2']})))
+    def test_get_asset_files(self, requests_get, headers):
+        media_services = self.make_one()
+        asset_id = 'asset_id'
+        files = media_services.get_asset_files(asset_id)
+        requests_get.assert_called_once_with(
+            "https://rest_api_endpoint/api/Assets('{}')/Files".format(asset_id),
+            headers={}
+        )
+        self.assertEqual(files, ['file1', 'file2'])
+
+    def test_raise_for_status_get_asset_files(self):
+        self.raise_for_status(func='get_asset_files', func_args=['asset_id'])
