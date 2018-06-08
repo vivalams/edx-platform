@@ -30,23 +30,28 @@
      *         - verifyToggleBannerFailedOff
      */
      edx.dashboard.legacy.init = function(urls) {
-         var notifications = $('.dashboard-notifications'),
-             upgradeButtonLinks = $('.action-upgrade'),
-             verifyButtonLinks = $('.verification-cta > .cta');
+         var $notifications = $('.dashboard-notifications'),
+             $upgradeButtonLinks = $('.action-upgrade'),
+             $verifyButtonLinks = $('.verification-cta > .cta');
 
         // On initialization, set focus to the first notification available for screen readers.
-         if (notifications.children().length > 0) {
-             notifications.focus();
+         if ($notifications.children().length > 0) {
+             $notifications.focus();
          }
 
         // Track clicks of the upgrade button. The `trackLink` method is a helper that makes
         // a `track` call whenever a bound link is clicked. Usually the page would change before
         // `track` had time to execute; `trackLink` inserts a small timeout to give the `track`
         // call enough time to fire. The clicked link element is passed to `generateProperties`.
-         window.analytics.trackLink(upgradeButtonLinks, 'edx.bi.dashboard.upgrade_button.clicked', generateProperties);
+        // NOTE: This is a duplicate of the 'edx.course.enrollment.upgrade.clicked' event with
+        //  location learner_dashboard.  This bi event is being left in for now because:
+        //  1. I don't know who is relying on it and it is viewable separately in GA.
+        //  2. The other event doesn't yet have the benefit of the timeout of trackLink(), so
+        //     the other event might under-report as compared to this event.
+         window.analytics.trackLink($upgradeButtonLinks, 'edx.bi.dashboard.upgrade_button.clicked', generateProperties);
 
         // Track clicks of the "verify now" button.
-         window.analytics.trackLink(verifyButtonLinks, 'edx.bi.user.verification.resumed', generateProperties);
+         window.analytics.trackLink($verifyButtonLinks, 'edx.bi.user.verification.resumed', generateProperties);
 
         // Track clicks of the LinkedIn "Add to Profile" button
          window.analytics.trackLink(
@@ -182,4 +187,4 @@
              $('#unenroll_course_name').text($(event.target).data('course-name'));
          });
      };
- })(jQuery, gettext, Logger, accessible_modal, interpolate);
+ }(jQuery, gettext, Logger, accessible_modal, interpolate));

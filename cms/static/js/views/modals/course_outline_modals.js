@@ -258,10 +258,10 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
 
         afterRender: function() {
             AbstractEditor.prototype.afterRender.call(this);
-            this.$('input.date').datepicker({'dateFormat': 'm/d/yy'});
+            this.$('input.date').datepicker({dateFormat: 'm/d/yy'});
             this.$('input.time').timepicker({
-                'timeFormat': 'H:i',
-                'forceRoundTime': false
+                timeFormat: 'H:i',
+                forceRoundTime: false
             });
             if (this.model.get(this.fieldName)) {
                 DateUtils.setDate(
@@ -289,7 +289,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         getRequestData: function() {
             return {
                 metadata: {
-                    'due': this.getValue()
+                    due: this.getValue()
                 }
             };
         }
@@ -324,7 +324,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
             }
             return {
                 metadata: {
-                    'start': newReleaseDate
+                    start: newReleaseDate
                 }
             };
         }
@@ -353,8 +353,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
             }
             if (showRulesField) {
                 this.$('.field-exam-review-rules').show();
-            }
-            else {
+            } else {
                 this.$('.field-exam-review-rules').hide();
             }
         },
@@ -380,10 +379,10 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         afterRender: function() {
             AbstractEditor.prototype.afterRender.call(this);
             this.$('input.time').timepicker({
-                'timeFormat': 'H:i',
-                'minTime': '00:30',
-                'maxTime': '24:00',
-                'forceRoundTime': false
+                timeFormat: 'H:i',
+                minTime: '00:30',
+                maxTime: '24:00',
+                forceRoundTime: false
             });
 
             this.setExamType(this.model.get('is_time_limited'), this.model.get('is_proctored_exam'),
@@ -470,16 +469,16 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
 
             return {
                 metadata: {
-                    'is_practice_exam': is_practice_exam,
-                    'is_time_limited': is_time_limited,
-                    'exam_review_rules': exam_review_rules,
+                    is_practice_exam: is_practice_exam,
+                    is_time_limited: is_time_limited,
+                    exam_review_rules: exam_review_rules,
                     // We have to use the legacy field name
                     // as the Ajax handler directly populates
                     // the xBlocks fields. We will have to
                     // update this call site when we migrate
                     // seq_module.py to use 'is_proctored_exam'
-                    'is_proctored_enabled': is_proctored_exam,
-                    'default_time_limit_minutes': this.convertTimeLimitToMinutes(time_limit)
+                    is_proctored_enabled: is_proctored_exam,
+                    default_time_limit_minutes: this.convertTimeLimitToMinutes(time_limit)
                 }
             };
         }
@@ -557,7 +556,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
 
         getRequestData: function() {
             return {
-                'graderType': this.getValue()
+                graderType: this.getValue()
             };
         },
 
@@ -689,8 +688,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                 if (this.currentVisibility() === 'staff_only') {
                     metadata.visible_to_staff_only = true;
                     metadata.hide_after_due = null;
-                }
-                else if (this.currentVisibility() === 'hide_after_due') {
+                } else if (this.currentVisibility() === 'hide_after_due') {
                     metadata.visible_to_staff_only = null;
                     metadata.hide_after_due = true;
                 } else {
@@ -702,8 +700,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                     publish: 'republish',
                     metadata: metadata
                 };
-            }
-            else {
+            } else {
                 return {};
             }
         },

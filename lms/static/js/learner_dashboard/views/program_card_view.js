@@ -2,12 +2,12 @@
     'use strict';
 
     define(['backbone',
-            'jquery',
-            'underscore',
-            'gettext',
-            'text!../../../templates/learner_dashboard/program_card.underscore',
-            'picturefill'
-           ],
+        'jquery',
+        'underscore',
+        'gettext',
+        'text!../../../templates/learner_dashboard/program_card.underscore',
+        'picturefill'
+    ],
          function(
              Backbone,
              $,
@@ -22,8 +22,8 @@
 
                  attributes: function() {
                      return {
-                         'aria-labelledby': 'program-' + this.model.get('id'),
-                         'role': 'group'
+                         'aria-labelledby': 'program-' + this.model.get('uuid'),
+                         role: 'group'
                      };
                  },
 
@@ -73,15 +73,9 @@
                      var progress = this.progressModel ? this.progressModel.toJSON() : false;
 
                      if (progress) {
-                         progress.total = {
-                             completed: progress.completed.length,
-                             in_progress: progress.in_progress.length,
-                             not_started: progress.not_started.length
-                         };
-
-                         progress.total.courses = progress.total.completed +
-                                                 progress.total.in_progress +
-                                                 progress.total.not_started;
+                         progress.total = progress.completed +
+                                          progress.in_progress +
+                                          progress.not_started;
 
                          progress.percentage = {
                              completed: this.getWidth(progress.total.completed, progress.total.courses),

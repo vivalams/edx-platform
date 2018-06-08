@@ -154,6 +154,6 @@
             };
 
             return ResponseCommentView;
-        })(DiscussionContentView);
+        }(DiscussionContentView));
     }
 }).call(window);

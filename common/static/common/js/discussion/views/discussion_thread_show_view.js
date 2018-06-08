@@ -74,6 +74,6 @@
             };
 
             return DiscussionThreadShowView;
-        })(DiscussionContentShowView);
+        }(DiscussionContentShowView));
     }
 }).call(window);

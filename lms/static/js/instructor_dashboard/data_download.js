@@ -204,6 +204,9 @@
                         return dataDownloadObj.$download_request_response_error.text(
                             gettext('Error getting student list.')
                         );
+                        return dataDownloadObj.$download_request_response_error.css({
+                            display: 'block'
+                        });
                     },
                     success: function(data) {
                         var $tablePlaceholder, columns, feature, gridData, options;

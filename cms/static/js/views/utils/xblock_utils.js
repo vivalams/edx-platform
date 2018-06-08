@@ -2,8 +2,8 @@
  * Provides utilities for views to work with xblocks.
  */
 define(['jquery', 'underscore', 'gettext', 'common/js/components/utils/view_utils', 'js/utils/module',
-        'edx-ui-toolkit/js/utils/string-utils'],
-    function($, _, gettext, ViewUtils, ModuleUtils, StringUtils) {
+    'js/models/xblock_info', 'edx-ui-toolkit/js/utils/string-utils'],
+    function($, _, gettext, ViewUtils, ModuleUtils, XBlockInfo, StringUtils) {
         'use strict';
         var addXBlock, duplicateXBlock, deleteXBlock, createUpdateRequestData, updateXBlockField, VisibilityState,
             getXBlockVisibilityClass, getXBlockListTypeClass, updateXBlockFields, getXBlockType;
@@ -51,14 +51,14 @@ define(['jquery', 'underscore', 'gettext', 'common/js/components/utils/view_util
                 function() {
                     var addOperation = $.Deferred();
                     analytics.track('Created a ' + category, {
-                        'course': course_location_analytics,
-                        'display_name': displayName
+                        course: course_location_analytics,
+                        display_name: displayName
                     });
                     $.postJSON(ModuleUtils.getUpdateUrl(),
                         {
-                            'parent_locator': parentLocator,
-                            'category': category,
-                            'display_name': displayName
+                            parent_locator: parentLocator,
+                            category: category,
+                            display_name: displayName
                         }, function(data) {
                             var locator = data.locator;
                             addOperation.resolve(locator);

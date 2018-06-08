@@ -36,11 +36,11 @@ define(['jquery', 'underscore', 'gettext', 'js/views/pages/base_page', 'js/views
 
             setCollapseExpandVisibility: function() {
                 var has_content = this.hasContent(),
-                    collapseExpandButton = $('.button-toggle-expand-collapse');
+                    $collapseExpandButton = $('.button-toggle-expand-collapse');
                 if (has_content) {
-                    collapseExpandButton.removeClass('is-hidden');
+                    $collapseExpandButton.removeClass('is-hidden');
                 } else {
-                    collapseExpandButton.addClass('is-hidden');
+                    $collapseExpandButton.addClass('is-hidden');
                 }
             },
 
@@ -87,19 +87,18 @@ define(['jquery', 'underscore', 'gettext', 'js/views/pages/base_page', 'js/views
                 event.preventDefault();
                 toggleButton.toggleClass('collapse-all expand-all');
                 this.$('.list-sections > li').each(function(index, domElement) {
-                    var element = $(domElement);
+                    var $element = $(domElement);
                     if (collapse) {
-                        element.addClass('is-collapsed');
+                        $element.addClass('is-collapsed');
                     } else {
-                        element.removeClass('is-collapsed');
+                        $element.removeClass('is-collapsed');
                     }
                 });
                 if (this.model.get('child_info')) {
                     _.each(this.model.get('child_info').children, function(childXBlockInfo) {
                         if (collapse) {
                             this.expandedLocators.remove(childXBlockInfo.get('id'));
-                        }
-                        else {
+                        } else {
                             this.expandedLocators.add(childXBlockInfo.get('id'));
                         }
                     }, this);
@@ -109,12 +108,12 @@ define(['jquery', 'underscore', 'gettext', 'js/views/pages/base_page', 'js/views
             handleReIndexEvent: function(event) {
                 var self = this;
                 event.preventDefault();
-                var target = $(event.currentTarget);
-                target.css('cursor', 'wait');
-                this.startReIndex(target.attr('href'))
+                var $target = $(event.currentTarget);
+                $target.css('cursor', 'wait');
+                this.startReIndex($target.attr('href'))
                     .done(function(data) { self.onIndexSuccess(data); })
                     .fail(function(data) { self.onIndexError(data); })
-                    .always(function() { target.css('cursor', 'pointer'); });
+                    .always(function() { $target.css('cursor', 'pointer'); });
             },
 
             startReIndex: function(reindex_url) {

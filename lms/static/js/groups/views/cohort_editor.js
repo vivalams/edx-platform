@@ -90,7 +90,7 @@
 
                     if (students.length > 0) {
                         $.post(
-                            add_url, {'users': students}
+                            add_url, {users: students}
                         ).done(function(modifiedUsers) {
                             self.refreshCohorts().done(function() {
                                 // Find the equivalent cohort in the new collection and select it
@@ -246,8 +246,7 @@
                         });
 
                         this.showErrorMessage(title, false, errorModel);
-                    }
-                    else if (this.errorNotifications) {
+                    } else if (this.errorNotifications) {
                         this.errorNotifications.$el.html('');
                         this.errorNotifications = null;
                     }

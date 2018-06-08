@@ -121,7 +121,8 @@ var StaffDebug = (function() {
         getURL: getURL,
         getUser: getUser,
         sanitizeString: sanitizeString
-    }; })();
+    };
+}());
 
 // Register click handlers
 $(document).ready(function() {

@@ -10,24 +10,24 @@ var edx = edx || {};
     edx.dashboard.dropdown.toggleCourseActionsDropdownMenu = function(event) {
         // define variables for code legibility
         var dashboardIndex = $(event.currentTarget).data().dashboardIndex,
-            dropdown = $('#actions-dropdown-' + dashboardIndex),
-            dropdownButton = $('#actions-dropdown-link-' + dashboardIndex),
-            ariaExpandedState = (dropdownButton.attr('aria-expanded') === 'true'),
-            menuItems = dropdown.find('a');
+            $dropdown = $('#actions-dropdown-' + dashboardIndex),
+            $dropdownButton = $('#actions-dropdown-link-' + dashboardIndex),
+            ariaExpandedState = ($dropdownButton.attr('aria-expanded') === 'true'),
+            menuItems = $dropdown.find('a');
 
         var catchKeyPress = function(object, event) {
             // get currently focused item
-            var focusedItem = $(':focus');
+            var $focusedItem = $(':focus');
 
             // get the index of the currently focused item
-            var focusedItemIndex = menuItems.index(focusedItem);
+            var focusedItemIndex = menuItems.index($focusedItem);
 
             // var to store next focused item index
             var itemToFocusIndex;
 
             // if space or escape key pressed
             if (event.which === 32 || event.which === 27) {
-                dropdownButton.click();
+                $dropdownButton.click();
                 event.preventDefault();
             }
 
@@ -62,12 +62,12 @@ var edx = edx || {};
             dropdown.attr('tabindex', -1);
             dropdown.focus();
         } else {
-            dropdown.removeAttr('tabindex');
-            dropdownButton.focus();
+            $dropdown.removeAttr('tabindex');
+            $dropdownButton.focus();
         }
 
         // Inform the ARIA framework that the dropdown has been expanded
-        dropdownButton.attr('aria-expanded', !ariaExpandedState);
+        $dropdownButton.attr('aria-expanded', !ariaExpandedState);
 
         // catch keypresses when inside dropdownMenu (we want to catch spacebar;
         // escape; up arrow or shift+tab; and down arrow or tab)
@@ -86,4 +86,4 @@ var edx = edx || {};
     $(document).ready(function() {
         edx.dashboard.dropdown.bindToggleButtons();
     });
-})(jQuery);
+}(jQuery));

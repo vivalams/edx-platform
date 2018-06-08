@@ -81,15 +81,15 @@ function() {
         // Let screen readers know that this div, representing the slider
         // handle, behaves as a slider named 'video position'.
         state.videoProgressSlider.handle.attr({
-            'role': 'slider',
+            role: 'slider',
             'aria-disabled': false,
             'aria-valuetext': getTimeDescription(state.videoProgressSlider
                 .slider.slider('option', 'value')),
             'aria-valuemax': state.videoPlayer.duration(),
             'aria-valuemin': '0',
             'aria-valuenow': state.videoPlayer.currentTime,
-            'tabindex': '0',
-            'aria-label': gettext('Video position')
+            tabindex: '0',
+            'aria-label': gettext('Video position. Press space to toggle playback')
         });
 
         state.el.on('destroy', state.videoProgressSlider.destroy);
@@ -201,7 +201,7 @@ function() {
 
         this.trigger(
             'videoPlayer.onSlideSeek',
-            {'type': 'onSlideSeek', 'time': time}
+            {type: 'onSlideSeek', time: time}
         );
 
         // ARIA
@@ -222,7 +222,7 @@ function() {
         if (this.videoProgressSlider.lastSeekValue !== ui.value) {
             this.trigger(
                 'videoPlayer.onSlideSeek',
-                {'type': 'onSlideSeek', 'time': ui.value}
+                {type: 'onSlideSeek', time: ui.value}
             );
         }
 
@@ -311,7 +311,7 @@ function() {
                     msg = ngettext('%(value)s second', '%(value)s seconds', value);
                     break;
                 }
-                return interpolate(msg, {'value': value}, true);
+                return interpolate(msg, {value: value}, true);
             };
 
         seconds = seconds % 60;

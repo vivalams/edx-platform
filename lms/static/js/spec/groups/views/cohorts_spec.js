@@ -12,12 +12,14 @@ define(['backbone', 'jquery', 'edx-ui-toolkit/js/utils/spec-helpers/ajax-helpers
         'use strict';
 
         describe('Cohorts View', function() {
-            var catLoversInitialCount = 123, dogLoversInitialCount = 456, unknownUserMessage,
-                createMockCohort, createMockCohorts, createMockContentGroups, createMockCohortSettingsJson,
-                createMockVerifiedTrackCohortsJson, flushVerifiedTrackCohortRequests, createCohortsView,
-                cohortsView, requests, respondToRefresh, verifyMessage, verifyNoMessage, verifyDetailedMessage,
-                verifyHeader, verifyVerifiedTrackMessage, verifyVerifiedTrackUIUpdates, expectCohortAddRequest,
-                getAddModal, selectContentGroup, clearContentGroup,
+            var catLoversInitialCount = 123,
+                dogLoversInitialCount = 456,
+                unknownUserMessage,
+                invalidEmailMessage, createMockCohort, createMockCohorts, createMockContentGroups,
+                createMockCohortSettingsJson, createMockVerifiedTrackCohortsJson, flushVerifiedTrackCohortRequests,
+                createCohortsView, cohortsView, requests, respondToRefresh, verifyMessage, verifyNoMessage,
+                verifyDetailedMessage, verifyHeader, verifyVerifiedTrackMessage, verifyVerifiedTrackUIUpdates,
+                expectCohortAddRequest, getAddModal, selectContentGroup, clearContentGroup,
                 saveFormAndExpectErrors, createMockCohortSettings, MOCK_COHORTED_USER_PARTITION_ID,
                 MOCK_UPLOAD_COHORTS_CSV_URL, MOCK_STUDIO_ADVANCED_SETTINGS_URL, MOCK_STUDIO_GROUP_CONFIGURATIONS_URL,
                 MOCK_VERIFIED_TRACK_COHORTING_URL, MOCK_MANUAL_ASSIGNMENT, MOCK_RANDOM_ASSIGNMENT,
@@ -139,8 +141,7 @@ define(['backbone', 'jquery', 'edx-ui-toolkit/js/utils/spec-helpers/ajax-helpers
                         enabled: true,
                         verified_cohort_name: 'Verified Track'
                     };
-                }
-                else {
+                } else {
                     return {enabled: false};
                 }
             };
@@ -232,8 +233,7 @@ define(['backbone', 'jquery', 'edx-ui-toolkit/js/utils/spec-helpers/ajax-helpers
                 expect(cohortsView.$('div.message')).toHaveClass('message-' + expectedMessageType);
                 if (expectedAction) {
                     expect(cohortsView.$('.message-actions .action-primary').text().trim()).toBe(expectedAction);
-                }
-                else {
+                } else {
                     expect(cohortsView.$('.message-actions .action-primary').length).toBe(0);
                 }
                 if (!hasDetails) {
@@ -250,8 +250,7 @@ define(['backbone', 'jquery', 'edx-ui-toolkit/js/utils/spec-helpers/ajax-helpers
                     expect($('.message').length).toBe(1);
                     expect($('.message-' + type).length).toBe(1);
                     expect($('.message-title').text()).toContain(expectedText);
-                }
-                else {
+                } else {
                     expect($('.message').length).toBe(0);
                 }
             };
@@ -395,7 +394,8 @@ define(['backbone', 'jquery', 'edx-ui-toolkit/js/utils/spec-helpers/ajax-helpers
             });
 
             it('can upload a CSV of cohort assignments if a cohort exists', function() {
-                var uploadCsvToggle, fileUploadForm, fileUploadFormCss = '#file-upload-form';
+                var uploadCsvToggle, fileUploadForm,
+                    fileUploadFormCss = '#file-upload-form';
 
                 createCohortsView(this);
 
@@ -988,7 +988,7 @@ define(['backbone', 'jquery', 'edx-ui-toolkit/js/utils/spec-helpers/ajax-helpers
                     it('can clear selected content group', function() {
                         createCohortsView(this, {
                             cohorts: [
-                                {id: 1, name: 'Cat Lovers', group_id: 0, 'assignment_type': MOCK_MANUAL_ASSIGNMENT}
+                                {id: 1, name: 'Cat Lovers', group_id: 0, assignment_type: MOCK_MANUAL_ASSIGNMENT}
                             ],
                             selectCohort: 1
                         });
@@ -1002,7 +1002,7 @@ define(['backbone', 'jquery', 'edx-ui-toolkit/js/utils/spec-helpers/ajax-helpers
                             requests, 'PATCH', '/mock_service/cohorts/1',
                             {
                                 name: 'Cat Lovers',
-                                'assignment_type': MOCK_MANUAL_ASSIGNMENT,
+                                assignment_type: MOCK_MANUAL_ASSIGNMENT,
                                 group_id: null,
                                 user_partition_id: null
                             }

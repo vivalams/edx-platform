@@ -46,8 +46,9 @@ define([
                 language: '',
                 learning_info: [''],
                 instructor_info: {
-                    'instructors': [{'name': '', 'title': '', 'organization': '', 'image': '', 'bio': ''}]
-                }
+                    instructors: [{name: '', title: '', organization: '', image: '', bio: ''}]
+                },
+                self_paced: false
             },
 
             mockSettingsPage = readFixtures('mock/mock-settings-page.underscore'),
@@ -67,7 +68,7 @@ define([
 
             this.model = new CourseDetailsModel($.extend(true, {}, modelData, {
                 instructor_info: {
-                    'instructors': [{'name': '', 'title': '', 'organization': '', 'image': '', 'bio': ''}]
+                    instructors: [{name: '', title: '', organization: '', image: '', bio: ''}]
                 }}), {parse: true});
             this.model.urlRoot = urlRoot;
             this.view = new MainView({
@@ -324,13 +325,13 @@ define([
                 expectedJson = $.extend(true, {}, modelData, {
                     instructor_info: {
                         instructors:
-                            [{
-                                'name': 'test_name',
-                                'title': 'test_title',
-                                'organization': 'test_org',
-                                'image': 'test_image',
-                                'bio': 'test_bio'
-                            }]
+                        [{
+                            name: 'test_name',
+                            title: 'test_title',
+                            organization: 'test_org',
+                            image: 'test_image',
+                            bio: 'test_bio'
+                        }]
                     }
                 });
 

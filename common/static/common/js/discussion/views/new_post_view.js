@@ -200,6 +200,6 @@
             };
 
             return NewPostView;
-        })(Backbone.View);
+        }(Backbone.View));
     }
 }).call(window);

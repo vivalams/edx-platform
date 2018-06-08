@@ -72,4 +72,4 @@
 
     // XBlock initialization functions must be global
     window.VisibilityEditorInit = initializeVisibilityEditor;
-})($);
+}($));

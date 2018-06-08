@@ -56,6 +56,6 @@
             };
 
             return ThreadResponseEditView;
-        })(Backbone.View);
+        }(Backbone.View));
     }
 }).call(window);

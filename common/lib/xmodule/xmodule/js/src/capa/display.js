@@ -748,6 +748,7 @@
             this.submitNotification.remove();
             this.gentleAlertNotification.hide();
             this.saveNotification.hide();
+            this.showAnswerNotification.hide();
         };
 
         Problem.prototype.gentle_alert = function(msg) {

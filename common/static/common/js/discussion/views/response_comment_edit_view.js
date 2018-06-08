@@ -56,6 +56,6 @@
             };
 
             return ResponseCommentEditView;
-        })(Backbone.View);
+        }(Backbone.View));
     }
 }).call(window);

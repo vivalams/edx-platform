@@ -40,7 +40,7 @@ function($, Backbone, _, Utils, Editor, MetadataView, MetadataModel, MetadataCol
                 object: testData,
                 string: JSON.stringify(testData)
             },
-            transcripts, container;
+            transcripts, $container;
 
         var waitsForDisplayName = function(collection) {
             return jasmine.waitUntil(function() {
@@ -51,12 +51,12 @@ function($, Backbone, _, Utils, Editor, MetadataView, MetadataModel, MetadataCol
 
         beforeEach(function() {
             var tpl = sandbox({
-                'class': 'wrapper-comp-settings basic_metadata_edit',
-                'data-metadata': JSON.stringify(metadataDict['object'])
+                class: 'wrapper-comp-settings basic_metadata_edit',
+                'data-metadata': JSON.stringify(metadataDict.object)
             });
 
             appendSetFixtures(tpl);
-            container = $('.basic_metadata_edit');
+            $container = $('.basic_metadata_edit');
 
             spyOn(Utils, 'command');
         });
@@ -70,7 +70,7 @@ function($, Backbone, _, Utils, Editor, MetadataView, MetadataModel, MetadataCol
                 spyOn(MetadataView, 'Editor');
 
                 transcripts = new Editor({
-                    el: container
+                    el: $container
                 });
             });
 
@@ -82,7 +82,7 @@ function($, Backbone, _, Utils, Editor, MetadataView, MetadataModel, MetadataCol
 
             it('MetadataView.Editor is initialized', function() {
                 expect(MetadataView.Editor).toHaveBeenCalledWith({
-                    el: container,
+                    el: $container,
                     collection: transcripts.collection
                 });
             });
@@ -140,7 +140,7 @@ function($, Backbone, _, Utils, Editor, MetadataView, MetadataModel, MetadataCol
                 spyOn(MetadataView, 'Editor');
 
                 transcripts = new Editor({
-                    el: container
+                    el: $container
                 });
 
                 metadataCollection = new MetadataCollection(

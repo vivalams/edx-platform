@@ -263,7 +263,7 @@ function($, _, Utils, _str) {
 
         describe('Method: parseLink', function() {
             var resultDataDict = {
-                'html5': {
+                html5: {
                     link: html5LinksList.mp4[0],
                     resp: {
                         mode: 'html5',
@@ -271,7 +271,7 @@ function($, _, Utils, _str) {
                         type: 'mp4'
                     }
                 },
-                'youtube': {
+                youtube: {
                     link: ytLinksList[0],
                     resp: {
                         mode: 'youtube',
@@ -279,7 +279,7 @@ function($, _, Utils, _str) {
                         type: 'youtube'
                     }
                 },
-                'incorrect': {
+                incorrect: {
                     link: 'http://example.com',
                     resp: {
                         mode: 'incorrect'
