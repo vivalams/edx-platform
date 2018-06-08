@@ -17,7 +17,8 @@ XSSLINT_THRESHOLDS=`cat scripts/xsslint_thresholds.json`
 export XSSLINT_THRESHOLDS=${XSSLINT_THRESHOLDS//[[:space:]]/}
 
 doCheckVars() {
-    if [ -n "$CIRCLECI" ] ; then
+   SCRIPT_TO_RUN=scripts/generic-ci-tests.sh  
+   if [ -n "$CIRCLECI" ] ; then
         SCRIPT_TO_RUN=scripts/circle-ci-tests.sh
 
     elif [ -n "$JENKINS_HOME" ] ; then
