@@ -14,7 +14,7 @@ from oauth2_provider.oauth2_validators import OAuth2Validator
 from pytz import utc
 from ratelimitbackend.backends import RateLimitMixin
 from django.conf import settings
-from ..models import RestrictedApplication, OauthRestrictedApplication
+from ..models import ScopedApplication, RestrictedApplication
 from openedx.core.djangoapps.oauth_dispatch.utils import is_oauth_scope_enforcement_enabled
 
 @receiver(pre_save, sender=AccessToken)

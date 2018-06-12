@@ -17,4 +17,3 @@ class DynamicScopes(SettingsScopes):
 
     def get_available_scopes(self, application = None, request = None, *args, **kwargs):
         return list(self.get_all_scopes().keys())
-
