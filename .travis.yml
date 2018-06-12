@@ -47,7 +47,7 @@ before_script:
   - sleep 3
   
 script: 
-  - sudo ./scripts/docker-run-tests.sh
+  - sudo bash ./scripts/docker-run-tests.sh
 
 after_success:
   - ./scripts/docker-report.sh
