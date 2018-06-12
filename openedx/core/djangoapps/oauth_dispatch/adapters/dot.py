@@ -17,15 +17,15 @@ class DOTAdapter(object):
                                    user,
                                    redirect_uri,
                                    client_id=None,
-                                   authorization_grant_type=models.Application.GRANT_AUTHORIZATION_CODE):
+                                   authorization_grant_type=models.get_application_model().GRANT_AUTHORIZATION_CODE):
         """
         Create an oauth client application that is confidential.
         """
-        return models.Application.objects.create(
+        return models.get_application_model().objects.create(
             name=name,
             user=user,
             client_id=client_id,
-            client_type=models.Application.CLIENT_CONFIDENTIAL,
+            client_type=models.get_application_model().CLIENT_CONFIDENTIAL,
             authorization_grant_type=authorization_grant_type,
             redirect_uris=redirect_uri,
         )
@@ -34,12 +34,12 @@ class DOTAdapter(object):
         """
         Create an oauth client application that is public.
         """
-        return models.Application.objects.create(
+        return models.get_application_model().objects.create(
             name=name,
             user=user,
             client_id=client_id,
-            client_type=models.Application.CLIENT_PUBLIC,
-            authorization_grant_type=models.Application.GRANT_PASSWORD,
+            client_type=models.get_application_model().CLIENT_PUBLIC,
+            authorization_grant_type=models.get_application_model().GRANT_PASSWORD,
             redirect_uris=redirect_uri,
         )
 
@@ -49,7 +49,7 @@ class DOTAdapter(object):
 
         Wraps django's queryset.get() method.
         """
-        return models.Application.objects.get(**filters)
+        return models.get_application_model().objects.get(**filters)
 
     def get_client_for_token(self, token):
         """

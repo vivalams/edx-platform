@@ -7,14 +7,14 @@ from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyText
 import pytz
 
-from oauth2_provider.models import Application, AccessToken, RefreshToken
+from oauth2_provider.models import get_application_model, AccessToken, RefreshToken
 
 from student.tests.factories import UserFactory
 
 
 class ApplicationFactory(DjangoModelFactory):
     class Meta(object):
-        model = Application
+        model = get_application_model()
 
     user = factory.SubFactory(UserFactory)
     client_id = factory.Sequence(u'client_{0}'.format)

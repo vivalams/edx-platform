@@ -2,7 +2,7 @@
 
 from django.conf import settings
 from django.test import TestCase
-from oauth2_provider.models import Application, AccessToken, RefreshToken
+from oauth2_provider.models import get_application_model, AccessToken, RefreshToken
 import unittest
 
 from openedx.core.djangoapps.oauth_dispatch.tests import factories
@@ -17,7 +17,7 @@ class TestClientFactory(TestCase):
 
     def test_client_factory(self):
         actual_application = factories.ApplicationFactory(user=self.user)
-        expected_application = Application.objects.get(user=self.user)
+        expected_application = get_application_model().objects.get(user=self.user)
         self.assertEqual(actual_application, expected_application)
 
 

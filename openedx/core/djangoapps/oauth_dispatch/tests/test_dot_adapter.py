@@ -65,7 +65,7 @@ class DOTAdapterTestCase(TestCase):
     @ddt.unpack
     def test_create_client(self, client_name, client_type):
         client = getattr(self, '{}_client'.format(client_name))
-        self.assertIsInstance(client, models.Application)
+        self.assertIsInstance(client, models.get_application_model())
         self.assertEqual(client.client_id, '{}-client-id'.format(client_name))
         self.assertEqual(client.client_type, client_type)
 
@@ -78,11 +78,11 @@ class DOTAdapterTestCase(TestCase):
             redirect_uris=DUMMY_REDIRECT_URL,
             client_type=models.Application.CLIENT_CONFIDENTIAL
         )
-        self.assertIsInstance(client, models.Application)
+        self.assertIsInstance(client, models.get_application_model())
         self.assertEqual(client.client_type, models.Application.CLIENT_CONFIDENTIAL)
 
     def test_get_client_not_found(self):
-        with self.assertRaises(models.Application.DoesNotExist):
+        with self.assertRaises(models.get_application_model().DoesNotExist):
             self.adapter.get_client(client_id='not-found')
 
     def test_get_client_for_token(self):
