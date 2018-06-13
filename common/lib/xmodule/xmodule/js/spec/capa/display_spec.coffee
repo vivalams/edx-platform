@@ -753,7 +753,6 @@ describe 'Problem', ->
       @problem.refreshMath target: $('#input_example_1').get(0)
 
     it 'should queue the conversion and MathML element update', ->
-      debugger;
       expect(MathJax.Hub.Queue).toHaveBeenCalledWith ['Text', @stubbedJax, 'E\\=mc\\^2'],
         [@problem.updateMathML, @stubbedJax, $('#input_example_1').get(0)]
 
