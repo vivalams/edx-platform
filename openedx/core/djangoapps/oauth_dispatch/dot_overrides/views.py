@@ -65,8 +65,12 @@ class EdxOAuth2AuthorizationView(AuthorizationView):
 
             scopes, credentials = self.validate_authorization_request(request)
             all_scopes = get_scopes_backend().get_all_scopes()
-			org = get_associated_application_orgs(request)
-            kwargs["scopes_descriptions"] = associate_org_with_scope_description(scopes,all_scopes,org)
+            if is_org_associated_with_appication:
+			    org = get_associated_application_orgs(request)
+                kwargs["scopes_descriptions"] = associate_org_with_scope_description(scopes,all_scopes,org)
+            else:
+               kwargs["scopes_descriptions"] = [all_scopes[scope] for scope in scopes]
+
             kwargs['scopes'] = scopes
 
             # at this point we know an Application instance with such client_id exists in the database
