@@ -21,8 +21,8 @@ def is_org_associated_with_appication(request):
         return False
 
 def get_associated_application_orgs(request):
-    dot_id = dot_models.get_application_model().objects.get(client_id = request.GET.get('client_id')).id
-    if ScopedOrganization.objects.filter(application_id=dot_id).exists():
+
+    if is_org_associated_with_appication(request):
         orgs = ScopedOrganization.objects.get(application_id=dot_id).org_associations
         return orgs
     else:
