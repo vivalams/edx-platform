@@ -21,7 +21,6 @@ def is_org_associated_with_appication(request):
         return False
 
 def get_associated_application_orgs(request):
-
     if is_org_associated_with_appication(request):
         orgs = ScopedOrganization.objects.get(application_id=dot_id).org_associations
         return orgs
