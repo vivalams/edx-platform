@@ -2,6 +2,7 @@
 
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
+default_app_config = 'third_party_auth.apps.ThirdPartyAuthConfig'
 
 def is_enabled():
     """Check whether third party authentication has been enabled. """
