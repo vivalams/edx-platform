@@ -6,7 +6,6 @@ import contentstore.views
 import contentstore
 from cms.djangoapps.contentstore.views.program import ProgramAuthoringView, ProgramsIdTokenView
 from cms.djangoapps.contentstore.views.organization import OrganizationListView
-from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 admin.autodiscover()
 
@@ -67,7 +66,7 @@ urlpatterns = patterns(
     url(r'^update_lang/', include('openedx.core.djangoapps.dark_lang.urls', namespace='dark_lang')),
 )
 
-if configuration_helpers.get_value("ENABLE_AZURE_MEDIA_SERVICES_XBLOCK"):
+if settings.FEATURES["ENABLE_AZURE_MEDIA_SERVICES_XBLOCK"]:
     urlpatterns += (
         url(r'^embed_player/', include('azure_media_services.urls')),
     )
