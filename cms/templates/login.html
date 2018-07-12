@@ -24,7 +24,7 @@ providers = provider.Registry.displayed_for_login()
     </header>
     <article class="content-primary" role="main">
       <form id="login_form" method="post" action="login_post" onsubmit="return false;">
-        % if third_party_auth.is_enabled() and providers:
+        % if third_party_auth.is_enabled():
         <div class="login-providers">
           % if True:
           <div class="section-title lines">
@@ -34,19 +34,19 @@ providers = provider.Registry.displayed_for_login()
           </div>
           % endif
 
-          % for enabled in providers:
+          
           <button type="button"
-                  class="button button-primary button-${enabled.provider_id} login-provider login-${enabled.provider_id}"
-                  onclick="thirdPartySignin(event, '${pipeline.get_login_url(enabled.provider_id, pipeline.AUTH_ENTRY_LOGIN, redirect_url=reverse("home"))}');">
-            <div class="icon fa ${enabled.icon_class if enabled.icon_class else ''}" aria-hidden="true">
-              % if enabled.icon_image:
-              <img class="icon-image" src="${enabled.icon_image.url}" alt="${enabled.name} icon" />
-              % endif
+                  class="button button-primary button-oa2-azuread-oauth2 login-provider login-oa2-azuread-oauth2"
+                  onclick="thirdPartySignin(event, '/auth/login/azuread-oauth2/?auth_entry=login&next=%2Fhome');">
+            <div class="icon fa fa-sign-in" aria-hidden="true">
+
+        
+              
             </div>
-            <span aria-hidden="true">${enabled.name}</span>
-            <span class="sr">${_("Sign in with {}".format(enabled.name))}</span>
+            <span aria-hidden="true">Microsoft AAD</span>
+            <span class="sr">Sign in with Microsoft AAD</span>
           </button>
-          % endfor
+          
 
         </div>
           % if not static.get_value('ONLY_THIRD_PARTY_AUTH', settings.FEATURES.get('ONLY_THIRD_PARTY_AUTH', False)):
@@ -99,7 +99,7 @@ providers = provider.Registry.displayed_for_login()
   <script type="text/javascript">
     function thirdPartySignin(event, url) {
       event.preventDefault();
-      window.location.href = url;
+      window.location.href = "http://manificusaad.westus.cloudapp.azure.com:18010/"+url;
     }
   </script>
 </%block>
