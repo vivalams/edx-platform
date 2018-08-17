@@ -832,6 +832,7 @@ INSTALLED_APPS = (
 
     # Monitor the status of services
     'openedx.core.djangoapps.service_status',
+    'third_party_auth',
 
     # Testing
     'django_nose',
