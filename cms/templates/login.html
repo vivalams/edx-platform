@@ -1,3 +1,4 @@
+<%namespace name='static' file='/static_content.html'/>
 <%page expression_filter="h"/>
 <%inherit file="base.html" />
 <%def name="online_help_token()"><% return "login" %></%def>
@@ -21,10 +22,43 @@ providers = provider.Registry.displayed_for_login()
       <h1 class="title title-1">${_("Sign In to {studio_name}").format(studio_name=settings.STUDIO_NAME)}</h1>
       <a href="${reverse('signup')}" class="action action-signin">${_("Don't have a {studio_name} Account? Sign up!").format(studio_name=settings.STUDIO_SHORT_NAME)}</a>
     </header>
-
     <article class="content-primary" role="main">
       <form id="login_form" method="post" action="login_post" onsubmit="return false;">
-        % if not static.get_value('ONLY_THIRD_PARTY_AUTH', settings.FEATURES.get('ONLY_THIRD_PARTY_AUTH', False)):
+        % if third_party_auth.is_enabled():
+        <div class="login-providers">
+          % if True:
+          <div class="section-title lines">
+            <h3>
+              <span class="text">${_("Sign in with")}</span>
+            </h3>
+          </div>
+          % endif
+
+
+          <button type="button"
+                  class="button button-primary button-oa2-azuread-oauth2 login-provider login-oa2-azuread-oauth2"
+                  onclick="thirdPartySignin(event, '/auth/login/azuread-oauth2/?auth_entry=login&next=%2Fhome');">
+            <div class="icon fa fa-sign-in" aria-hidden="true">
+
+
+
+            </div>
+            <span aria-hidden="true">Microsoft AAD</span>
+            <span class="sr">Sign in with Microsoft AAD</span>
+          </button>
+
+
+        </div>
+          % if not static.get_value('ONLY_THIRD_PARTY_AUTH', settings.FEATURES.get('ONLY_THIRD_PARTY_AUTH', False)):
+        <div class="section-title lines">
+          <h3>
+            <span class="text">${_("or sign in using email and password")}</span>
+          </h3>
+        </div>
+        % endif
+        % endif
+
+      % if not static.get_value('ONLY_THIRD_PARTY_AUTH', settings.FEATURES.get('ONLY_THIRD_PARTY_AUTH', False)):
         <fieldset>
           <legend class="sr">${_("Required Information to Sign In to {studio_name}").format(studio_name=settings.STUDIO_NAME)}</legend>
           <input type="hidden" name="csrfmiddlewaretoken" value="${ csrf }" />
@@ -50,34 +84,6 @@ providers = provider.Registry.displayed_for_login()
         <!-- no honor code for CMS, but need it because we're using the lms student object -->
         <input name="honor_code" type="checkbox" value="true" checked="true" hidden="true">
         % endif
-
-        % if third_party_auth.is_enabled() and providers:
-        <div class="login-providers">
-          % if not static.get_value('ONLY_THIRD_PARTY_AUTH', settings.FEATURES.get('ONLY_THIRD_PARTY_AUTH', False)):
-          <div class="section-title lines">
-            <h3>
-              <span class="text">${_("or sign in with")}</span>
-            </h3>
-          </div>
-          % endif
-
-          % for enabled in providers:
-          <button type="button"
-                  class="button button-primary button-${enabled.provider_id} login-provider login-${enabled.provider_id}"
-                  onclick="thirdPartySignin(event, '${pipeline.get_login_url(enabled.provider_id, pipeline.AUTH_ENTRY_LOGIN, redirect_url=reverse("home"))}');">
-            <div class="icon fa ${enabled.icon_class if enabled.icon_class else ''}" aria-hidden="true">
-              % if enabled.icon_image:
-              <img class="icon-image" src="${enabled.icon_image.url}" alt="${enabled.name} icon" />
-              % endif
-            </div>
-            <span aria-hidden="true">${enabled.name}</span>
-            <span class="sr">${_("Sign in with {}".format(enabled.name))}</span>
-          </button>
-          % endfor
-
-        </div>
-        % endif
-
       </form>
     </article>
   </section>
@@ -89,7 +95,6 @@ providers = provider.Registry.displayed_for_login()
       LoginFactory("${reverse('homepage') | n, js_escaped_string}");
   });
 </%block>
-
 <%block name="jsextra">
   <script type="text/javascript">
     function thirdPartySignin(event, url) {
