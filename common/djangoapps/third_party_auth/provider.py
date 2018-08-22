@@ -22,7 +22,7 @@ class Registry(object):
         Helper method that returns a generator used to iterate over all providers
         of the current site.
         """
-        oauth2_slugs = OAuth2ProviderConfig.key_values('slug', flat=True)
+        oauth2_slugs = OAuth2ProviderConfig.key_values('provider_slug', flat=True)
         for oauth2_slug in oauth2_slugs:
             provider = OAuth2ProviderConfig.current(oauth2_slug)
             if provider.enabled_for_current_site and provider.backend_name in _PSA_OAUTH2_BACKENDS:
@@ -105,7 +105,7 @@ class Registry(object):
             Instances of ProviderConfig.
         """
         if backend_name in _PSA_OAUTH2_BACKENDS:
-            oauth2_slugs = OAuth2ProviderConfig.key_values('slug', flat=True)
+            oauth2_slugs = OAuth2ProviderConfig.key_values('provider_slug', flat=True)
             for oauth2_slug in oauth2_slugs:
                 provider = OAuth2ProviderConfig.current(oauth2_slug)
                 if provider.backend_name == backend_name and provider.enabled_for_current_site:
