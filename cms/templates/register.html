@@ -27,7 +27,9 @@ providers = provider.Registry.displayed_for_login()
 
     <article class="content-primary" role="main">
       <form id="register_form" method="post">
-
+        ${third_party_auth.is_enabled()}
+        ${providers}
+        ${running_pipeline}
         % if third_party_auth.is_enabled() and providers and not running_pipeline:
         <div class="login-providers">
           <div class="section-title lines">
