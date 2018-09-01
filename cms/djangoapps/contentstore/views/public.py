@@ -35,8 +35,9 @@ def signup(request):
         # Redirect to course to login to process their certificate if SSL is enabled
         # and registration is disabled.
         return redirect_with_get('login', request.GET, False)
+
     context = {
-        'csrf': 'csrf_token',
+        'csrf': csrf_token,
         'email': '',
         'name': '',
         'running_pipeline': None,
@@ -55,7 +56,7 @@ def signup(request):
             overrides['running_pipeline'] = running_pipeline
             overrides['selected_provider'] = current_provider
             context.update(overrides)
-    print (context)
+
     return render_to_response('register.html', context)
 
 
