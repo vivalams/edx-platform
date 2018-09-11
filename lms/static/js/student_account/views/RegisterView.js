@@ -143,9 +143,11 @@
                                     return _.map(
                                         errorList,
                                         function(errorItem) {
-                                            if (errorItem.user_message === 'Full Name'){
-                                                var fullnameErrorMsg = gettext("Please ensure your Microsoft account contains both a first name and last name on your <a href='https://account.microsoft.com'>account settings</a> prior to registering for this site.");
-                                                return '<li>' + fullnameErrorMsg + '</li>';
+                                            if (errorItem.user_message === 'Full Name') {
+                                                return "<li>Please ensure your Microsoft account contains both" +
+                                                    " a first name and last name on your " +
+                                                    "<a href='https://account.microsoft.com'>account settings</a>" +
+                                                    " prior to registering for this site.</li>";
                                             }
                                             return '<li>' + errorItem.user_message + '</li>';
                                         }
