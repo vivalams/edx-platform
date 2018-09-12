@@ -17,9 +17,19 @@ urlpatterns = [
         views.CourseGradesView.as_view(), name='course_grades'
     ),
     url(
+        r'^course_modules/$',
+        views.CourseDetailedGradesView.as_view(), name='course_modules'
+    ),
+    url(
+        r'^course_modules/{course_id}/$'.format(
+            course_id=settings.COURSE_ID_PATTERN,
+        ),
+        views.CourseDetailedGradesView.as_view(), name='course_modules'
+    ),
+    url(
         r'^policy/courses/{course_id}/$'.format(
             course_id=settings.COURSE_ID_PATTERN,
         ),
         CourseGradingPolicy.as_view(), name='course_grading_policy'
     ),
-]
+] 

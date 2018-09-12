@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>Employabulity Home Page</h1>
+
+<p>EXPLORE COURSES  {{ user }} </p>
+<ul>
+  {% for link in courseslist %}
+    <li><a href= {{ link }} > {{ link }}</a> </li>
+  {% endfor %}
+
+<ul>
+{% for each in imagelist  %}
+
+
+  <li> <img src= {{ each }} alt= {{ each  }} width="200" height="200"> </li>
+{% endfor %}
+</ul>
+</body>
+</html>

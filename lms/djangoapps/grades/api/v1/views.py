@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
-
+from django.contrib.auth.models import User
 from edx_rest_framework_extensions import permissions
 from edx_rest_framework_extensions.authentication import JwtAuthentication
 from enrollment import data as enrollment_data
@@ -20,8 +20,8 @@ from openedx.core.lib.api.authentication import (
 )
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin
 from student.models import CourseEnrollment
-
-
+from courseware.courses import get_course_with_access, get_course
+from xmodule.modulestore.django import modulestore
 log = logging.getLogger(__name__)
 USER_MODEL = get_user_model()
 
@@ -77,6 +77,39 @@ class GradeViewMixin(DeveloperErrorViewMixin):
                 grade_responses.append(self._make_grade_response(user, course_key, course_grade))
 
         return Response(grade_responses)
+    def _get_user_detailedgrades(self,course_key):
+        enrollments_in_course = enrollment_data.get_user_enrollments(course_key)
+
+        paged_enrollments = self.paginator.paginate_queryset(
+            enrollments_in_course, self.request, view=self
+        )
+        users = (enrollment.user for enrollment in paged_enrollments)
+        #grades = CourseGradeFactory().iter(users, course_key=course_key)
+        #course_key = CourseKey.from_string(course_id)
+        course = get_course(course_key, depth=None)
+        enrolled_students = User.objects.filter(
+            courseenrollment__course_id=course_key,
+            courseenrollment__is_active=1
+        ).order_by('username').select_related("profile")
+
+        with modulestore().bulk_operations(course.location.course_key):
+            student_info = [
+                {
+                    'username': student.username,
+                    'id': student.id,
+                    'email': student.email,
+                    'grade_summary': CourseGradeFactory().read(student, course).summary
+                }
+                for student in enrolled_students
+            ]   
+ 
+        #grade_responses = []
+        #for user, course_grade, exc in grades:
+        #    if not exc:
+        #        grade_responses.append(self._make_grade_response(user, course_key, course_grade))
+
+        return Response(student_info)
+
 
     def _make_grade_response(self, user, course_key, course_grade):
         """
@@ -99,6 +132,57 @@ class GradeViewMixin(DeveloperErrorViewMixin):
         if request.user.is_anonymous():
             raise AuthenticationFailed
 
+class CourseDetailedGradesView(GradeViewMixin, GenericAPIView):
+    def get(self, request, course_id=None):
+        """
+        Gets a course progress status.
+        Args:
+            request (Request): Django request object.
+            course_id (string): URI element specifying the course location.
+                                Can also be passed as a GET parameter instead.
+        Return:
+            A JSON serialized representation of the requesting user's current grade status.
+        """
+        username = request.GET.get('username')
+
+        if not course_id:
+            course_id = request.GET.get('course_id')
+
+        try:
+            course_key = CourseKey.from_string(course_id)
+        except InvalidKeyError:
+            raise self.api_error(
+                status_code=status.HTTP_404_NOT_FOUND,
+                developer_message='The provided course key cannot be parsed.',
+                error_code='invalid_course_key'
+            )
+
+        if not CourseOverview.get_from_id_if_exists(course_key):
+            raise self.api_error(
+                status_code=status.HTTP_404_NOT_FOUND,
+                developer_message="Requested grade for unknown course {course}".format(course=course_id),
+                error_code='course_does_not_exist'
+            )
+
+        if username:
+            # If there is a username passed, get grade for a single user
+            try:
+                return self._get_single_user_grade(request, course_key)
+            except USER_MODEL.DoesNotExist:
+                raise self.api_error(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    developer_message='The user matching the requested username does not exist.',
+                    error_code='user_does_not_exist'
+                )
+            except CourseEnrollment.DoesNotExist:
+                raise self.api_error(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    developer_message='The user matching the requested username is not enrolled in this course',
+                    error_code='user_not_enrolled'
+                )
+        else:
+            # If no username passed, get paginated list of grades for all users in course
+            return self._get_user_detailedgrades(course_key)
 
 class CourseGradesView(GradeViewMixin, GenericAPIView):
     """

@@ -93,6 +93,7 @@ def get_grade_book_page(request, course, course_key):
             }
             for student in enrolled_students
         ]
+    print(student_info)
     return student_info, page
 
 
@@ -108,7 +109,9 @@ def spoc_gradebook(request, course_id):
     course_key = CourseKey.from_string(course_id)
     course = get_course_with_access(request.user, 'staff', course_key, depth=None)
     student_info, page = get_grade_book_page(request, course, course_key)
-
+    print('****************************************************************************************************')
+    print((course.grade_cutoffs.items()))
+    print('#####################################################################################################')
     return render_to_response('courseware/gradebook.html', {
         'page': page,
         'page_url': reverse('spoc_gradebook', kwargs={'course_id': unicode(course_key)}),
