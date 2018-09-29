@@ -101,3 +101,12 @@ providers = provider.Registry.displayed_for_login()
     }
   </script>
 </%block>
+
+<%block name="jsextra">
+  <script type="text/javascript">
+    function thirdPartySignin(event, url) {
+      event.preventDefault();
+      window.location.href = url;
+    }
+  </script>
+</%block>
