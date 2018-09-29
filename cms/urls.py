@@ -78,11 +78,7 @@ urlpatterns = [
     url(r'^signup$', contentstore.views.signup, name='signup'),
     url(r'^register$', contentstore.views.signup),
     url(r'^signin$', contentstore.views.login_page, name='login'),
-<<<<<<< HEAD
     url(r'^login$', contentstore.views.login_page, name='login1'),
-=======
-    url(r'^login$', contentstore.views.login_page),
->>>>>>> c711fe0a4b... Add third-party-auth to CMS (#309)
     url(r'^request_course_creator$', contentstore.views.request_course_creator, name='request_course_creator'),
     url(r'^course_team/{}(?:/(?P<email>.+))?$'.format(COURSELIKE_KEY_PATTERN),
         contentstore.views.course_team_handler, name='course_team_handler'),
@@ -150,6 +146,10 @@ urlpatterns = [
         contentstore.views.textbooks_detail_handler, name='textbooks_detail_handler'),
     url(r'^videos/{}(?:/(?P<edx_video_id>[-\w]+))?$'.format(settings.COURSE_KEY_PATTERN),
         contentstore.views.videos_handler, name='videos_handler'),
+    url(r'^videos/{}/encrypt(?:/(?P<edx_video_id>[-\w]+))?$'.format(settings.COURSE_KEY_PATTERN),
+        contentstore.views.video_encrypt, name='video_encrypt'),
+    url(r'^videos/{}/data(?:/(?P<edx_video_id>[-\w]+))?$'.format(settings.COURSE_KEY_PATTERN),
+        contentstore.views.video_data_handler, name='video_data_handler'),
     url(r'^video_images/{}(?:/(?P<edx_video_id>[-\w]+))?$'.format(settings.COURSE_KEY_PATTERN),
         contentstore.views.video_images_handler, name='video_images_handler'),
     url(r'^transcript_preferences/{}$'.format(settings.COURSE_KEY_PATTERN),
