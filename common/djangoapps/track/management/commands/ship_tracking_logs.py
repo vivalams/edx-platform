@@ -19,41 +19,58 @@ class Command(BaseCommand):
         manage.py ... create_user -e test@example.com -p insecure -c edX/Open_DemoX/edx_demo_course -m verified
     """
 
-    option_list = BaseCommand.option_list + (
-        make_option('-p', '--path',
-            metavar='PATH',
-            dest='path',
-            default='/edx/var/log/tracking',
-            help='where to find the tracking logs',
-        ),
-        make_option('-c', '--container',
-                    metavar='CONTAINER',
-                    dest='container',
-                    default=None,
-                    help='Which container/bucket to use'),
-        make_option('-f', '--folder',
-                    metavar='FOLDER',
-                    dest='folder',
-                    default=None,
-                    help='Which folder to put the files in'),
-        make_option('-s', '--storage',
-                    metavar='STORAGE',
-                    dest='storage',
-                    # default to Azure blob storage
-                    default='openedx.core.storage.AzureStorageExtended',
-                    help='Which storage class to use'),
-        make_option('-o', '--overwrite',
-            metavar='OVERWRITE',
-            dest='overwrite',
-            default=False,
-            help='Overwrite existing files in remote storage'),
-        make_option('-d', '--delete',
-            metavar='DELETE',
-            dest='delete',
-            default=False,
-            help='delete files already uploaded',
-        )
-    )
+    def add_arguments(self, parser):
+
+	parser.add_argument(
+		'--path',
+		'-p',
+		dest='path',
+		default='/edx/var/log/tracking',
+		help='where to find the tracking logs',
+	)
+
+	parser.add_argument(
+		'--container',
+		'-c',
+		dest='container',
+		default=None,
+		help='Which container/bucket to use',
+	)
+
+	parser.add_argument(
+		'--folder',
+		'-f',
+		dest='folder',
+		default=None,
+		help='Which folder to put the files in'
+	)
+
+	parser.add_argument(
+		'--storage',
+		'-s',
+		dest='storage',
+		# default to Azure blob storage
+		default='openedx.core.storage.AzureStorageExtended',
+		help='Which storage class to use'
+	)
+
+	parser.add_argument(
+		'--overwrite',
+		'-o',
+		action='store_true',
+		dest='overwrite',
+		default=False,
+		help='Overwrite existing files in remote storage'
+	)
+
+	parser.add_argument(
+		'--delete',
+		'-d',
+		action='store_true',
+		dest='delete',
+		default=False,
+		help='delete files already uploaded',
+	)
 
     def handle(self, *args, **options):
         storage_class = options['storage']
@@ -76,12 +93,14 @@ class Command(BaseCommand):
                 try:
                     dest_fn = '{}/{}'.format(folder, file)
                     exists = storage.exists(dest_fn)
+
                     # does it already exist? Don't overwrite
                     if not exists or overwrite:
                         # even if we overwrite, don't do so if filesize has not
                         # changed
-                        if overwrite:
+                        if overwrite and exists:
                             remote_size = storage.size(dest_fn)
+
                             local_size = stat(local_path).st_size
                             print '{} {}'.format(remote_size, local_size)
                             if long(remote_size) == long(local_size):
