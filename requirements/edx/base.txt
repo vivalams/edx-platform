@@ -106,7 +106,7 @@ django-splash==0.2.2
 django-statici18n==1.4.0
 #django-storages==1.7.1
 # Interim fix for azure storage integration with django-storages
-git+https://github.com/eltoncarr/django-storages.git@oxa/eltonc.haw_azurestoragefix#egg=django-storages    
+git+https://github.com/eltoncarr/django-storages.git@eltonc/support_kwargs_azure_storage#egg=django-storages    
 django-user-tasks==0.1.5
 django-waffle==0.12.0
 django-webpack-loader==0.6.0
