@@ -230,7 +230,7 @@ def users_social_auth_mapping(request):
         usersocialauth = UserSocialAuth.objects.get(uid=uid, provider=provider)
     except UserSocialAuth.DoesNotExist:
         raise Http404
-     user_id = usersocialauth.user_id
+    user_id = usersocialauth.user_id
     try:
         usersocialauth_mapping = UserSocialAuthMapping(uid=uid, puid=puid, user_id=user_id)
         usersocialauth_mapping.save()
