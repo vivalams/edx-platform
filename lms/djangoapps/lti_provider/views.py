@@ -216,7 +216,7 @@ def users_social_auth_mapping(request):
      # Check the OAuth signature on the message
     if not SignatureValidator(lti_consumer).verify(request):
         return HttpResponseForbidden()
-     provider = params["provider"]
+    provider = params["provider"]
     uid = params["uid"]
     puid = params["puid"]
      # First verify the mapping is already exist sanity check
