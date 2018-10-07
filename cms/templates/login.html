@@ -92,7 +92,7 @@ providers = provider.Registry.displayed_for_login()
 
 <%block name="jsextra">
   <script type="text/javascript">
-    if ('${third_party_auth.is_enabled()}' && '${providers}'){
+    if ('${third_party_auth.is_enabled()}' == 'True' && '${len(providers)}' > 0){
         var azureUrl='${pipeline.get_login_url(providers[0].provider_id, pipeline.AUTH_ENTRY_LOGIN, redirect_url=reverse("home"))}';
         if(azureUrl.includes('azuread-oauth2')){
             window.location.href = azureUrl;
