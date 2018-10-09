@@ -3,12 +3,15 @@ Django storage backends for Open edX.
 """
 
 import pytz
+
+from azure.storage import AccessPolicy
 from datetime import datetime, timedelta
 from django.contrib.staticfiles.storage import StaticFilesStorage, CachedFilesMixin
 from django.core.files.storage import get_storage_class
 from django.utils.lru_cache import lru_cache
 from pipeline.storage import NonPackagingMixin, PipelineCachedStorage, PipelineMixin
 from require.storage import OptimizedFilesMixin
+from storages.backends.azure_storage import AzureStorage
 from storages.backends.s3boto import S3BotoStorage
 
 from openedx.core.djangoapps.theming.storage import ThemeCachedFilesMixin, ThemePipelineMixin, ThemeStorage
@@ -27,10 +30,6 @@ class PipelineForgivingStorage(PipelineCachedStorage):
             # some packages have missing files in their css all the time.
             out = name
         return out
-
-
-from storages.backends.azure_storage import AzureStorage
-from azure.storage.common import AccessPolicy
 
 class ProductionStorage(
         PipelineForgivingStorage,
