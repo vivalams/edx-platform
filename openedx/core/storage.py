@@ -4,7 +4,7 @@ Django storage backends for Open edX.
 
 import pytz
 
-from azure.storage import AccessPolicy
+from azure.storage.common import AccessPolicy
 from datetime import datetime, timedelta
 from django.contrib.staticfiles.storage import StaticFilesStorage, CachedFilesMixin
 from django.core.files.storage import get_storage_class
