@@ -14,7 +14,8 @@ from .accounts.views import (
     AccountRetirementView,
     AccountViewSet,
     DeactivateLogoutView,
-    LMSAccountRetirementView
+    LMSAccountRetirementView,
+    LockAccountView
 )
 from .preferences.views import PreferencesDetailView, PreferencesView
 from .verification_api.views import IDVerificationStatusView
@@ -98,6 +99,11 @@ urlpatterns = [
         r'^v1/accounts/deactivate_logout/$',
         DeactivateLogoutView.as_view(),
         name='deactivate_logout'
+    ),
+    url(
+        r'^v1/accounts/{}/lock_account/$'.format(settings.USERNAME_PATTERN),
+        LockAccountView.as_view(),
+        name='lock_account'
     ),
     url(
         r'^v1/accounts/{}/verification_status/$'.format(settings.USERNAME_PATTERN),

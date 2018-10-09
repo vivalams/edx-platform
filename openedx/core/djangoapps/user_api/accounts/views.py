@@ -376,6 +376,62 @@ class AccountRetireMailingsView(APIView):
             return Response(text_type(exc), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+class LockAccountView(APIView):
+    """
+    Lock Account for Retirement viewset. Currently only supports POST requests.
+
+    """
+    authentication_classes = (JwtAuthentication, )
+    permission_classes = (permissions.IsAuthenticated, CanRetireUser)
+
+    def post(self, request, username):
+        """
+        POST /api/user/v1/accounts/{username}/lock_account/
+        """
+        try:
+            user = User.objects.get(username=username)
+            with transaction.atomic():
+                UserRetirementStatus.create_retirement(user)
+                # Unlink LMS social auth accounts
+                UserSocialAuth.objects.filter(user_id=user.id).delete()
+                # Change LMS password & email
+                user_email = user.email
+                user.email = get_retired_email_by_email(user.email)
+                user.save()
+                _set_unusable_password(user)
+                # TODO: Unlink social accounts & change password on each IDA.
+                # Remove the activation keys sent by email to the user for account activation.
+                Registration.objects.filter(user=user).delete()
+                # Add user to retirement queue.
+                # Delete OAuth tokens associated with the user.
+                retire_dop_oauth2_models(user)
+                retire_dot_oauth2_models(user)
+
+                try:
+                    # Send notification email to user
+                    site = Site.objects.get_current()
+                    notification_context = get_base_template_context(site)
+                    notification_context.update({'full_name': user.profile.name})
+                    notification = DeletionNotificationMessage().personalize(
+                        recipient=Recipient(username='', email_address=user_email),
+                        language=user.profile.language,
+                        user_context=notification_context,
+                    )
+                    ace.send(notification)
+                except Exception as exc:
+                    log.exception('Error sending out deletion notification email')
+                    raise
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except KeyError:
+            return Response(u'Username not specified.', status=status.HTTP_404_NOT_FOUND)
+        except User.DoesNotExist:
+            return Response(
+                u'The user "{}" does not exist.'.format(username), status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            return Response(text_type(exc), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class DeactivateLogoutView(APIView):
     """
     POST /api/user/v1/accounts/deactivate_logout/
