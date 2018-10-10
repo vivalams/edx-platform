@@ -93,16 +93,15 @@ auto_login_enabled = configuration_helpers.get_value('ENABLE_AUTO_LOGIN', False)
 </%block>
 
 <%block name="jsextra">
-
-% if third_party_auth.is_enabled() and providers:
-  % if auto_login_enabled is True and static.get_value('ONLY_THIRD_PARTY_AUTH', settings.FEATURES.get('ONLY_THIRD_PARTY_AUTH', False)) and len(providers) == 1:
+% if (auto_login_enabled is True and third_party_auth.is_enabled() and \
+static.get_value('ONLY_THIRD_PARTY_AUTH', settings.FEATURES.get('ONLY_THIRD_PARTY_AUTH', False)) and \
+providers and len(providers) == 1):
     % for enabled in providers:
       <script type="text/javascript">
         var loginUrl='${pipeline.get_login_url(enabled.provider_id, pipeline.AUTH_ENTRY_LOGIN, redirect_url=reverse("home"))}';
         window.location.href = loginUrl;
       </script>
     % endfor
-  % endif
 % endif
   <script type="text/javascript">
     function thirdPartySignin(event, url) {
