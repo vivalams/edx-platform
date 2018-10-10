@@ -1288,7 +1288,7 @@ def login_user(request, error=""):  # pylint: disable=too-many-statements,unused
 
     if msa_migration_enabled:
         if msa_migration_pipeline_status in ('EMAIL_LOOKUP', 'REGISTER_NEW_USER'):
-            login_restricted_domain = configuration_helpers.get_value('LOGIN_RESTRICTED_DOMAIN')
+            login_restricted_domain = configuration_helpers.get_value('LOGIN_RESTRICTED_DOMAIN','@microsoft.com')
             if user_found_by_email_lookup and login_restricted_domain not in user.email:
                 # User has already migrated to Microsoft account (MSA),
                 # redirect them through that flow.
