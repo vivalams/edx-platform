@@ -587,6 +587,7 @@ def course_index(request, course_key):
         if not course_module:
             raise Http404
         lms_link = get_lms_link_for_item(course_module.location)
+        preview_lms_link = get_lms_link_for_item(course_module.location, preview=True)
         reindex_link = None
         if settings.FEATURES.get('ENABLE_COURSEWARE_INDEX', False):
             reindex_link = "/course/{course_id}/search_reindex".format(course_id=unicode(course_key))
@@ -607,6 +608,7 @@ def course_index(request, course_key):
         return render_to_response('course_outline.html', {
             'context_course': course_module,
             'lms_link': lms_link,
+            'preview_lms_link': preview_lms_link,
             'sections': sections,
             'course_structure': course_structure,
             'initial_state': course_outline_initial_state(locator_to_show, course_structure) if locator_to_show else None,
@@ -657,6 +659,7 @@ def _remove_in_process_courses(courses, in_process_course_actions):
             'course_key': unicode(course.location.course_key),
             'url': reverse_course_url('course_handler', course.id),
             'lms_link': get_lms_link_for_item(course.location),
+            'preview_lms_link': get_lms_link_for_item(course.location, preview=True),
             'rerun_link': _get_rerun_link_for_item(course.id),
             'org': course.display_org_with_default,
             'number': course.display_number_with_default,
