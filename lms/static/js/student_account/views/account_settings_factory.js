@@ -89,7 +89,7 @@
                 };
             } else if (msaEnabled) {
                 emailFieldView = {
-                    view: new AccountSettingsFieldViews.EmailFieldView(msaemailFieldData)
+                    view: new AccountSettingsFieldViews.ReadonlyFieldView(msaemailFieldData)
                 };
             } else {
                 emailFieldView = {
@@ -123,7 +123,7 @@
                 };
             } else if (msaEnabled){
                 fullnameFieldView = {
-                    view: new AccountSettingsFieldViews.TextFieldView(msafullNameFieldData)
+                    view: new AccountSettingsFieldViews.ReadonlyFieldView(msafullNameFieldData)
                 };
             } else {
                 fullnameFieldView = {
