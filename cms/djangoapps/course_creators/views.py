@@ -3,6 +3,7 @@ Methods for interacting programmatically with the user creator table.
 """
 from course_creators.models import CourseCreator
 from student.roles import CourseCreatorRole
+from student.models import CourseAccessRole
 from student import auth
 
 
@@ -78,6 +79,18 @@ def user_requested_access(user):
     if user.state != CourseCreator.GRANTED:
         user.state = CourseCreator.PENDING
         user.save()
+
+
+def is_course_author(user):
+    """
+    Check if user is Course Author of any course
+
+    """
+    user_is_course_staff = CourseAccessRole.objects.filter(user_id=user.id).exists()
+    if user_is_course_staff:
+        return True
+    else:
+        return False
 
 
 def _add_user(user, state):
