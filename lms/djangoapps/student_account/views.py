@@ -133,6 +133,8 @@ def login_and_registration_form(request, initial_mode="login"):
         } for message in messages.get_messages(request) if 'account-activation' in message.tags
     ]
 
+    enable_msa_migration = configuration_helpers.get_value("ENABLE_MSA_MIGRATION")
+
     # Otherwise, render the combined login/registration page
     context = {
         'data': {
@@ -146,7 +148,7 @@ def login_and_registration_form(request, initial_mode="login"):
                 'PASSWORD_RESET_SUPPORT_LINK', settings.PASSWORD_RESET_SUPPORT_LINK
             ) or settings.SUPPORT_SITE_LINK,
             'account_activation_messages': account_activation_messages,
-
+            'enable_msa_migration': enable_msa_migration,
             # Include form descriptions retrieved from the user API.
             # We could have the JS client make these requests directly,
             # but we include them in the initial page load to avoid
@@ -605,3 +607,4 @@ def account_settings_context(request):
         } for state in auth_states if state.provider.display_for_login or state.has_account]
 
     return context
+

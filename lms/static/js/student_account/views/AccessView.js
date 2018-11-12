@@ -52,9 +52,6 @@
 
                     this.thirdPartyAuthHint = options.third_party_auth_hint || null;
 
-                    // Account activation messages
-                    this.accountActivationMessages = options.account_activation_messages || [];
-
                     if (options.login_redirect_url) {
                     // Ensure that the next URL is internal for security reasons
                         if (! window.isExternal(options.login_redirect_url)) {
@@ -72,11 +69,8 @@
 
                     this.platformName = options.platform_name;
                     this.supportURL = options.support_link;
-                    this.passwordResetSupportUrl = options.password_reset_support_link;
-                    this.createAccountOption = options.account_creation_allowed;
-                    this.hideAuthWarnings = options.hide_auth_warnings || false;
-                    this.pipelineUserDetails = options.third_party_auth.pipeline_user_details;
-                    this.enterpriseName = options.enterprise_name || '';
+                    this.msaMigrationEnabled = options.enable_msa_migration;
+                    this.msa_migration_pipeline_status = null;
 
                 // The login view listens for 'sync' events from the reset model
                     this.resetModel = new PasswordResetModel({}, {
@@ -89,10 +83,6 @@
                 // Once the third party error message has been shown once,
                 // there is no need to show it again, if the user changes mode:
                     this.thirdPartyAuth.errorMessage = null;
-
-                    // Once the account activation messages have been shown once,
-                    // there is no need to show it again, if the user changes mode:
-                    this.accountActivationMessages = [];
                 },
 
                 render: function() {
@@ -110,6 +100,7 @@
                     if (Backbone.history.getHash() === 'forgot-password-modal') {
                         this.resetPassword();
                     }
+
                     this.loadForm(this.activeForm);
                 },
 
@@ -122,7 +113,9 @@
                     login: function(data) {
                         var model = new LoginModel({}, {
                             method: data.method,
-                            url: data.submit_url
+                            url: data.submit_url,
+                            msaMigrationEnabled: this.msaMigrationEnabled,
+                            msa_migration_pipeline_status: this.msa_migration_pipeline_status
                         });
 
                         this.subview.login = new LoginView({
@@ -130,14 +123,9 @@
                             model: model,
                             resetModel: this.resetModel,
                             thirdPartyAuth: this.thirdPartyAuth,
-                            accountActivationMessages: this.accountActivationMessages,
                             platformName: this.platformName,
                             supportURL: this.supportURL,
-                            passwordResetSupportUrl: this.passwordResetSupportUrl,
-                            createAccountOption: this.createAccountOption,
-                            hideAuthWarnings: this.hideAuthWarnings,
-                            pipelineUserDetails: this.pipelineUserDetails,
-                            enterpriseName: this.enterpriseName
+                            msaMigrationEnabled: this.msaMigrationEnabled
                         });
 
                     // Listen for 'password-help' event to toggle sub-views
@@ -174,7 +162,7 @@
                             model: model,
                             thirdPartyAuth: this.thirdPartyAuth,
                             platformName: this.platformName,
-                            hideAuthWarnings: this.hideAuthWarnings
+                            msaMigrationEnabled: this.msaMigrationEnabled
                         });
 
                     // Listen for 'auth-complete' event so we can enroll/redirect the user appropriately.
@@ -222,8 +210,7 @@
                 toggleForm: function(e) {
                     var type = $(e.currentTarget).data('type'),
                         $form = $('#' + type + '-form'),
-                        scrollX = window.scrollX,
-                        scrollY = window.scrollY,
+                        $anchor = $('#' + type + '-anchor'),
                         queryParams = url('?'),
                         queryStr = queryParams.length > 0 ? '?' + queryParams : '';
 
@@ -242,6 +229,7 @@
                     this.element.hide($(this.el).find('.submission-success'));
                     this.element.hide($(this.el).find('.form-wrapper'));
                     this.element.show($form);
+                    this.element.scrollTop($anchor);
 
                 // Update url without reloading page
                     if (type != 'institution_login') {
@@ -251,9 +239,6 @@
 
                 // Focus on the form
                     $('#' + type).focus();
-
-               // Maintain original scroll position
-                    window.scrollTo(scrollX, scrollY);
                 },
 
             /**
@@ -308,3 +293,4 @@
             });
         });
 }).call(this, define || RequireJS.define);
+
