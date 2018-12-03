@@ -8,7 +8,7 @@ from __future__ import absolute_import
 import json
 import logging
 import re
-
+from social_core.utils import setting_name
 from config_models.models import ConfigurationModel, cache
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -32,7 +32,10 @@ from .lti import LTI_PARAMS_KEY, LTIAuthBackend
 from .saml import STANDARD_SAML_PROVIDER_KEY, get_saml_idp_choices, get_saml_idp_class
 
 log = logging.getLogger(__name__)
-
+USER_MODEL = getattr(settings, setting_name('USER_MODEL'), None) or \
+    getattr(settings, 'AUTH_USER_MODEL', None) or \
+    'auth.User'
+UID_LENGTH = getattr(settings, setting_name('UID_LENGTH'), 255)
 REGISTRATION_FORM_FIELD_BLACKLIST = [
     'name',
     'username'
@@ -826,3 +829,17 @@ class ProviderApiPermissions(models.Model):
         app_label = "third_party_auth"
         verbose_name = "Provider API Permission"
         verbose_name_plural = verbose_name + 's'
+
+
+class UserSocialAuthMapping(models.Model):
+    """
+    Mapping table for user social auth and puid
+    """
+    user = models.ForeignKey(USER_MODEL, related_name='third_party_auth')
+    uid = models.CharField(max_length=UID_LENGTH)
+    puid = models.CharField(max_length=200)
+
+    class Meta(object):
+        app_label = "third_party_auth"
+        unique_together = ('uid', 'puid')
+        db_table = 'third_party_auth_social_auth_mapping'

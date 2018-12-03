@@ -8,7 +8,7 @@ import datetime
 import logging
 import uuid
 import warnings
-from urlparse import parse_qs, urlsplit, urlunsplit
+from urlparse import parse_qs, urlsplit, urlunsplit, urljoin
 
 import analytics
 import edx_oauth2_provider
@@ -70,6 +70,7 @@ from student.models import (
 )
 from student.helpers import authenticate_new_user, do_create_account
 from third_party_auth import pipeline, provider
+from third_party_auth.models import UserSocialAuthMapping, OAuth2ProviderConfig
 from util.json_request import JsonResponse
 
 log = logging.getLogger("edx.student")
@@ -736,7 +737,7 @@ class LogoutView(TemplateView):
     template_name = 'logout.html'
 
     # Keep track of the page to which the user should ultimately be redirected.
-    default_target = reverse_lazy('cas-logout') if settings.FEATURES.get('AUTH_USE_CAS') else '/'
+    default_target = reverse_lazy('cas-logout') if settings.FEATURES.get('AUTH_USE_CAS') else '/login'
 
     @property
     def target(self):
@@ -753,6 +754,18 @@ class LogoutView(TemplateView):
             return self.default_target
 
     def dispatch(self, request, *args, **kwargs):  # pylint: disable=missing-docstring
+
+        # If this is from the MSA migration confirmation page,
+        # only log the user out of their Microsoft account
+        is_true = lambda value: bool(value) and value.lower() not in ('false', '0')
+        msa_only = is_true(request.GET.get('msa_only'))
+        auto_link = is_true(request.GET.get('auto_link'))
+        msa_registration = is_true(request.GET.get('msa_registration'))
+        msa_migration_enabled = configuration_helpers.get_value("ENABLE_MSA_MIGRATION")
+
+        if msa_only and third_party_auth.is_enabled() and msa_migration_enabled:
+            return self._do_microsoft_account_logout(request, msa_only=msa_only, auto_link=auto_link)
+
         # We do not log here, because we have a handler registered to perform logging on successful logouts.
         request.is_from_logout = True
 
@@ -769,6 +782,10 @@ class LogoutView(TemplateView):
 
         # Clear the cookie used by the edx.org marketing site
         delete_logged_in_cookies(response)
+
+        if third_party_auth.is_enabled() and msa_migration_enabled:
+            # If this was a normal logout request, also log the user out of their Microsoft Account
+            return self._do_microsoft_account_logout(request)
 
         return response
 
@@ -787,6 +804,32 @@ class LogoutView(TemplateView):
         query_params['no_redirect'] = 1
         new_query_string = urlencode(query_params, doseq=True)
         return urlunsplit((scheme, netloc, path, new_query_string, fragment))
+
+    def _do_microsoft_account_logout(self, request, msa_only=False, auto_link=False):
+        """
+        Log the user out of Microsoft Account. Only applicable during MSA_MIGRATION
+        Args:
+            request: Logout request object
+            msa_only:
+                Whether to only log the user out of their Microsoft Account
+                or to do a full logout
+        Returns:
+            HttpResponseRedirect
+        """
+        provider = OAuth2ProviderConfig.current("live")
+        client_id = provider.get_setting("KEY")
+        lms_root_url = configuration_helpers.get_value('LMS_ROOT_URL')
+
+        if msa_only:
+            redirect_url = '{}/account/link'.format(lms_root_url)
+            if auto_link:
+                redirect_url += '?{}'.format(urlencode({'auto': True}))
+        else:
+            redirect_url = lms_root_url
+            next_url = request.GET.get('next')
+            if next_url:
+                redirect_url = urljoin(redirect_url, next_url)
+        return redirect("https://login.live.com/oauth20_logout.srf?client_id={}&redirect_uri={}".format(client_id, redirect_url))
 
     def get_context_data(self, **kwargs):
         context = super(LogoutView, self).get_context_data(**kwargs)
