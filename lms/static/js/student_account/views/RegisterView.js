@@ -25,7 +25,8 @@
                     'click .login-provider': 'thirdPartyAuth',
                     'click input[required][type="checkbox"]': 'liveValidateHandler',
                     'blur input[required], textarea[required], select[required]': 'liveValidateHandler',
-                    'focus input[required], textarea[required], select[required]': 'handleRequiredInputFocus'
+                    'focus input[required], textarea[required], select[required]': 'handleRequiredInputFocus',
+                    'click .login-provider-msa-migration': 'thirdPartyAuth'
                 },
                 liveValidationFields: [
                     'name',
@@ -50,6 +51,7 @@
                 negativeValidationEnabled: true,
 
                 preRender: function(data) {
+
                     this.providers = data.thirdPartyAuth.providers || [];
                     this.hasSecondaryProviders = (
                         data.thirdPartyAuth.secondaryProviders && data.thirdPartyAuth.secondaryProviders.length
@@ -63,7 +65,7 @@
                     this.autoRegisterWelcomeMessage = data.thirdPartyAuth.autoRegisterWelcomeMessage || '';
                     this.registerFormSubmitButtonText =
                         data.thirdPartyAuth.registerFormSubmitButtonText || _('Create Account');
-
+                    this.msaMigrationEnabled = data.msaMigrationEnabled;
                     this.listenTo(this.model, 'sync', this.saveSuccess);
                     this.listenTo(this.model, 'validation', this.renderLiveValidations);
                 },
@@ -147,17 +149,47 @@
                             hasSecondaryProviders: this.hasSecondaryProviders,
                             platformName: this.platformName,
                             autoRegisterWelcomeMessage: this.autoRegisterWelcomeMessage,
-                            registerFormSubmitButtonText: this.registerFormSubmitButtonText
+                            registerFormSubmitButtonText: this.registerFormSubmitButtonText,
+                            msaMigrationEnabled: this.msaMigrationEnabled
                         }
                     }));
 
                     this.postRender();
 
+                    if (this.msaMigrationEnabled) {
+                        // Hide all form content except the login-providers div.
+                        // We need to force users to register with their
+                        // Microsoft account
+
+
+                        if (!this.currentProvider) {
+                            this.$form.children()
+                                .slice(1)
+                                .attr('aria-hidden', 'true')
+                                .hide();
+                        }
+                        $(this.$el)
+                            .find('.toggle-form')
+                            .attr('aria-hidden', 'true')
+                            .hide();
+
+                    // Don't allow user to edit email or name
+                    this.$form.find('#register-email, #register-name').prop('disabled', true).addClass('disabled');
+                    }
+
                     // Must be called after postRender, since postRender sets up $formFeedback.
                     if (this.errorMessage) {
                         this.renderErrors(formErrorsTitle, [this.errorMessage]);
-                    } else if (this.currentProvider && !this.hideAuthWarnings) {
+                    } else if (this.currentProvider) {
                         this.renderAuthWarning();
+                        // Don't allow user to edit email or name
+                        this.$form.find('#register-email, #register-name').prop('disabled', true).addClass('disabled');
+                        if (jQuery.trim($('#register-name').val()).length === 0) {
+                            this.renderErrors(formErrorsTitle, ['<li>Full name is required.</li>',
+                                '<li>Please ensure your Microsoft account contains both a first name and last name on your <a href="https://account.microsoft.com" target="_blank">account settings</a> prior to registering for this site.</li>']); // eslint-disable-line max-len
+                            this.$form.find('label[for=register-name], #register-name').addClass('error');
+                            this.toggleDisableButton(true);
+                        }
                     }
 
                     if (this.autoSubmit) {
@@ -414,6 +446,11 @@
 
                 thirdPartyAuth: function(event) {
                     var providerUrl = $(event.currentTarget).data('provider-url') || '';
+
+                    // take user consent for writing non-essential cookies
+                    if (window.mscc) {
+                        window.mscc.setConsent();
+                    }
 
                     if (providerUrl) {
                         window.location.href = providerUrl;

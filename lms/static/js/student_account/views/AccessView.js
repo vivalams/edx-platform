@@ -77,7 +77,7 @@
                     this.hideAuthWarnings = options.hide_auth_warnings || false;
                     this.pipelineUserDetails = options.third_party_auth.pipeline_user_details;
                     this.enterpriseName = options.enterprise_name || '';
-
+                    this.msaMigrationEnabled = options.enable_msa_migration;
                 // The login view listens for 'sync' events from the reset model
                     this.resetModel = new PasswordResetModel({}, {
                         method: 'GET',
@@ -122,7 +122,8 @@
                     login: function(data) {
                         var model = new LoginModel({}, {
                             method: data.method,
-                            url: data.submit_url
+                            url: data.submit_url,
+                            msaMigrationEnabled: this.msaMigrationEnabled,
                         });
 
                         this.subview.login = new LoginView({
@@ -137,7 +138,8 @@
                             createAccountOption: this.createAccountOption,
                             hideAuthWarnings: this.hideAuthWarnings,
                             pipelineUserDetails: this.pipelineUserDetails,
-                            enterpriseName: this.enterpriseName
+                            enterpriseName: this.enterpriseName,
+                            msaMigrationEnabled: this.msaMigrationEnabled,
                         });
 
                     // Listen for 'password-help' event to toggle sub-views
@@ -174,7 +176,8 @@
                             model: model,
                             thirdPartyAuth: this.thirdPartyAuth,
                             platformName: this.platformName,
-                            hideAuthWarnings: this.hideAuthWarnings
+                            hideAuthWarnings: this.hideAuthWarnings,
+                            msaMigrationEnabled: this.msaMigrationEnabled,
                         });
 
                     // Listen for 'auth-complete' event so we can enroll/redirect the user appropriately.

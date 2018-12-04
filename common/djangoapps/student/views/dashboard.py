@@ -54,6 +54,8 @@ from student.models import (
 )
 from util.milestones_helpers import get_pre_requisite_courses_not_completed
 from xmodule.modulestore.django import modulestore
+from social_django.models import UserSocialAuth
+from third_party_auth.models import UserSocialAuthMapping, OAuth2ProviderConfig
 
 log = logging.getLogger("edx.student")
 
@@ -547,6 +549,24 @@ def student_dashboard(request):
 
     """
     user = request.user
+    if configuration_helpers.get_value("ENABLE_MSA_MIGRATION"):
+        is_redirection = False
+        try:
+            # Check to see user social entry for this user
+            social_user = UserSocialAuth.objects.get(user=user)
+            UserSocialAuthMapping.objects.get(uid=social_user.uid)
+        except UserSocialAuthMapping.DoesNotExist:
+            is_redirection = True
+        except Exception:
+            pass
+
+        if is_redirection:
+            external_login_api = configuration_helpers.get_value('external_login_api', '')
+            lms_root_url = configuration_helpers.get_value('LMS_ROOT_URL', settings.FEATURES.get('LMS_ROOT_URL', ''))
+            if external_login_api and lms_root_url:
+                external_redirect_url = ''.join([external_login_api, lms_root_url, request.path])
+                return redirect(external_redirect_url)
+
     if not UserProfile.objects.filter(user=user).exists():
         return redirect(reverse('account_settings'))
 
