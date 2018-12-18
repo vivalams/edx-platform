@@ -1,9 +1,10 @@
 from django.conf.urls import patterns, url
 from django.conf import settings
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 urlpatterns = []
 
-if settings.FEATURES.get('ENABLE_COMBINED_LOGIN_REGISTRATION'):
+if settings.FEATURES.get('ENABLE_COMBINED_LOGIN_REGISTRATION') and configuration_helpers.get_value('ENABLE_RESET_PASSWORD', True):
     urlpatterns += patterns(
         'student_account.views',
         url(r'^password$', 'password_change_request_handler', name='password_change_request'),
