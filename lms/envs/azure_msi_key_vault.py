@@ -2,7 +2,7 @@ import requests
 import json
 
 
-def get_configs_from_keyvault(request_uri=None,payload=None,key_vault_url=None,key_name=None,api_version=None):
+def get_configs_from_keyvault(request_uri=None, payload=None, key_vault_url=None, key_name=None, api_version=None):
     """
     Read configurations from azure key vault
     """
