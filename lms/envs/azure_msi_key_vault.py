@@ -1,14 +1,6 @@
 import requests
 import json
 
-"""
-    request_uri = 'http://169.254.169.254/metadata/identity/oauth2/token'
-    resource = 'https://vault.azure.net'
-    payload = {'resource': resource,'api-version': '2018-02-01'}
-    key_vault_url = 'https://hawmanikeyvault.vault.azure.net'
-    key_name = 'PLATFORM-NAME'
-    api_version = '2016-10-01'
-"""
 
 def get_configs_from_keyvault(request_uri=None,payload=None,key_vault_url=None,key_name=None,api_version=None):
     """
