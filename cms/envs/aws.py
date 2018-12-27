@@ -98,7 +98,6 @@ with open(CONFIG_ROOT / CONFIG_PREFIX + "env.json") as env_file:
 
 ##################### NON-SECURE ENV CONFIG FROM  AZURE KEY VAULT ########
 # Override non-secure env congif from azure keyvault
-
 if ENV_TOKENS.get('GET_SECRETS_FROM_AZURE_KEYVAULT',False):
     request_uri = ENV_TOKENS.get('AZURE_MSI_REQUEST_URI',None)
     payload = ENV_TOKENS.get('KEYVAULT_PAYLOAD',None)
