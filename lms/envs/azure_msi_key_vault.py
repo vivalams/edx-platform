@@ -2,7 +2,7 @@ import requests
 import json
 import logging
 
-log = logging.getLogger("edx.azure_key_vault")
+log = logging.getLogger("edx.azure_msi_key_vault")
 
 def _get_configs_from_keyvault(request_uri=None, payload=None, key_vault_url=None, key_name=None, api_version=None):
     """
