@@ -171,6 +171,11 @@ def login_and_registration_form(request, initial_mode="login"):
 
     enterprise_customer = enterprise_customer_for_request(request)
     update_logistration_context_for_enterprise(request, context, enterprise_customer)
+    
+    # this view is used for auto-provisioning accounts logging in via third_party_auth. In the interim, it is still
+    # useful to have. So, we will only render this form if the auto-provisioning flow is not activated.
+    if not context['data']['third_party_auth']['syncLearnerProfileData']:
+        return redirect(configuration_helpers.get_value('REGISTRATION_REDIRECT_URL', '/'))
 
     response = render_to_response('student_account/login_and_register.html', context)
     handle_enterprise_cookies_for_logistration(request, response, context)
@@ -476,6 +481,23 @@ def account_settings(request):
         GET /account/settings
 
     """
+    
+    # When custom authentication is disabled, the settings page isn't
+    # the appropriate editor for user account settings. It should instead
+    # be managed by the third-party authentication provider. This setting here
+    # provides support for that override.
+    enable_student_account_settings_routes = configuration_helpers.get_value(
+        'ENABLE_STUDENT_ACCOUNT_SETTINGS_ROUTES',
+        True)
+
+    if not enable_student_account_settings_routes:
+        # student account settings have been disabled
+        # redirect to the dashboard (default) or a user specified path
+        return redirect(
+            configuration_helpers.get_value(
+                'STUDENT_ACCOUNT_SETTINGS_REDIRECT_URL',
+                '/dashboard'))
+
     context = account_settings_context(request)
     return render_to_response('student_account/account_settings.html', context)
 
