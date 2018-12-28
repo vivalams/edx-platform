@@ -398,7 +398,10 @@ FEATURES = {
 
     # Whether to display the account deletion section the account settings page
     'ENABLE_ACCOUNT_DELETION': True,
-    
+
+    # Set this to true to make Delete requests from third party agent
+    'ENABLE_OAUTH_ACCOUNT_DELETION': True,
+  
     # Making the display of course discovery and dashboard tabs configurable
     'ENABLE_COURSE_DISCOVERY': True,
     'ENABLE_DASHBOARD_TABS': True,

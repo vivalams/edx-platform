@@ -10,6 +10,7 @@ from functools import wraps
 
 import pytz
 from consent.models import DataSharingConsent
+from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, logout
 from django.contrib.sites.models import Site
 from django.core.cache import cache
@@ -374,6 +375,159 @@ class AccountRetireMailingsView(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         except Exception as exc:  # pylint: disable=broad-except
             return Response(text_type(exc), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+class DeactivateLogoutViewV2(APIView):
+    """
+    POST /api/user/v1/accounts/deactivate_logoutv2/
+    {
+        "password": "example_password",
+        "useremail": "user1@example.com",
+    }
+
+    **POST Parameters**
+
+      A POST request can include one of the following parameter.
+
+      * useremail: Optional. the email of the user being deactivated
+      * password: Required. The current password of the user being deactivated.
+
+    **POST Response Values**
+
+     If the request does not specify a username or submits a username
+     for a non-existent user, the request returns an HTTP 404 "Not Found"
+     response.
+
+     If a user who is not a superuser tries to deactivate a user,
+     the request returns an HTTP 403 "Forbidden" response.
+
+     If the specified user is successfully deactivated, the request
+     returns an HTTP 204 "No Content" response.
+
+     If an unanticipated error occurs, the request returns an
+     HTTP 500 "Internal Server Error" response.
+
+    Allows an LMS user to take the following actions:
+    -  Change the user's password permanently to Django's unusable password
+    -  Log the user out
+    - Create a row in the retirement table for that user
+    """
+    authentication_classes = (SessionAuthentication, JwtAuthentication, )
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def post(self, request):
+        """
+        POST /api/user/v1/accounts/deactivate_logoutv2/
+
+        Marks the user as having no password set for deactivation purposes,
+        and logs the user out.
+        """
+        user_model = get_user_model()
+        try:
+            oauth_account_deletion = settings.FEATURES.get('ENABLE_OAUTH_ACCOUNT_DELETION', False)
+            if oauth_account_deletion:
+                user_email = request.POST.get('useremail', False)
+                if user_email:
+                    request.user = User.objects.get(email=useremail)
+                    self._check_excessive_login_attempts(request.user)
+                else:
+                    self._process_account_deactivation(request)
+            else:
+                self._process_account_deactivation(request)
+               
+            with transaction.atomic():
+                UserRetirementStatus.create_retirement(request.user)
+                # Unlink LMS social auth accounts
+                UserSocialAuth.objects.filter(user_id=request.user.id).delete()
+                # Change LMS password & email
+                user_email = request.user.email
+                request.user.email = get_retired_email_by_email(request.user.email)
+                request.user.save()
+                _set_unusable_password(request.user)
+                # TODO: Unlink social accounts & change password on each IDA.
+                # Remove the activation keys sent by email to the user for account activation.
+                Registration.objects.filter(user=request.user).delete()
+                # Add user to retirement queue.
+                # Delete OAuth tokens associated with the user.
+                retire_dop_oauth2_models(request.user)
+                retire_dot_oauth2_models(request.user)
+
+                try:
+                    # Send notification email to user
+                    site = Site.objects.get_current()
+                    notification_context = get_base_template_context(site)
+                    notification_context.update({'full_name': request.user.profile.name})
+                    notification = DeletionNotificationMessage().personalize(
+                        recipient=Recipient(username='', email_address=user_email),
+                        language=request.user.profile.language,
+                        user_context=notification_context,
+                    )
+                    ace.send(notification)
+                except Exception as exc:
+                    log.exception('Error sending out deletion notification email')
+                    raise
+
+                # Log the user out.
+                logout(request)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except KeyError:
+            return Response(u'Username not specified.', status=status.HTTP_404_NOT_FOUND)
+        except user_model.DoesNotExist:
+            return Response(
+                u'The user "{}" does not exist.'.format(request.user.username), status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            return Response(text_type(exc), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def _process_account_deactivation(self, request):
+        """
+        Validates the user password from the request if it matches with the user request the account deletion
+        """
+        verify_user_password_response = self._verify_user_password(request)
+        if verify_user_password_response.status_code != status.HTTP_204_NO_CONTENT:
+            return verify_user_password_response
+
+    def _verify_user_password(self, request):
+        """
+        If the user is logged in and we want to verify that they have submitted the correct password
+        for a major account change (for example, retiring this user's account).
+
+        Args:
+            request (HttpRequest): A request object where the password should be included in the POST fields.
+        """
+        try:
+            self._check_excessive_login_attempts(request.user)
+            user = authenticate(username=request.user.username, password=request.POST['password'], request=request)
+            if user:
+                if LoginFailures.is_feature_enabled():
+                    LoginFailures.clear_lockout_counter(user)
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                self._handle_failed_authentication(request.user)
+        except AuthFailedError as err:
+            return Response(text_type(err), status=status.HTTP_403_FORBIDDEN)
+        except Exception as err:  # pylint: disable=broad-except
+            return Response(u"Could not verify user password: {}".format(err), status=status.HTTP_400_BAD_REQUEST)
+
+    def _check_excessive_login_attempts(self, user):
+        """
+        See if account has been locked out due to excessive login failures
+        """
+        if user and LoginFailures.is_feature_enabled():
+            if LoginFailures.is_user_locked_out(user):
+                raise AuthFailedError(_('This account has been temporarily locked due '
+                                        'to excessive login failures. Try again later.'))
+
+    def _handle_failed_authentication(self, user):
+        """
+        Handles updating the failed login count, inactive user notifications, and logging failed authentications.
+        """
+        if user and LoginFailures.is_feature_enabled():
+            LoginFailures.increment_lockout_counter(user)
+
+        raise AuthFailedError(_('Email or password is incorrect.'))
+
 
 
 class DeactivateLogoutView(APIView):
