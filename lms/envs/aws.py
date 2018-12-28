@@ -1118,3 +1118,5 @@ ENABLE_CERTIFICATES_FOR_HONOR_MODE = ENV_TOKENS.get('ENABLE_CERTIFICATES_FOR_HON
 ########################## Derive Any Derived Settings  #######################
 
 derive_settings(__name__)
+
+API_COOKIE_URL = ENV_TOKENS.get('API_COOKIE_URL', None)
