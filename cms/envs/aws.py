@@ -22,8 +22,6 @@ import os
 from path import Path as path
 from xmodule.modulestore.modulestore_settings import convert_module_store_setting_if_needed
 
-from lms.envs.azure_msi_key_vault import override_configs_from_keyvault
-
 # SERVICE_VARIANT specifies name of the variant used, which decides what JSON
 # configuration files are read during startup.
 SERVICE_VARIANT = os.environ.get('SERVICE_VARIANT', None)
@@ -95,17 +93,6 @@ CELERY_ROUTES = "{}celery.Router".format(QUEUE_VARIANT)
 # Things like server locations, ports, etc.
 with open(CONFIG_ROOT / CONFIG_PREFIX + "env.json") as env_file:
     ENV_TOKENS = json.load(env_file)
-
-##################### NON-SECURE ENV CONFIG FROM  AZURE KEY VAULT ########
-# Override non-secure env config from azure keyvault
-if ENV_TOKENS.get('GET_SECRETS_FROM_AZURE_KEYVAULT', False):
-    request_uri = ENV_TOKENS.get('AZURE_MSI_REQUEST_URI', None)
-    payload = ENV_TOKENS.get('KEYVAULT_PAYLOAD', None)
-    key_vault_url = ENV_TOKENS.get('KEYVAULT_URL', None)
-    non_secure_key = ENV_TOKENS.get('CMS_NON_SECURE_KEY_NAME', None)
-    api_version = ENV_TOKENS.get('API_VERSION', None)
-    ENV_TOKENS = override_configs_from_keyvault(ENV_TOKENS, request_uri, payload, key_vault_url, non_secure_key, api_version)
-
 
 # Do NOT calculate this dynamically at startup with git because it's *slow*.
 EDX_PLATFORM_REVISION = ENV_TOKENS.get('EDX_PLATFORM_REVISION', EDX_PLATFORM_REVISION)
@@ -316,13 +303,6 @@ ZENDESK_CUSTOM_FIELDS = ENV_TOKENS.get('ZENDESK_CUSTOM_FIELDS', ZENDESK_CUSTOM_F
 # Secret things: passwords, access keys, etc.
 with open(CONFIG_ROOT / CONFIG_PREFIX + "auth.json") as auth_file:
     AUTH_TOKENS = json.load(auth_file)
-
-##################### SECURE AUTH FROM AZURE KEY VAULT ########
-# Override secure auth items from azure keyvault
-if ENV_TOKENS.get('GET_SECRETS_FROM_AZURE_KEYVAULT', False):
-    secure_keys = ENV_TOKENS.get('CMS_SECURE_KEY_NAME', None)
-    AUTH_TOKENS = override_configs_from_keyvault(AUTH_TOKENS, request_uri, payload, key_vault_url, secure_keys, api_version)
-
 
 ############### XBlock filesystem field config ##########
 if 'DJFS' in AUTH_TOKENS and AUTH_TOKENS['DJFS'] is not None:
