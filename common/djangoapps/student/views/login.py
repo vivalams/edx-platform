@@ -71,6 +71,8 @@ from student.models import (
 from student.helpers import authenticate_new_user, do_create_account
 from third_party_auth import pipeline, provider
 from util.json_request import JsonResponse
+from courseware.access_utils import in_preview_mode
+from courseware.access import _has_access_to_course
 
 log = logging.getLogger("edx.student")
 AUDIT_LOG = logging.getLogger("audit")
@@ -473,7 +475,15 @@ def login_user(request):
         redirect_url = None  # The AJAX method calling should know the default destination upon success
         if was_authenticated_third_party:
             running_pipeline = pipeline.get(request)
-            redirect_url = pipeline.get_complete_url(backend_name=running_pipeline['backend'])
+            course_id = request.GET.get('course_id')
+
+            if in_preview_mode():
+                if _has_access_to_course(email_user, 'staff', course_id):
+                    redirect_url = get_next_url_for_login_page(request)
+                else:
+                    raise AuthFailedError("You do not have permission to preview this course")
+            else:
+                redirect_url = pipeline.get_complete_url(backend_name=running_pipeline['backend'])
 
         response = JsonResponse({
             'success': True,
