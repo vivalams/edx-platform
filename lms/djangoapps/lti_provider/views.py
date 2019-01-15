@@ -18,6 +18,7 @@ from openedx.core.lib.url_utils import unquote_slashes
 from util.views import add_p3p_header
 from social_django.models import UserSocialAuth
 from third_party_auth.models import UserSocialAuthMapping
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 log = logging.getLogger("edx.lti_provider")
 
@@ -199,46 +200,49 @@ def users_social_auth_mapping(request):
         - The launch data is correctly signed using a known client key/secret
           pair
     """
-    request.META['wsgi.url_scheme'] = 'https'
-    if request.method != 'POST':
-        return HttpResponseNotAllowed('POST')
+    if configuration_helpers.get_value('ENABLE_MSA_MIGRATION', False):
+        request.META['wsgi.url_scheme'] = 'https'
+        if request.method != 'POST':
+            return HttpResponseNotAllowed('POST')
 
-    # Check the LTI parameters, and return 400 if any required parameters are
-    # missing
-    additional_params = ['uid', 'puid', 'provider']
-    params = get_required_lti_parameters(request.POST, additional_params)
-    if not params:
-        return HttpResponseBadRequest()
+        # Check the LTI parameters, and return 400 if any required parameters are
+        # missing
+        additional_params = ['uid', 'puid', 'provider']
+        params = get_required_lti_parameters(request.POST, additional_params)
+        if not params:
+            return HttpResponseBadRequest()
 
-    # Get the consumer information from either the instance GUID or the consumer key
-    try:
-        lti_consumer = LtiConsumer.get_or_supplement(None, params["oauth_consumer_key"])
-    except LtiConsumer.DoesNotExist:
+        # Get the consumer information from either the instance GUID or the consumer key
+        try:
+            lti_consumer = LtiConsumer.get_or_supplement(None, params["oauth_consumer_key"])
+        except LtiConsumer.DoesNotExist:
+            return HttpResponseForbidden()
+
+        # Check the OAuth signature on the message
+        if not SignatureValidator(lti_consumer).verify(request):
+            return HttpResponseForbidden()
+        provider = params["provider"]
+        uid = params["uid"]
+        puid = params["puid"]
+
+        # First verify the mapping is already exist sanity check
+        try:
+            usersocialauth_mapping = UserSocialAuthMapping.objects.get(uid=uid, puid=puid)
+            return HttpResponse(status=200)
+        except UserSocialAuthMapping.DoesNotExist:
+            pass
+
+        # Check user social auth entry for uid and provider i.e. live
+        try:
+            usersocialauth = UserSocialAuth.objects.get(uid=uid, provider=provider)
+        except UserSocialAuth.DoesNotExist:
+            raise Http404
+        user_id = usersocialauth.user_id
+        try:
+            usersocialauth_mapping = UserSocialAuthMapping(uid=uid, puid=puid, user_id=user_id)
+            usersocialauth_mapping.save()
+        except Exception:
+            raise Http404
+        return HttpResponse(status=204)
+    else:
         return HttpResponseForbidden()
-
-    # Check the OAuth signature on the message
-    if not SignatureValidator(lti_consumer).verify(request):
-        return HttpResponseForbidden()
-    provider = params["provider"]
-    uid = params["uid"]
-    puid = params["puid"]
-
-    # First verify the mapping is already exist sanity check
-    try:
-        usersocialauth_mapping = UserSocialAuthMapping.objects.get(uid=uid, puid=puid)
-        return HttpResponse(status=200)
-    except UserSocialAuthMapping.DoesNotExist:
-        pass
-
-    # Check user social auth entry for uid and provider i.e. live
-    try:
-        usersocialauth = UserSocialAuth.objects.get(uid=uid, provider=provider)
-    except UserSocialAuth.DoesNotExist:
-        raise Http404
-    user_id = usersocialauth.user_id
-    try:
-        usersocialauth_mapping = UserSocialAuthMapping(uid=uid, puid=puid, user_id=user_id)
-        usersocialauth_mapping.save()
-    except Exception:
-        raise Http404
-    return HttpResponse(status=204)
