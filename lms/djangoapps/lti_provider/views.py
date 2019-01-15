@@ -202,30 +202,35 @@ def users_social_auth_mapping(request):
     request.META['wsgi.url_scheme'] = 'https'
     if request.method != 'POST':
         return HttpResponseNotAllowed('POST')
-     # Check the LTI parameters, and return 400 if any required parameters are
+
+    # Check the LTI parameters, and return 400 if any required parameters are
     # missing
     additional_params = ['uid', 'puid', 'provider']
     params = get_required_lti_parameters(request.POST, additional_params)
     if not params:
         return HttpResponseBadRequest()
-     # Get the consumer information from either the instance GUID or the consumer key
+
+    # Get the consumer information from either the instance GUID or the consumer key
     try:
         lti_consumer = LtiConsumer.get_or_supplement(None, params["oauth_consumer_key"])
     except LtiConsumer.DoesNotExist:
         return HttpResponseForbidden()
-     # Check the OAuth signature on the message
+
+    # Check the OAuth signature on the message
     if not SignatureValidator(lti_consumer).verify(request):
         return HttpResponseForbidden()
-     provider = params["provider"]
+    provider = params["provider"]
     uid = params["uid"]
     puid = params["puid"]
-     # First verify the mapping is already exist sanity check
+
+    # First verify the mapping is already exist sanity check
     try:
         usersocialauth_mapping = UserSocialAuthMapping.objects.get(uid=uid, puid=puid)
         return HttpResponse(status=200)
     except UserSocialAuthMapping.DoesNotExist:
         pass
-     # Check user social auth entry for uid and provider i.e. live
+
+    # Check user social auth entry for uid and provider i.e. live
     try:
         usersocialauth = UserSocialAuth.objects.get(uid=uid, provider=provider)
     except UserSocialAuth.DoesNotExist:

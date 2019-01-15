@@ -549,16 +549,16 @@ def student_dashboard(request):
 
     """
     user = request.user
+    is_redirection = False
     if configuration_helpers.get_value("ENABLE_MSA_MIGRATION"):
-        is_redirection = False
-    try:
-        # Check to see user social entry for this user
-        social_user = UserSocialAuth.objects.get(user=user)
-        UserSocialAuthMapping.objects.get(uid=social_user.uid)
-    except UserSocialAuthMapping.DoesNotExist:
-        is_redirection = True
-    except Exception:
-        pass
+        try:
+            # Check to see user social entry for this user
+            social_user = UserSocialAuth.objects.get(user=user)
+            UserSocialAuthMapping.objects.get(uid=social_user.uid)
+        except UserSocialAuthMapping.DoesNotExist:
+            is_redirection = True
+        except Exception:
+            pass
     if is_redirection:
         external_login_api = configuration_helpers.get_value('external_login_api', '')
         lms_root_url = configuration_helpers.get_value('LMS_ROOT_URL', settings.FEATURES.get('LMS_ROOT_URL', ''))
