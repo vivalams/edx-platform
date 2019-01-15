@@ -75,7 +75,7 @@ from util.query import use_read_replica_if_available
 log = logging.getLogger(__name__)
 AUDIT_LOG = logging.getLogger("audit")
 SessionStore = import_module(settings.SESSION_ENGINE).SessionStore  # pylint: disable=invalid-name
-RETIRE_SALTS = [str(random.randrange(1, 10**10)), str(random.randrange(1, 10**10))]
+
 
 # enroll status changed events - signaled to email_marketing.  See email_marketing.tasks for more info
 
@@ -261,6 +261,7 @@ def get_retired_username_by_username(username):
     returns that UserRetirementStatus.retired_username value.  Otherwise, returns a "retired username"
     hashed using the newest configured salt.
     """
+    RETIRE_SALTS = [str(random.randrange(1, 10**10)), str(random.randrange(1, 10**10))]
     UserRetirementStatus = apps.get_model('user_api', 'UserRetirementStatus')
     try:
         status = UserRetirementStatus.objects.filter(original_username=username).order_by('-modified').first()
@@ -277,6 +278,7 @@ def get_retired_email_by_email(email):
     returns that UserRetirementStatus.retired_email value.  Otherwise, returns a "retired email"
     hashed using the newest configured salt.
     """
+    RETIRE_SALTS = [str(random.randrange(1, 10**10)), str(random.randrange(1, 10**10))]
     UserRetirementStatus = apps.get_model('user_api', 'UserRetirementStatus')
     try:
         status = UserRetirementStatus.objects.filter(original_email=email).order_by('-modified').first()
