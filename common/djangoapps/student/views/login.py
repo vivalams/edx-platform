@@ -72,7 +72,7 @@ from student.helpers import authenticate_new_user, do_create_account
 from third_party_auth import pipeline, provider
 from util.json_request import JsonResponse
 from courseware.access_utils import in_preview_mode
-from courseware.access import _has_access_to_course
+from courseware.access import has_staff_access_to_preview_mode
 
 log = logging.getLogger("edx.student")
 AUDIT_LOG = logging.getLogger("audit")
@@ -477,11 +477,8 @@ def login_user(request):
             running_pipeline = pipeline.get(request)
             course_id = request.GET.get('course_id')
 
-            if in_preview_mode():
-                if _has_access_to_course(email_user, 'staff', course_id):
-                    redirect_url = get_next_url_for_login_page(request)
-                else:
-                    raise AuthFailedError("You do not have permission to preview this course")
+            if in_preview_mode() and has_staff_access_to_preview_mode(email_user, course_id):
+                redirect_url = get_next_url_for_login_page(request)
             else:
                 redirect_url = pipeline.get_complete_url(backend_name=running_pipeline['backend'])
 
